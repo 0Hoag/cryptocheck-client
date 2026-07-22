@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api";
 export type CommunityPost = { id: string; content: string; author_id: string; permission: "public" | "private"; source_url?: string; created_at: string };
 export type Reaction = { id: string; post_id: string; author_id: string; type: string; created_at: string };
 export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
+export type Follow = { id: string; author_id: string; followee_id: string; created_at: string };
 type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number } };
 
 export async function getCommunityPosts(authorId?: string) {
@@ -15,3 +16,8 @@ export async function createReaction(postId: string) { return (await apiClient.p
 export async function deleteReaction(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/reaction/${id}`); }
 export async function getComments(postId: string) { return (await apiClient.get<{ data: ListResponse<Comment> }>("/api/v1/news-feed/comment", { params: { post_id: postId, page: 1, limit: 50 } })).data.data.items; }
 export async function createComment(postId: string, content: string) { return (await apiClient.post<{ data: Comment }>("/api/v1/news-feed/comment", { post_id: postId, content })).data.data; }
+export async function getFollows(authorId: string, followeeId?: string) {
+  return (await apiClient.get<{ data: ListResponse<Follow> }>("/api/v1/news-feed/follow", { params: { author_id: authorId, followee_id: followeeId, page: 1, limit: 1 } })).data.data.items;
+}
+export async function createFollow(followeeId: string) { return (await apiClient.post<{ data: Follow }>("/api/v1/news-feed/follow", { followee_id: followeeId })).data.data; }
+export async function deleteFollow(id: string) { await apiClient.delete(`/api/v1/news-feed/follow/${id}`); }
