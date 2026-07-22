@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import CryptoTicker from "@/components/CryptoTicker";
 import NewsTicker from "@/components/NewsTicker";
 import Footer from "@/components/Footer";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,13 +14,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Crypto News Feed - Latest Cryptocurrency News",
-  description: "Stay updated with the latest cryptocurrency news from Coindesk, Cointelegraph, and more. Real-time crypto news aggregator.",
+  title: "CryptoCheck | Tin tức và phân tích crypto",
+  description: "Theo dõi thị trường crypto, đọc tin tức đáng tin cậy và quét rủi ro token trong một nơi.",
   keywords: ["crypto", "cryptocurrency", "bitcoin", "ethereum", "blockchain", "news"],
-  authors: [{ name: "Crypto News Feed" }],
+  authors: [{ name: "CryptoCheck" }],
   openGraph: {
-    title: "Crypto News Feed",
-    description: "Latest cryptocurrency news aggregated from top sources",
+    title: "CryptoCheck",
+    description: "Tin tức, dữ liệu thị trường và quét rủi ro token.",
     type: "website",
   },
 };
@@ -32,13 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+        <LanguageProvider>
+        <div className="min-h-screen bg-transparent">
           <Header />
           <CryptoTicker />
           <NewsTicker />
           <main>{children}</main>
           <Footer />
         </div>
+        </LanguageProvider>
       </body>
     </html>
   );

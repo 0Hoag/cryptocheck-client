@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Post } from "@/lib/types";
 import { formatDate, getSourceName, extractImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
@@ -20,36 +19,31 @@ export default function ArticleCard({ post, variant = "default", className }: Ar
         <Link
             href={`/posts/${post.id}`}
             className={cn(
-                "group flex flex-col bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300 h-full",
+                "group surface surface-hover flex h-full flex-col overflow-hidden",
                 className
             )}
         >
             {/* Image Section */}
-            <div className={cn("relative w-full overflow-hidden bg-gray-900 border-b border-white/5",
+            <div className={cn("relative w-full overflow-hidden border-b border-slate-800 bg-slate-900/70",
                 variant === "compact" ? "aspect-[16/9]" : "aspect-[16/9]"
             )}>
                 {imageUrl ? (
-                    <Image
-                        src={imageUrl}
-                        alt={title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
-                    />
+                    <img src={imageUrl} alt="" className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" onError={(event) => { event.currentTarget.style.display = "none"; }} />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center p-4">
-                        <span className="text-2xl font-black text-white/5 uppercase tracking-tighter">News</span>
+                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#172554,#0f172a_55%,#020617)] p-4">
+                        <span className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/40">CryptoCheck</span>
                     </div>
                 )}
             </div>
 
             {/* Content Section */}
-            <div className="p-4 flex flex-col flex-1 relative">
+            <div className="relative flex flex-1 flex-col p-4">
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] uppercase font-bold text-cyan-500 tracking-wider">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-400">
                         {sourceName}
                     </span>
                     {variant === "default" && (
-                        <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500">
                             <Clock className="w-3 h-3" />
                             {formatDate(post.created_at)}
                         </span>
@@ -57,19 +51,19 @@ export default function ArticleCard({ post, variant = "default", className }: Ar
                 </div>
 
                 <h3 className={cn(
-                    "font-bold text-gray-100 leading-snug group-hover:text-cyan-400 transition-colors",
+                    "font-semibold leading-snug text-slate-100 transition-colors group-hover:text-sky-300",
                     variant === "compact" ? "text-sm line-clamp-3 mb-1" : "text-lg line-clamp-2 mb-3"
                 )}>
                     {title}
                 </h3>
 
                 {variant === "default" && (
-                    <div className="mt-auto pt-4 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5">
+                    <div className="mt-auto flex items-center justify-between border-t border-slate-800 pt-4 text-[11px] text-slate-500">
                         <span className="flex items-center gap-1.5 opacity-60">
                             By {sourceName}
                         </span>
-                        <span className="group-hover:translate-x-1 transition-transform text-gray-400 group-hover:text-white flex items-center gap-0.5">
-                            Read more &rarr;
+                        <span className="flex items-center gap-0.5 text-slate-400 transition group-hover:translate-x-1 group-hover:text-sky-200">
+                            Đọc bài &rarr;
                         </span>
                     </div>
                 )}

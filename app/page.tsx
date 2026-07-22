@@ -1,107 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getPosts } from "@/lib/api";
-import { Post } from "@/lib/types";
-import HeroPost from "@/components/HeroPost";
-import QuickHeadlines from "@/components/QuickHeadlines";
-import MarketWidgets from "@/components/MarketWidgets";
-import ArticleCard from "@/components/ArticleCard";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Bot, CheckCircle2, Search, ShieldCheck, Zap } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await getPosts();
-        let fetchedPosts = response.posts;
-
-        setPosts(fetchedPosts);
-      } catch (err) {
-        console.error("Failed to fetch posts:", err);
-        setError("Failed to load posts. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+export default function LandingPage() {
+  const { language } = useLanguage();
+  const vi = language === "vi";
+  const steps = vi ? ["Nhập token hoặc địa chỉ contract", "Hệ thống phân tích mã nguồn đã xác minh", "Nhận Trust Score và cảnh báo dễ hiểu"] : ["Enter a token or contract address", "We analyze verified contract source", "Get a clear Trust Score and risk alerts"];
+  return <main>
+    <section className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-28"><div className="absolute inset-x-0 top-0 -z-10 h-[620px] bg-[radial-gradient(circle_at_50%_5%,rgba(14,165,233,0.2),transparent_48%)]" />
+      <div className="mx-auto max-w-5xl text-center"><div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1.5 text-xs font-semibold text-sky-200"><ShieldCheck className="h-4 w-4" />{vi ? "Bảo mật thông minh cho nhà đầu tư crypto" : "Smart security for crypto investors"}</div>
+        <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-6xl">{vi ? "Kiểm tra trước khi xuống tiền." : "Check before you invest."}<span className="block text-sky-400">CryptoCheck.</span></h1>
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">{vi ? "Quét Smart Contract trong vài giây, hiểu rủi ro bằng Trust Score rõ ràng và theo dõi thị trường trong cùng một nền tảng." : "Scan smart contracts in seconds, understand risks through a clear Trust Score, and follow the market in one place."}</p>
+        <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/scanner" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"><Search className="h-4 w-4" />{vi ? "Quét token ngay" : "Scan a token"}<ArrowRight className="h-4 w-4" /></Link><Link href="/news" className="inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 px-5 py-3.5 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800">{vi ? "Xem tin tức thị trường" : "Explore market news"}</Link></div>
       </div>
-    );
-  }
-
-  // Data slicing strategy
-  const topStory = posts.length > 0 ? posts[0] : null;
-  const subStories = posts.length > 1 ? posts.slice(1, 4) : [];
-  const otherNews = posts.length > 4 ? posts.slice(4) : [];
-
-  // For Headlines, we use the sliced list. Exclude top story usually.
-  const recentHeadlines = posts.length > 1 ? posts.slice(1, 15) : [];
-
-  return (
-    <main className="min-h-screen bg-[#050505] text-gray-200 font-sans selection:bg-cyan-500/20 selection:text-cyan-200">
-      <div className="max-w-[1600px] mx-auto px-4 py-8">
-
-        {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
-
-          {/* LEFT COLUMN: Quick Headlines (2/12) - Sticky Sidebar */}
-          <div className="hidden xl:block col-span-2">
-            {recentHeadlines.length > 0 && <QuickHeadlines posts={recentHeadlines} />}
-          </div>
-
-          {/* CENTER COLUMN: Main Content (7/12) */}
-          <div className="col-span-1 lg:col-span-8 xl:col-span-7 space-y-8">
-            {/* Top Story Hero */}
-            {topStory && <HeroPost post={topStory} />}
-
-            {/* Sub Stories Row */}
-            {subStories.length > 0 && (
-              <div>
-                <h2 className="text-white/90 text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="text-cyan-500">⚡</span> Must Read
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {subStories.map(post => (
-                    <ArticleCard key={post.id} post={post} variant="compact" />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Other News Grid */}
-            {otherNews.length > 0 && (
-              <div>
-                <h2 className="text-white/90 text-sm font-bold mb-4 border-t border-white/5 pt-8 uppercase tracking-wider">
-                  Latest Stories
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {otherNews.map(post => (
-                    <ArticleCard key={post.id} post={post} variant="default" />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT COLUMN: Widgets (3/12) - Sticky Sidebar */}
-          <div className="hidden lg:block col-span-4 xl:col-span-3">
-            <div className="sticky top-24">
-              <MarketWidgets />
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+    </section>
+    <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:grid-cols-3 sm:px-6">{[["5", vi ? "Mạng EVM được hỗ trợ" : "supported EVM networks"], ["30s", vi ? "Kết quả phân tích mục tiêu" : "target analysis time"], ["24/7", vi ? "Tin tức và dữ liệu thị trường" : "market news and data"]].map(([value, label]) => <div key={label} className="surface p-5 text-center"><div className="text-2xl font-semibold text-sky-300">{value}</div><div className="mt-1 text-xs text-slate-500">{label}</div></div>)}</section>
+    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6"><div className="mb-8 max-w-xl"><div className="eyebrow">How it works</div><h2 className="mt-2 text-3xl font-semibold text-white">{vi ? "Đọc kết quả, không cần đọc Solidity." : "Read the result, not Solidity."}</h2></div><div className="grid gap-4 md:grid-cols-3">{steps.map((step, index) => <div key={step} className="surface surface-hover p-6"><div className="mb-5 grid h-9 w-9 place-items-center rounded-lg bg-sky-500/10 text-sm font-semibold text-sky-300">0{index + 1}</div><p className="text-sm leading-6 text-slate-300">{step}</p></div>)}</div></section>
+    <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6"><div className="surface grid gap-6 overflow-hidden p-7 md:grid-cols-[1.3fr_0.7fr] md:p-10"><div><div className="eyebrow">Built for clarity</div><h2 className="mt-2 text-3xl font-semibold text-white">{vi ? "Tin tức, dữ liệu và công cụ an toàn trong một nhịp làm việc." : "News, data and safety tools in one workflow."}</h2><p className="mt-4 max-w-xl text-sm leading-6 text-slate-400">{vi ? "Theo dõi tín hiệu thị trường, xem phân tích và kiểm tra contract trước mỗi quyết định." : "Follow market signals, review analysis and inspect contracts before each decision."}</p></div><div className="grid grid-cols-2 gap-3 text-sm"><div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"><Bot className="h-5 w-5 text-sky-300" /><p className="mt-4 font-medium text-white">AI assisted</p></div><div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"><Zap className="h-5 w-5 text-amber-300" /><p className="mt-4 font-medium text-white">Fast checks</p></div><div className="col-span-2 flex items-center gap-2 rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-4 text-emerald-100"><CheckCircle2 className="h-5 w-5 text-emerald-400" />{vi ? "Không cần đăng ký để quét token." : "No account required to scan a token."}</div></div></div></section>
+  </main>;
 }

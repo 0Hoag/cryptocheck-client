@@ -12,7 +12,7 @@ export default function QuickHeadlines({ posts }: QuickHeadlinesProps) {
         <div className="bg-[#111] border border-white/5 rounded-2xl p-5 h-fit sticky top-24">
             <div className="flex items-center gap-2 mb-6">
                 <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase">Quick Headlines</h3>
+                <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase">Tin nhanh</h3>
             </div>
 
             <div className="space-y-5">
@@ -35,10 +35,7 @@ export default function QuickHeadlines({ posts }: QuickHeadlinesProps) {
                 ))}
             </div>
 
-            <button className="text-blue-400 text-xs font-medium mt-6 hover:text-blue-300 transition-colors flex items-center gap-1 group">
-                See all news
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </button>
+            <p className="mt-6 border-t border-slate-800 pt-4 text-[11px] leading-5 text-slate-500">Cập nhật theo thời gian thực từ các nguồn tin đã chọn.</p>
         </div>
     );
 }

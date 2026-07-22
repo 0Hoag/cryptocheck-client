@@ -10,7 +10,7 @@ export default function Footer() {
                     <div className="lg:col-span-3 space-y-6">
                         <Link href="/" className="block">
                             <span className="text-2xl font-bold text-blue-500 tracking-tight">
-                                Syntax
+                                Crypto<span className="text-sky-400">Check</span>
                             </span>
                         </Link>
                         <p className="text-gray-400 leading-relaxed text-xs">
@@ -66,10 +66,10 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="border-t border-white/5 pt-8 mt-8">
                     <p className="text-[10px] text-gray-500 text-center leading-relaxed max-w-4xl mx-auto mb-4">
-                        Cảnh báo rủi ro: Giao dịch tiền điện tử tiềm ẩn rủi ro cao. Thông tin trên Syntax chỉ mang tính chất tham khảo, không phải lời khuyên đầu tư. Bạn chịu trách nhiệm hoàn toàn về các quyết định giao dịch của mình.
+                        Cảnh báo rủi ro: Giao dịch tiền điện tử tiềm ẩn rủi ro cao. Thông tin trên CryptoCheck chỉ mang tính chất tham khảo, không phải lời khuyên đầu tư. Bạn chịu trách nhiệm hoàn toàn về các quyết định giao dịch của mình.
                     </p>
                     <p className="text-[10px] text-gray-600 text-center">
-                        © 2026 Syntax. Bản quyền nền tảng và phân tích. Tin tức thị trường được tổng hợp từ các nguồn uy tín.
+                        © 2026 CryptoCheck. Bản quyền nền tảng và phân tích. Tin tức thị trường được tổng hợp từ các nguồn uy tín.
                     </p>
                 </div>
             </div>

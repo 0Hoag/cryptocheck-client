@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Post, PaginationParams, PostsResponse } from "./types";
+import { getAuthToken } from "./auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -8,6 +9,12 @@ const apiClient = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
+});
+
+apiClient.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
 });
 
 // Add response interceptor for error handling
