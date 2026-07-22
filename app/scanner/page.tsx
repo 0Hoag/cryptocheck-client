@@ -19,6 +19,14 @@ export default function ScannerPage() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState("");
 
+  function validateQuery(query: string) {
+    if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {
+      return "Địa chỉ EVM phải gồm 0x và đúng 40 ký tự hexadecimal. Nếu quét bằng mã token, hãy nhập symbol như ENA thay vì địa chỉ dở dang.";
+    }
+    if (query.length > 128) return "Giá trị quét quá dài. Hãy nhập symbol hoặc địa chỉ contract hợp lệ.";
+    return "";
+  }
+
   async function handleScan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token.trim()) return;
@@ -28,13 +36,19 @@ export default function ScannerPage() {
       setError(`“${query.toUpperCase()}” là native coin, không có smart contract để quét. Hãy dán địa chỉ contract của token (bắt đầu bằng 0x), ví dụ WBNB thay vì BNB.`);
       return;
     }
+    const validationError = validateQuery(query);
+    if (validationError) {
+      setResult(null);
+      setError(validationError);
+      return;
+    }
     setLoading(true); setError(""); setResult(null);
     try {
-      const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: "vi" } });
+      const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: "vi" }, timeout: 45000 });
       setResult(response.data.data);
     } catch (err: any) {
       const message = err?.response?.data?.message;
-      setError(message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ (0x...) thay vì mã coin; native coin như BNB/ETH không thể quét trực tiếp." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ."));
+      setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử symbol chính xác; native coin như BNB/ETH không thể quét trực tiếp." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
     } finally { setLoading(false); }
   }
 
@@ -57,7 +71,7 @@ export default function ScannerPage() {
         </div>
       </section>
 
-      {error && <div role="alert" className="mt-6 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div>}
+      {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><button type="button" onClick={() => { setError(""); setResult(null); }} className="shrink-0 rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">Nhập lại</button></div>}
 
       {result && <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.4fr]">
         <div className={`surface p-6 ${scoreTone(result.trust_score)}`}>
