@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, CircleDollarSign, Loader2, Search, ShieldC
 import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
-type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
+type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset" | "solana_mint"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
 type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; contract_scan_supported: boolean };
 
 function scoreTone(score: number) {
@@ -17,6 +17,7 @@ function scoreTone(score: number) {
 function analysisLabel(type: ScanResult["analysis_type"]) {
   if (type === "native_asset") return "Native asset report";
   if (type === "market_asset") return "Market profile";
+  if (type === "solana_mint") return "Solana mint authority check";
   return "Verified contract scan";
 }
 
@@ -113,8 +114,9 @@ export default function ScannerPage() {
 
       {result && <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.4fr]">
         <div className={`surface p-6 ${result.score_available ? scoreTone(result.trust_score) : "border-sky-400/20 bg-sky-500/5 text-sky-100"}`}>
-          <div className="eyebrow text-current/70">{result.score_available ? "Trust score" : "Market profile"}</div>
+          <div className="eyebrow text-current/70">{result.score_available ? (result.analysis_type === "solana_mint" ? "Authority risk score" : "Trust score") : "Market profile"}</div>
           {result.score_available ? <div className="mt-2 text-6xl font-semibold tracking-tighter">{result.trust_score}<span className="text-2xl">/100</span></div> : <><div className="mt-3 flex items-center gap-2 text-xl font-semibold"><CircleDollarSign className="h-6 w-6 text-sky-300" />Đã nhận diện tài sản</div><p className="mt-2 text-sm leading-6 text-slate-300">Chưa có security score vì chain hoặc source code chưa được scanner hỗ trợ.</p></>}
+          {result.analysis_type === "solana_mint" && <p className="mt-3 text-xs leading-5 text-slate-300">Điểm này chỉ phản ánh quyền mint/freeze của SPL token; không phải audit toàn bộ Solana program.</p>}
           <div className="mt-6 border-t border-current/20 pt-5 text-sm">
             <div className="font-semibold text-slate-100">{result.name || "Unknown token"}</div>
             <div className="mt-1 break-all font-mono text-xs text-slate-400">{result.address}</div>
