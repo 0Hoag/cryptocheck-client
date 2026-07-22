@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
 type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; issues: ScanIssue[]; safe_features: string[] };
+type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; contract_scan_supported: boolean };
 
 function scoreTone(score: number) {
   if (score >= 75) return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
@@ -29,6 +30,7 @@ export default function ScannerPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState("");
+  const [candidates, setCandidates] = useState<TokenCandidate[]>([]);
 
   function validateQuery(query: string) {
     if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {
@@ -38,20 +40,37 @@ export default function ScannerPage() {
     return "";
   }
 
+  async function runScan(query: string) {
+    setLoading(true); setError(""); setResult(null); setCandidates([]);
+    try {
+      const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: "vi" }, timeout: 45000 });
+      setResult(response.data.data);
+    } catch (err: any) {
+      const message = err?.response?.data?.message;
+      setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
+    } finally { setLoading(false); }
+  }
+
   async function handleScan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token.trim()) return;
     const query = token.trim();
     const validationError = validateQuery(query);
     if (validationError) {
-      setResult(null);
+      setResult(null); setCandidates([]);
       setError(validationError);
       return;
     }
-    setLoading(true); setError(""); setResult(null);
+    const isEvmAddress = /^0x[a-fA-F0-9]{40}$/.test(query);
+    const isNativeAsset = ["BTC", "ETH", "BNB", "SOL"].includes(query.toUpperCase());
+    if (isEvmAddress || isNativeAsset) {
+      await runScan(query);
+      return;
+    }
+    setLoading(true); setError(""); setResult(null); setCandidates([]);
     try {
-      const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: "vi" }, timeout: 45000 });
-      setResult(response.data.data);
+      const response = await apiClient.get<{ data: TokenCandidate[] }>("/api/v1/news-feed/scanner/candidates", { params: { token: query }, timeout: 15000 });
+      setCandidates(response.data.data);
     } catch (err: any) {
       const message = err?.response?.data?.message;
       setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
@@ -78,6 +97,8 @@ export default function ScannerPage() {
       </section>
 
       {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><button type="button" onClick={() => { setError(""); setResult(null); }} className="shrink-0 rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">Nhập lại</button></div>}
+
+      {candidates.length > 0 && <section className="surface mt-6 p-6"><div className="flex items-center gap-2 eyebrow"><Search className="h-4 w-4 text-sky-400" /> Chọn đúng tài sản để quét</div><p className="mt-2 text-sm leading-6 text-slate-400">Symbol có thể tồn tại trên nhiều chain. Chọn chain và token đúng trước khi chạy scanner.</p><div className="mt-5 grid gap-3">{candidates.map((candidate) => <button key={`${candidate.network}-${candidate.address}`} type="button" onClick={() => { setToken(candidate.address); void runScan(candidate.address); }} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-100">{candidate.name}</span><span className="rounded-md border border-slate-700 bg-slate-950/40 px-2 py-0.5 text-xs text-slate-300">{candidate.network}</span>{candidate.contract_scan_supported ? <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">Có thể security scan</span> : <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-200">Market profile</span>}</div><div className="mt-1 break-all font-mono text-xs text-slate-500">{candidate.address}</div></div><div className="grid grid-cols-2 gap-4 text-xs text-slate-400 sm:text-right"><span>Thanh khoản <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.liquidity_usd)}</strong></span><span>Volume 24h <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.volume_h24)}</strong></span></div></button>)}</div></section>}
 
       {result && <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.4fr]">
         <div className={`surface p-6 ${result.score_available ? scoreTone(result.trust_score) : "border-sky-400/20 bg-sky-500/5 text-sky-100"}`}>

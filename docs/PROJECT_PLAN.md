@@ -30,6 +30,7 @@ npm run build
 - [x] Scanner route exists with clear input guidance and friendly native-coin errors.
 - [x] ENA smoke test succeeds against the fixed API.
 - [x] Render `market_asset` results without showing a false security score; show DexScreener liquidity and 24h volume instead. (production build passed)
+- [x] Require a chain/token choice for symbol searches, showing the five strongest candidates and their scan capability. (production build passed)
 - [ ] Add scan history for signed-in users.
 - [ ] Add network/address validation, loading timeout/retry and explicit explorer/source availability states.
 - [ ] Render Free versus Premium capability/limit information from API entitlements.
