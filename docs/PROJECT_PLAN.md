@@ -37,7 +37,8 @@ npm run build
 - [x] `/community` feed is restored and excludes crawler news posts.
 - [x] Authenticated users can create a public post, like/unlike, comment and share a link.
 - [x] Anonymous users can read the feed and are prompted to sign in before interaction.
-- [ ] Add API-backed author cards, profile pages and follow/unfollow.
+- [x] Add member profile page and author-filtered post feed.
+- [ ] Add API-backed author cards and follow/unfollow.
 - [ ] Add post detail route, edit/delete ownership UI, reactions count and comment count returned by API.
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
