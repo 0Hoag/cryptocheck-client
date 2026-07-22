@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Post, PaginationParams, PostsResponse } from "./types";
-import { getAuthToken } from "./auth";
+import { clearAuth, getAuthToken } from "./auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -21,6 +21,7 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.response?.status === 401) clearAuth();
         console.error("API Error:", error.response?.data || error.message);
         return Promise.reject(error);
     }
