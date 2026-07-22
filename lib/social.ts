@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api";
 
-export type CommunityPost = { id: string; content: string; author_id: string; permission: "public" | "private"; source_url?: string; created_at: string };
+export type CommunityAuthor = { id: string; username: string; avatar_url: string };
+export type CommunityPost = { id: string; content: string; author_id: string; author: CommunityAuthor; permission: "public" | "justme"; source_url?: string; created_at: string; reaction_count: number; comment_count: number };
 export type Reaction = { id: string; post_id: string; author_id: string; type: string; created_at: string };
 export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
 export type Follow = { id: string; author_id: string; followee_id: string; created_at: string };
