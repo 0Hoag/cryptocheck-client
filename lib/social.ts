@@ -5,8 +5,8 @@ export type Reaction = { id: string; post_id: string; author_id: string; type: s
 export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
 type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number } };
 
-export async function getCommunityPosts() {
-  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page: 1, limit: 50, sort: "-created_at" } });
+export async function getCommunityPosts(authorId?: string) {
+  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page: 1, limit: 50, sort: "-created_at", author_id: authorId } });
   return response.data.data.items.filter((post) => !post.source_url);
 }
 export async function createPost(content: string) { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission: "public", pin: false, file_ids: [], tagged_target: [] })).data.data; }
