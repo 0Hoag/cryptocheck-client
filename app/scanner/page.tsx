@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, CircleDollarSign, Loader2, Search, ShieldC
 import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
-type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; issues: ScanIssue[]; safe_features: string[] };
+type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
 type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; contract_scan_supported: boolean };
 
 function scoreTone(score: number) {
@@ -23,6 +23,17 @@ function analysisLabel(type: ScanResult["analysis_type"]) {
 function usd(value?: number) {
   if (value === undefined || value === null) return "Chưa có dữ liệu";
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+}
+
+function confidenceLabel(confidence?: ScanResult["market_confidence"]) {
+  if (confidence === "high") return "Cao";
+  if (confidence === "medium") return "Trung bình";
+  return "Thấp";
+}
+
+function dateFromUnixMs(value?: number) {
+  if (!value) return "Chưa có dữ liệu";
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
 }
 
 export default function ScannerPage() {
@@ -109,6 +120,7 @@ export default function ScannerPage() {
             <div className="mt-1 break-all font-mono text-xs text-slate-400">{result.address}</div>
             <div className="mt-4 flex flex-wrap gap-2"><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.network || "Unknown network"}</span><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{analysisLabel(result.analysis_type)}</span></div>
             {result.analysis_type === "market_asset" && <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Thanh khoản</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.liquidity_usd)}</div></div><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Khối lượng 24h</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.volume_h24)}</div></div></div>}
+            {result.analysis_type === "market_asset" && <div className="mt-3 rounded-lg border border-sky-400/15 bg-slate-950/35 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Nguồn dữ liệu</span><span className="font-medium text-slate-200">{result.market_provider || "Market provider"} · {result.dex_id || "DEX"}</span></div><div className="mt-2 flex items-center justify-between gap-3"><span className="text-slate-400">Pair từ</span><span className="font-medium text-slate-200">{dateFromUnixMs(result.pair_created_at)}</span></div><div className="mt-2 flex items-center justify-between gap-3"><span className="text-slate-400">Confidence dữ liệu</span><span className="font-medium text-sky-200">{confidenceLabel(result.market_confidence)}</span></div>{result.pair_url && <a href={result.pair_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex font-medium text-sky-300 hover:text-sky-200">Mở pair trên DexScreener ↗</a>}</div>}
           </div>
         </div>
         <div className="surface p-6">
