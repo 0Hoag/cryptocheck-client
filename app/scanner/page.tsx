@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, Loader2, Search, ShieldCheck, Sparkles } f
 import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
-type ScanResult = { network: string; name: string; address: string; trust_score: number; issues: ScanIssue[]; safe_features: string[] };
+type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset"; source_available: boolean; trust_score: number; issues: ScanIssue[]; safe_features: string[] };
 
 function scoreTone(score: number) {
   if (score >= 75) return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
@@ -31,11 +31,6 @@ export default function ScannerPage() {
     event.preventDefault();
     if (!token.trim()) return;
     const query = token.trim();
-    if (["BNB", "ETH", "MATIC", "POL", "SOL", "BTC"].includes(query.toUpperCase())) {
-      setResult(null);
-      setError(`“${query.toUpperCase()}” là native coin, không có smart contract để quét. Hãy dán địa chỉ contract của token (bắt đầu bằng 0x), ví dụ WBNB thay vì BNB.`);
-      return;
-    }
     const validationError = validateQuery(query);
     if (validationError) {
       setResult(null);
@@ -48,7 +43,7 @@ export default function ScannerPage() {
       setResult(response.data.data);
     } catch (err: any) {
       const message = err?.response?.data?.message;
-      setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử symbol chính xác; native coin như BNB/ETH không thể quét trực tiếp." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
+      setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
     } finally { setLoading(false); }
   }
 
@@ -67,7 +62,7 @@ export default function ScannerPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {loading ? "Đang quét" : "Quét token"}
             </button>
           </form>
-          <p className="mt-3 text-xs text-slate-500">Chỉ quét smart contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon; BNB/ETH là native coin nên không có contract để quét.</p>
+          <p className="mt-3 text-xs text-slate-500">Quét token contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon; BTC, ETH, BNB và SOL có báo cáo native asset riêng.</p>
         </div>
       </section>
 
@@ -80,7 +75,7 @@ export default function ScannerPage() {
           <div className="mt-6 border-t border-current/20 pt-5 text-sm">
             <div className="font-semibold text-slate-100">{result.name || "Unknown token"}</div>
             <div className="mt-1 break-all font-mono text-xs text-slate-400">{result.address}</div>
-            <div className="mt-4 inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.network || "Unknown network"}</div>
+            <div className="mt-4 flex flex-wrap gap-2"><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.network || "Unknown network"}</span><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.analysis_type === "native_asset" ? "Native asset report" : "Verified contract scan"}</span></div>
           </div>
         </div>
         <div className="surface p-6">
