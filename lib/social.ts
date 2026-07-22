@@ -1,0 +1,17 @@
+import { apiClient } from "@/lib/api";
+
+export type CommunityPost = { id: string; content: string; author_id: string; permission: "public" | "private"; source_url?: string; created_at: string };
+export type Reaction = { id: string; post_id: string; author_id: string; type: string; created_at: string };
+export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
+type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number } };
+
+export async function getCommunityPosts() {
+  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page: 1, limit: 50, sort: "-created_at" } });
+  return response.data.data.items.filter((post) => !post.source_url);
+}
+export async function createPost(content: string) { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission: "public", pin: false, file_ids: [], tagged_target: [] })).data.data; }
+export async function getReactions(postId: string) { return (await apiClient.get<{ data: ListResponse<Reaction> }>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } })).data.data.items; }
+export async function createReaction(postId: string) { return (await apiClient.post<{ data: Reaction }>("/api/v1/news-feed/posts/reaction", { post_id: postId, type: "like" })).data.data; }
+export async function deleteReaction(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/reaction/${id}`); }
+export async function getComments(postId: string) { return (await apiClient.get<{ data: ListResponse<Comment> }>("/api/v1/news-feed/comment", { params: { post_id: postId, page: 1, limit: 50 } })).data.data.items; }
+export async function createComment(postId: string, content: string) { return (await apiClient.post<{ data: Comment }>("/api/v1/news-feed/comment", { post_id: postId, content })).data.data; }

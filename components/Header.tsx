@@ -20,6 +20,7 @@ export default function Header() {
     const navigation = [
         { href: "/", label: language === "vi" ? "Trang chủ" : "Home" },
         { href: "/news", label: language === "vi" ? "Tin tức" : "News" },
+        { href: "/community", label: language === "vi" ? "Cộng đồng" : "Community" },
         { href: "/analysis", label: language === "vi" ? "Phân tích" : "Analysis" },
         { href: "/scanner", label: language === "vi" ? "Quét token" : "Scan token" },
     ];
