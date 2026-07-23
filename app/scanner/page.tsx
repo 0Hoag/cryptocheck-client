@@ -44,7 +44,11 @@ function dateFromUnixMs(value?: number) {
 }
 
 function TokenAvatar({ name, imageURL }: { name: string; imageURL?: string }) {
-  return imageURL ? <img src={imageURL} alt="" className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>;
+  const [imageFailed, setImageFailed] = useState(!imageURL);
+  if (imageFailed) {
+    return <span aria-label={`${name} token icon`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>;
+  }
+  return <img src={imageURL} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageFailed(true)} />;
 }
 
 export default function ScannerPage() {
