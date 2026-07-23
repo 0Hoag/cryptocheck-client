@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
@@ -43,12 +43,22 @@ function dateFromUnixMs(value?: number) {
   return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
 }
 
-function TokenAvatar({ name, imageURL }: { name: string; imageURL?: string }) {
-  const [imageFailed, setImageFailed] = useState(!imageURL);
-  if (imageFailed) {
+function publicTokenIcon(symbol: string) {
+  const normalized = symbol.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  return normalized ? `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${normalized}.png` : "";
+}
+
+function TokenAvatar({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
+  const imageSources = Array.from(new Set([imageURL, publicTokenIcon(symbol || "")].filter(Boolean))) as string[];
+  const [imageIndex, setImageIndex] = useState(0);
+
+  useEffect(() => setImageIndex(0), [imageURL, symbol]);
+
+  const imageSource = imageSources[imageIndex];
+  if (!imageSource) {
     return <span aria-label={`${name} token icon`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>;
   }
-  return <img src={imageURL} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageFailed(true)} />;
+  return <img src={imageSource} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageIndex((index) => index + 1)} />;
 }
 
 export default function ScannerPage() {
@@ -124,7 +134,7 @@ export default function ScannerPage() {
 
       {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><button type="button" onClick={() => { setError(""); setResult(null); }} className="shrink-0 rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">Nhập lại</button></div>}
 
-      {candidates.length > 0 && <section className="surface mt-6 p-6"><div className="flex items-center gap-2 eyebrow"><Search className="h-4 w-4 text-sky-400" /> Chọn đúng tài sản để quét</div><p className="mt-2 text-sm leading-6 text-slate-400">So sánh logo, giá, chain, thanh khoản, volume và DEX trước khi chọn token đúng.</p><div className="mt-5 grid gap-3">{candidates.map((candidate) => <button key={`${candidate.network}-${candidate.address}`} type="button" onClick={() => { setToken(candidate.address); void runScan(candidate.address); }} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 items-start gap-3"><TokenAvatar name={candidate.symbol || candidate.name} imageURL={candidate.image_url} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-100">{candidate.name} ({candidate.symbol})</span><span className="rounded-md border border-slate-700 bg-slate-950/40 px-2 py-0.5 text-xs text-slate-300">{candidate.network}</span>{candidate.contract_scan_supported ? <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">Có thể security scan</span> : <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-200">Market profile</span>}</div><div className="mt-1 break-all font-mono text-xs text-slate-500">{candidate.address}</div><div className="mt-1 text-xs text-slate-500">DEX: {candidate.dex_id || "Chưa rõ"} · Pair từ {dateFromUnixMs(candidate.pair_created_at)}</div></div></div><div className="grid grid-cols-3 gap-4 text-xs text-slate-400 sm:text-right"><span>Giá hiện tại <strong className="mt-1 block text-sm text-sky-200">{tokenPrice(candidate.price_usd)}</strong></span><span>Thanh khoản <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.liquidity_usd)}</strong></span><span>Volume 24h <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.volume_h24)}</strong></span></div></button>)}</div></section>}
+      {candidates.length > 0 && <section className="surface mt-6 p-6"><div className="flex items-center gap-2 eyebrow"><Search className="h-4 w-4 text-sky-400" /> Chọn đúng tài sản để quét</div><p className="mt-2 text-sm leading-6 text-slate-400">So sánh logo, giá, chain, thanh khoản, volume và DEX trước khi chọn token đúng.</p><div className="mt-5 grid gap-3">{candidates.map((candidate) => <button key={`${candidate.network}-${candidate.address}`} type="button" onClick={() => { setToken(candidate.address); void runScan(candidate.address); }} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 items-start gap-3"><TokenAvatar name={candidate.name} symbol={candidate.symbol} imageURL={candidate.image_url} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-100">{candidate.name} ({candidate.symbol})</span><span className="rounded-md border border-slate-700 bg-slate-950/40 px-2 py-0.5 text-xs text-slate-300">{candidate.network}</span>{candidate.contract_scan_supported ? <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">Có thể security scan</span> : <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-200">Market profile</span>}</div><div className="mt-1 break-all font-mono text-xs text-slate-500">{candidate.address}</div><div className="mt-1 text-xs text-slate-500">DEX: {candidate.dex_id || "Chưa rõ"} · Pair từ {dateFromUnixMs(candidate.pair_created_at)}</div></div></div><div className="grid grid-cols-3 gap-4 text-xs text-slate-400 sm:text-right"><span>Giá hiện tại <strong className="mt-1 block text-sm text-sky-200">{tokenPrice(candidate.price_usd)}</strong></span><span>Thanh khoản <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.liquidity_usd)}</strong></span><span>Volume 24h <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.volume_h24)}</strong></span></div></button>)}</div></section>}
 
       {result && <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.4fr]">
         <div className={`surface p-6 ${result.score_available ? scoreTone(result.trust_score) : "border-sky-400/20 bg-sky-500/5 text-sky-100"}`}>
@@ -132,7 +142,7 @@ export default function ScannerPage() {
           {result.score_available ? <div className="mt-2 text-6xl font-semibold tracking-tighter">{result.trust_score}<span className="text-2xl">/100</span></div> : <><div className="mt-3 flex items-center gap-2 text-xl font-semibold"><CircleDollarSign className="h-6 w-6 text-sky-300" />Đã nhận diện tài sản</div><p className="mt-2 text-sm leading-6 text-slate-300">Chưa có security score vì chain hoặc source code chưa được scanner hỗ trợ.</p></>}
           {result.analysis_type === "solana_mint" && <p className="mt-3 text-xs leading-5 text-slate-300">Điểm này chỉ phản ánh quyền mint/freeze của SPL token; không phải audit toàn bộ Solana program.</p>}
           <div className="mt-6 border-t border-current/20 pt-5 text-sm">
-            <div className="font-semibold text-slate-100">{result.name || "Unknown token"}</div>
+            <div className="flex items-center gap-3"><TokenAvatar name={result.name || "Unknown token"} symbol={result.analysis_type === "native_asset" ? result.address : result.name} imageURL={result.image_url} /><div className="font-semibold text-slate-100">{result.name || "Unknown token"}</div></div>
             <div className="mt-1 break-all font-mono text-xs text-slate-400">{result.address}</div>
             <div className="mt-4 flex flex-wrap gap-2"><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.network || "Unknown network"}</span><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{analysisLabel(result.analysis_type)}</span></div>
             {result.analysis_type === "market_asset" && <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Thanh khoản</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.liquidity_usd)}</div></div><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Khối lượng 24h</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.volume_h24)}</div></div></div>}

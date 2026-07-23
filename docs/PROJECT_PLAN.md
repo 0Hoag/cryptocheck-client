@@ -32,6 +32,7 @@ npm run build
 - [x] Render `market_asset` results without showing a false security score; show DexScreener liquidity and 24h volume instead. (production build passed)
 - [x] Require a chain/token choice for symbol searches, showing the five strongest candidates and their scan capability. (production build passed)
 - [x] Keep every scanner candidate identifiable: show its market logo when available and a letter-avatar fallback when the remote image is missing or fails to load. (production build passed)
+- [x] Add a symbol-based public icon CDN fallback and show an avatar on native-asset results, so top coins still have a recognizable logo when DexScreener has no image. (production build passed)
 - [x] Show market-data provider, DEX pair, pair age and confidence without conflating them with a security score. (production build passed)
 - [x] Render the limited Solana SPL mint-authority result with a dedicated score label and audit-scope warning. (production build passed)
 - [x] Add `/prelaunch` watchlist: public project list and authenticated submission form for website, socials, claimed chain, launch date and verification evidence. (production build passed)
