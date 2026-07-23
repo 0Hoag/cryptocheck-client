@@ -2,11 +2,13 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
 type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset" | "solana_mint"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; price_usd?: number; image_url?: string; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
 type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; price_usd: number; image_url?: string; dex_id?: string; pair_created_at?: number; contract_scan_supported: boolean };
+type ScanHistoryItem = { id: string; input: string; network: string; analysis_type: ScanResult["analysis_type"]; trust_score: number; score_available: boolean; engine_version: string; created_at: string };
 
 function scoreTone(score: number) {
   if (score >= 75) return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
@@ -63,6 +65,10 @@ function dateFromUnixMs(value?: number) {
   return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
 }
 
+function dateTime(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+}
+
 function publicTokenIcon(symbol: string) {
   const normalized = symbol.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
   return normalized ? `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${normalized}.png` : "";
@@ -87,6 +93,30 @@ export default function ScannerPage() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState("");
   const [candidates, setCandidates] = useState<TokenCandidate[]>([]);
+  const [history, setHistory] = useState<ScanHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function loadHistory() {
+    if (!getAuthToken()) {
+      setHistory([]);
+      return;
+    }
+    setHistoryLoading(true);
+    try {
+      const response = await apiClient.get<{ data: ScanHistoryItem[] }>("/api/v1/news-feed/scanner/history", { params: { limit: 8 } });
+      setHistory(response.data.data);
+    } catch {
+      // The shared API interceptor handles expired sessions. History is optional
+      // and must never block an otherwise usable scanner.
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadHistory();
+  }, []);
 
   function validateQuery(query: string) {
     if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {
@@ -101,6 +131,7 @@ export default function ScannerPage() {
     try {
       const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: "vi" }, timeout: 45000 });
       setResult(response.data.data);
+      void loadHistory();
     } catch (err: any) {
       const message = err?.response?.data?.message;
       setError(err?.code === "ECONNABORTED" ? "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút." : (message?.includes("DexScreener") ? "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng." : (message || "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.")));
@@ -153,6 +184,8 @@ export default function ScannerPage() {
       </section>
 
       {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><button type="button" onClick={() => { setError(""); setResult(null); }} className="shrink-0 rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">Nhập lại</button></div>}
+
+      {getAuthToken() && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">Tài khoản của bạn</div><h2 className="mt-1 text-base font-semibold text-white">Lịch sử quét gần đây</h2></div>{historyLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{history.length > 0 ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={item.id} type="button" onClick={() => { setToken(item.input); void runScan(item.input); }} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/55 px-3 py-2.5 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5"><div className="min-w-0"><div className="truncate font-mono text-sm font-semibold text-slate-100">{item.input}</div><div className="mt-1 text-xs text-slate-500">{item.network} · {dateTime(item.created_at)}</div></div>{item.score_available ? <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold ${scoreTone(item.trust_score)}`}>{item.trust_score}/100</span> : <span className="shrink-0 rounded-md bg-sky-500/10 px-2 py-1 text-xs font-medium text-sky-200">Market</span>}</button>)}</div> : !historyLoading && <p className="mt-3 text-sm text-slate-400">Chưa có lượt quét nào được lưu trong tài khoản này.</p>}</section>}
 
       {candidates.length > 0 && <section className="surface mt-6 p-6"><div className="flex items-center gap-2 eyebrow"><Search className="h-4 w-4 text-sky-400" /> Chọn đúng tài sản để quét</div><p className="mt-2 text-sm leading-6 text-slate-400">So sánh logo, giá, chain, thanh khoản, volume và DEX trước khi chọn token đúng.</p><div className="mt-5 grid gap-3">{candidates.map((candidate) => <button key={`${candidate.network}-${candidate.address}`} type="button" onClick={() => { setToken(candidate.address); void runScan(candidate.address); }} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 items-start gap-3"><TokenAvatar name={candidate.name} symbol={candidate.symbol} imageURL={candidate.image_url} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-100">{candidate.name} ({candidate.symbol})</span><span className="rounded-md border border-slate-700 bg-slate-950/40 px-2 py-0.5 text-xs text-slate-300">{candidate.network}</span>{candidate.contract_scan_supported ? <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">Có thể security scan</span> : <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-200">Market profile</span>}</div><div className="mt-1 break-all font-mono text-xs text-slate-500">{candidate.address}</div><div className="mt-1 text-xs text-slate-500">DEX: {candidate.dex_id || "Chưa rõ"} · Pair từ {dateFromUnixMs(candidate.pair_created_at)}</div></div></div><div className="grid grid-cols-3 gap-4 text-xs text-slate-400 sm:text-right"><span>Giá hiện tại <strong className="mt-1 block text-sm text-sky-200">{tokenPrice(candidate.price_usd)}</strong></span><span>Thanh khoản <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.liquidity_usd)}</strong></span><span>Volume 24h <strong className="mt-1 block text-sm text-slate-200">{usd(candidate.volume_h24)}</strong></span></div></button>)}</div></section>}
 
