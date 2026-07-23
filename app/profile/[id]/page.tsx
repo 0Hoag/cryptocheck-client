@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
-import { ArrowLeft, Loader2, UserCheck, UserPlus, UserRound } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Pencil, Trash2, UserCheck, UserPlus, UserRound, X } from "lucide-react";
 import { AuthUser, getAuthUser } from "@/lib/auth";
-import { CommunityPost, Follow, createFollow, deleteFollow, getCommunityPosts, getFollowCounts, getFollows } from "@/lib/social";
+import { CommunityPost, Follow, createFollow, deleteCommunityPost, deleteFollow, getCommunityPosts, getFollowCounts, getFollows, updateCommunityPost } from "@/lib/social";
 
 function getErrorMessage(error: any, fallback: string) {
   return error?.response?.data?.message || fallback;
@@ -20,6 +20,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [error, setError] = useState("");
   const [followError, setFollowError] = useState("");
   const [counts, setCounts] = useState({ followers: 0, following: 0 });
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [draftContent, setDraftContent] = useState("");
+  const [postMutationId, setPostMutationId] = useState<string | null>(null);
+  const [postError, setPostError] = useState("");
 
   useEffect(() => {
     const session = getAuthUser();
@@ -73,6 +77,50 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     }
   }
 
+  function startEditing(post: CommunityPost) {
+    setPostError("");
+    setDraftContent(post.content);
+    setEditingPostId(post.id);
+  }
+
+  async function savePost(post: CommunityPost) {
+    const content = draftContent.trim();
+    if (!content) {
+      setPostError("Nội dung bài viết không được để trống.");
+      return;
+    }
+    setPostMutationId(post.id);
+    setPostError("");
+    try {
+      await updateCommunityPost(post.id, content);
+      setPosts((current) => current.map((item) => item.id === post.id ? { ...item, content } : item));
+      setEditingPostId(null);
+      setDraftContent("");
+    } catch (requestError) {
+      setPostError(getErrorMessage(requestError, "Không thể cập nhật bài viết lúc này."));
+    } finally {
+      setPostMutationId(null);
+    }
+  }
+
+  async function removePost(post: CommunityPost) {
+    if (!window.confirm("Xoá bài viết này? Thao tác này không thể hoàn tác.")) return;
+    setPostMutationId(post.id);
+    setPostError("");
+    try {
+      await deleteCommunityPost(post.id);
+      setPosts((current) => current.filter((item) => item.id !== post.id));
+      if (editingPostId === post.id) {
+        setEditingPostId(null);
+        setDraftContent("");
+      }
+    } catch (requestError) {
+      setPostError(getErrorMessage(requestError, "Không thể xoá bài viết lúc này."));
+    } finally {
+      setPostMutationId(null);
+    }
+  }
+
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-3xl">
@@ -88,7 +136,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {followError && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{followError}</p>}
         </section>
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>}
-        {loading ? <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div> : <section className="mt-6"><h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Bài viết</h2><div className="mt-3 space-y-3">{posts.length ? posts.map((post) => <article key={post.id} className="surface p-5"><p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p></article>) : <div className="surface p-8 text-center text-sm text-slate-400">Chưa có bài viết công khai.</div>}</div></section>}
+        {loading ? <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div> : <section className="mt-6"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Bài viết</h2>{own && <span className="text-xs text-slate-500">Bạn có thể sửa hoặc xoá bài viết của mình.</span>}</div>{postError && <p role="alert" className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{postError}</p>}<div className="mt-3 space-y-3">{posts.length ? posts.map((post) => { const editing = editingPostId === post.id; const saving = postMutationId === post.id; return <article key={post.id} className="surface p-5"><div className="flex items-start justify-between gap-3">{editing ? <textarea value={draftContent} onChange={(event) => setDraftContent(event.target.value)} rows={4} className="min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm leading-6 text-slate-200 outline-none ring-sky-400/40 focus:ring-2" /> : <p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p>}{own && <div className="flex shrink-0 gap-1">{editing ? <><button type="button" aria-label="Lưu bài viết" title="Lưu bài viết" onClick={() => savePost(post)} disabled={saving} className="rounded-lg p-2 text-emerald-300 hover:bg-emerald-400/10 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}</button><button type="button" aria-label="Huỷ chỉnh sửa" title="Huỷ chỉnh sửa" onClick={() => { setEditingPostId(null); setDraftContent(""); }} disabled={saving} className="rounded-lg p-2 text-slate-400 hover:bg-slate-700/60"><X className="h-4 w-4" /></button></> : <><button type="button" aria-label="Sửa bài viết" title="Sửa bài viết" onClick={() => startEditing(post)} disabled={saving} className="rounded-lg p-2 text-sky-300 hover:bg-sky-400/10 disabled:opacity-50"><Pencil className="h-4 w-4" /></button><button type="button" aria-label="Xoá bài viết" title="Xoá bài viết" onClick={() => removePost(post)} disabled={saving} className="rounded-lg p-2 text-red-300 hover:bg-red-400/10 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</button></>}</div>}</div></article>; }) : <div className="surface p-8 text-center text-sm text-slate-400">Chưa có bài viết công khai.</div>}</div></section>}
       </div>
     </main>
   );

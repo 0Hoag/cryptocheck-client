@@ -12,6 +12,10 @@ export async function getCommunityPosts(authorId?: string) {
   return response.data.data.items.filter((post) => !post.source_url);
 }
 export async function createPost(content: string) { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission: "public", pin: false, file_ids: [], tagged_target: [] })).data.data; }
+export async function updateCommunityPost(id: string, content: string) {
+  await apiClient.put("/api/v1/news-feed/posts", { id, content, permission: "public", file_ids: [], tagged_target: [] });
+}
+export async function deleteCommunityPost(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/${id}`); }
 export async function getReactions(postId: string) { return (await apiClient.get<{ data: ListResponse<Reaction> }>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } })).data.data.items; }
 export async function createReaction(postId: string) { return (await apiClient.post<{ data: Reaction }>("/api/v1/news-feed/posts/reaction", { post_id: postId, type: "like" })).data.data; }
 export async function deleteReaction(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/reaction/${id}`); }

@@ -46,7 +46,8 @@ npm run build
 - [x] Add member profile page and author-filtered post feed.
 - [x] Add profile follow/unfollow control backed by the API (production build passed).
 - [x] Add API-backed follower/following counts to member profiles using Follow API pagination totals. (production build passed)
-- [ ] Add post detail route, edit/delete ownership UI, reactions count and comment count returned by API.
+- [ ] Add post detail route, reactions count and comment count returned by API.
+- [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
 - [ ] Add reporting, moderation state and content-safe rendering.
