@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 interface CoinListProps {
@@ -21,6 +21,7 @@ interface CoinData {
 
 export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps) {
     const [coins, setCoins] = useState<CoinData[]>([]);
+    const pendingTickersRef = useRef<Map<string, any>>(new Map());
 
     const coinMapping = [
         // Commodity (separated at top)
@@ -68,17 +69,31 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
         }));
         setCoins(initialCoins);
 
-        // WebSocket for Crypto
+        const trackedSymbols = new Set(coinMapping.map((coin) => coin.symbol));
+
+        // Binance sends every listed market through this stream. Buffer the
+        // small subset shown here, then commit React state once per second.
+        // This avoids a full CoinList render for every socket message.
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
+            data.forEach((ticker: any) => {
+                if (trackedSymbols.has(ticker.s)) pendingTickersRef.current.set(ticker.s, ticker);
+            });
+        };
+
+        const flushTickers = () => {
+            if (pendingTickersRef.current.size === 0) return;
+            const tickers = pendingTickersRef.current;
+            pendingTickersRef.current = new Map();
+
             setCoins(prevCoins => {
                 const newCoins = [...prevCoins];
                 let updated = false;
 
-                data.forEach((ticker: any) => {
+                tickers.forEach((ticker) => {
                     const index = newCoins.findIndex(c => c.symbol === ticker.s);
                     if (index !== -1) {
                         newCoins[index] = {
@@ -107,7 +122,13 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
             });
         };
 
-        return () => ws.close();
+        const flushInterval = window.setInterval(flushTickers, 1000);
+
+        return () => {
+            window.clearInterval(flushInterval);
+            pendingTickersRef.current.clear();
+            ws.close();
+        };
     }, []);
 
     return (
