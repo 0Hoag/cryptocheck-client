@@ -4,7 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { ArrowLeft, Loader2, UserCheck, UserPlus, UserRound } from "lucide-react";
 import { AuthUser, getAuthUser } from "@/lib/auth";
-import { CommunityPost, Follow, createFollow, deleteFollow, getCommunityPosts, getFollows } from "@/lib/social";
+import { CommunityPost, Follow, createFollow, deleteFollow, getCommunityPosts, getFollowCounts, getFollows } from "@/lib/social";
 
 function getErrorMessage(error: any, fallback: string) {
   return error?.response?.data?.message || fallback;
@@ -19,6 +19,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [followLoading, setFollowLoading] = useState(false);
   const [error, setError] = useState("");
   const [followError, setFollowError] = useState("");
+  const [counts, setCounts] = useState({ followers: 0, following: 0 });
 
   useEffect(() => {
     const session = getAuthUser();
@@ -31,11 +32,13 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     Promise.all([
       getCommunityPosts(id),
       session && session.id !== id ? getFollows(session.id, id) : Promise.resolve([]),
+      getFollowCounts(id),
     ])
-      .then(([profilePosts, follows]) => {
+      .then(([profilePosts, follows, followCounts]) => {
         if (cancelled) return;
         setPosts(profilePosts);
         setFollow(follows[0] || null);
+        setCounts(followCounts);
       })
       .catch(() => {
         if (!cancelled) setError("Không tải được hồ sơ hoặc bài viết của thành viên này.");
@@ -58,8 +61,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       if (follow) {
         await deleteFollow(follow.id);
         setFollow(null);
+        setCounts((current) => ({ ...current, followers: Math.max(0, current.followers - 1) }));
       } else {
         setFollow(await createFollow(id));
+        setCounts((current) => ({ ...current, followers: current.followers + 1 }));
       }
     } catch (requestError) {
       setFollowError(getErrorMessage(requestError, "Không thể cập nhật trạng thái theo dõi lúc này."));
@@ -76,7 +81,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="grid h-14 w-14 place-items-center rounded-full bg-sky-500/15 text-sky-300"><UserRound className="h-7 w-7" /></div>
-              <div><h1 className="text-xl font-semibold text-white">{name}</h1><p className="mt-1 text-sm text-slate-400">{own ? "Hồ sơ và bài viết của bạn" : "Thành viên CryptoCheck"}</p></div>
+              <div><h1 className="text-xl font-semibold text-white">{name}</h1><p className="mt-1 text-sm text-slate-400">{own ? "Hồ sơ và bài viết của bạn" : "Thành viên CryptoCheck"}</p><div className="mt-2 flex gap-4 text-xs text-slate-400"><span><strong className="text-slate-200">{counts.followers}</strong> người theo dõi</span><span><strong className="text-slate-200">{counts.following}</strong> đang theo dõi</span></div></div>
             </div>
             {!own && (viewer ? <button type="button" onClick={toggleFollow} disabled={followLoading} className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-2.5 text-sm font-semibold text-sky-100 transition hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60">{followLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : follow ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}{follow ? "Đang theo dõi" : "Theo dõi"}</button> : <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-400"><UserPlus className="h-4 w-4" />Đăng nhập để theo dõi</Link>)}
           </div>

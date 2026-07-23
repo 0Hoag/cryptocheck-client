@@ -20,5 +20,12 @@ export async function createComment(postId: string, content: string) { return (a
 export async function getFollows(authorId: string, followeeId?: string) {
   return (await apiClient.get<{ data: ListResponse<Follow> }>("/api/v1/news-feed/follow", { params: { author_id: authorId, followee_id: followeeId, page: 1, limit: 1 } })).data.data.items;
 }
+export async function getFollowCounts(userId: string) {
+  const [followers, following] = await Promise.all([
+    apiClient.get<{ data: ListResponse<Follow> }>("/api/v1/news-feed/follow", { params: { followee_id: userId, page: 1, limit: 1 } }),
+    apiClient.get<{ data: ListResponse<Follow> }>("/api/v1/news-feed/follow", { params: { author_id: userId, page: 1, limit: 1 } }),
+  ]);
+  return { followers: followers.data.data.meta.total || 0, following: following.data.data.meta.total || 0 };
+}
 export async function createFollow(followeeId: string) { return (await apiClient.post<{ data: Follow }>("/api/v1/news-feed/follow", { followee_id: followeeId })).data.data; }
 export async function deleteFollow(id: string) { await apiClient.delete(`/api/v1/news-feed/follow/${id}`); }
