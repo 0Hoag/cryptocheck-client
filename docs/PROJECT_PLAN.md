@@ -39,7 +39,8 @@ npm run build
 - [x] Add `/prelaunch` watchlist: public project list and authenticated submission form for website, socials, claimed chain, launch date and verification evidence. (production build passed)
 - [x] Let project owners edit and remove their own prelaunch watchlist records without exposing owner IDs. (production build passed)
 - [x] Add API-backed scan history for signed-in users, including saved input, scope type, score and timestamp; allow one-click re-scan. (production build passed)
-- [ ] Add network/address validation, loading timeout/retry and explicit explorer/source availability states.
+- [x] Add EVM address validation, request timeout/retry, explicit explorer/source availability states, and clear empty-24h-volume wording. (production build passed)
+- [ ] Add chain-aware address validation for non-EVM contracts before claiming direct-address coverage outside EVM.
 - [ ] Render Free versus Premium capability/limit information from API entitlements.
 
 ## 3. Community social experience
