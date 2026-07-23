@@ -19,8 +19,11 @@ export default function CryptoTicker() {
     useEffect(() => {
         const fetchPrices = async () => {
             try {
-                // Fetch 24h ticker price change statistics
-                const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
+                // Request only the symbols rendered in this global component.
+                // The unfiltered endpoint returns every Binance ticker (~hundreds of KB)
+                // and was being downloaded every 10 seconds on every route.
+                const requestedSymbols = encodeURIComponent(JSON.stringify(symbols));
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${requestedSymbols}`);
                 const data = await res.json();
 
                 const filtered = data
@@ -45,7 +48,7 @@ export default function CryptoTicker() {
         };
 
         fetchPrices();
-        const interval = setInterval(fetchPrices, 10000); // Update every 10s
+        const interval = setInterval(fetchPrices, 60000);
 
         return () => clearInterval(interval);
     }, []);
