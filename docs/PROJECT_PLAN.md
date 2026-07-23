@@ -28,6 +28,7 @@ npm run build
 ## 2. Scanner experience
 
 - [x] Scanner route exists with clear input guidance and friendly native-coin errors.
+- [x] Make landing and scanner copy explicit about public-source/data scope and the fact that automated results are not an audit or safety guarantee. (production build passed)
 - [x] ENA smoke test succeeds against the fixed API.
 - [x] Render `market_asset` results without showing a false security score; show DexScreener liquidity and 24h volume instead. (production build passed)
 - [x] Require a chain/token choice for symbol searches, showing the five strongest candidates and their scan capability. (production build passed)

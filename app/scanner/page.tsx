@@ -184,7 +184,7 @@ export default function ScannerPage() {
         <div className="relative max-w-2xl">
           <div className="mb-4 flex items-center gap-2 eyebrow"><ShieldCheck className="h-4 w-4 text-sky-400" /> Token safety scanner</div>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Kiểm tra rủi ro trước khi xuống tiền.</h1>
-          <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">CryptoCheck phân tích mã nguồn đã xác minh của smart contract để đưa ra điểm tin cậy, cảnh báo và các tín hiệu an toàn.</p>
+          <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">CryptoCheck phân tích tín hiệu từ source contract công khai đã verify và dữ liệu thị trường để hỗ trợ quyết định.</p>
           <form onSubmit={handleScan} className="mt-7 flex flex-col gap-3 sm:flex-row">
             <label className="sr-only" htmlFor="token">Địa chỉ contract</label>
             <input id="token" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Dán địa chỉ contract (0x...)" className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-950/80 px-4 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-slate-500 focus:border-sky-400" />
@@ -192,7 +192,7 @@ export default function ScannerPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {loading ? "Đang quét" : "Quét token"}
             </button>
           </form>
-          <p className="mt-3 text-xs text-slate-500">Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có market profile từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu.</p>
+          <p className="mt-3 text-xs text-slate-500">Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có market profile từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.</p>
         </div>
       </section>
 
