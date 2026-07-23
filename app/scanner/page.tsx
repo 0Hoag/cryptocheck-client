@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, CircleDollarSign, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
@@ -19,6 +19,26 @@ function analysisLabel(type: ScanResult["analysis_type"]) {
   if (type === "market_asset") return "Market profile";
   if (type === "solana_mint") return "Solana mint authority check";
   return "Verified contract scan";
+}
+
+function explorerSourceURL(network: string, address: string) {
+  const explorers: Record<string, string> = {
+    eth: "https://etherscan.io",
+    ethereum: "https://etherscan.io",
+    bsc: "https://bscscan.com",
+    base: "https://basescan.org",
+    arbitrum: "https://arbiscan.io",
+    polygon: "https://polygonscan.com",
+  };
+  const explorer = explorers[network.toLowerCase()];
+  return explorer && address.startsWith("0x") ? `${explorer}/address/${address}#code` : "";
+}
+
+function inspectionScope(result: ScanResult) {
+  if (result.analysis_type === "native_asset") return "Native asset không có token contract để đọc mã nguồn. Báo cáo chỉ mô tả phạm vi kỹ thuật của coin gốc.";
+  if (result.analysis_type === "solana_mint") return "Đã kiểm tra quyền mint/freeze của SPL mint. Đây không phải audit toàn bộ Solana program.";
+  if (result.source_available) return "Đã chạy rule-based checks trên source contract công khai đã được verify tại blockchain explorer.";
+  return "Chưa có source contract công khai phù hợp để phân tích. Kết quả này chỉ là market profile, không có điểm bảo mật.";
 }
 
 function usd(value?: number) {
@@ -145,6 +165,7 @@ export default function ScannerPage() {
             <div className="flex items-center gap-3"><TokenAvatar name={result.name || "Unknown token"} symbol={result.analysis_type === "native_asset" ? result.address : result.name} imageURL={result.image_url} /><div className="font-semibold text-slate-100">{result.name || "Unknown token"}</div></div>
             <div className="mt-1 break-all font-mono text-xs text-slate-400">{result.address}</div>
             <div className="mt-4 flex flex-wrap gap-2"><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{result.network || "Unknown network"}</span><span className="inline-flex rounded-md border border-slate-700 bg-slate-950/35 px-2 py-1 text-xs font-medium text-slate-300">{analysisLabel(result.analysis_type)}</span></div>
+            <div className="mt-5 rounded-xl border border-amber-400/20 bg-amber-500/5 p-3 text-xs leading-5 text-slate-300"><div className="flex items-center gap-2 font-semibold text-amber-100"><Info className="h-4 w-4 shrink-0" /> Phạm vi kiểm tra</div><p className="mt-2">{inspectionScope(result)}</p>{result.source_available && <p className="mt-2 text-slate-400">Nguồn code: blockchain explorer của chain tương ứng. Dữ liệu thị trường (nếu có): {result.market_provider || "DexScreener"}.</p>}{explorerSourceURL(result.network, result.address) && <a href={explorerSourceURL(result.network, result.address)} target="_blank" rel="noreferrer" className="mt-2 inline-flex font-medium text-sky-300 hover:text-sky-200">Xem source public trên explorer ↗</a>}<p className="mt-2 text-slate-400">Kết quả là tín hiệu tự động, không phải chứng nhận audit hoặc cam kết tài sản an toàn.</p></div>
             {result.analysis_type === "market_asset" && <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Thanh khoản</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.liquidity_usd)}</div></div><div className="rounded-lg border border-sky-400/15 bg-slate-950/35 p-3"><div className="text-xs text-slate-400">Khối lượng 24h</div><div className="mt-1 text-sm font-semibold text-slate-100">{usd(result.volume_h24)}</div></div></div>}
             {result.analysis_type === "market_asset" && <div className="mt-3 rounded-lg border border-sky-400/15 bg-slate-950/35 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Nguồn dữ liệu</span><span className="font-medium text-slate-200">{result.market_provider || "Market provider"} · {result.dex_id || "DEX"}</span></div><div className="mt-2 flex items-center justify-between gap-3"><span className="text-slate-400">Pair từ</span><span className="font-medium text-slate-200">{dateFromUnixMs(result.pair_created_at)}</span></div><div className="mt-2 flex items-center justify-between gap-3"><span className="text-slate-400">Confidence dữ liệu</span><span className="font-medium text-sky-200">{confidenceLabel(result.market_confidence)}</span></div>{result.pair_url && <a href={result.pair_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex font-medium text-sky-300 hover:text-sky-200">Mở pair trên DexScreener ↗</a>}</div>}
           </div>
