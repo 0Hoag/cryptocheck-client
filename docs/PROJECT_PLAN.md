@@ -33,6 +33,7 @@ npm run build
 - [x] Require a chain/token choice for symbol searches, showing the five strongest candidates and their scan capability. (production build passed)
 - [x] Show market-data provider, DEX pair, pair age and confidence without conflating them with a security score. (production build passed)
 - [x] Render the limited Solana SPL mint-authority result with a dedicated score label and audit-scope warning. (production build passed)
+- [x] Add `/prelaunch` watchlist: public project list and authenticated submission form for website, socials, claimed chain, launch date and verification evidence. (production build passed)
 - [ ] Add scan history for signed-in users.
 - [ ] Add network/address validation, loading timeout/retry and explicit explorer/source availability states.
 - [ ] Render Free versus Premium capability/limit information from API entitlements.
