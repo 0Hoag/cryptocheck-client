@@ -67,6 +67,7 @@ npm run build
 
 ## 5. Quality and release
 
+- [x] Add standalone Docker production configuration for the split client repository. (Next production build passed)
 - [ ] Responsive/mobile audit of all routes.
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
 - [ ] Add component/integration tests for auth, scanner and community states.
