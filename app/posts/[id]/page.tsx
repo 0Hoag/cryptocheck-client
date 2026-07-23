@@ -8,7 +8,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import Image from "next/image";
-import { Share2, Clock, ExternalLink, Loader2 } from "lucide-react";
+import { Share2, Clock, ExternalLink, Heart, Loader2, MessageCircle, UserRound } from "lucide-react";
 import CryptoRanking from "@/components/CryptoRanking";
 import MarketWidgets from "@/components/MarketWidgets";
 import RelatedNews from "@/components/RelatedNews";
@@ -61,7 +61,9 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const imageUrl = extractImageUrl(post.content);
     // Remove image md syntax from content to avoid duplicate images
     const cleanContent = post.content.replace(/!\[.*?\]\(.*?\)/g, "").trim();
-    const sourceName = post.source_url ? getSourceName(post.source_url) : "Source";
+    const isCommunityPost = !post.source_url;
+    const sourceName = post.source_url ? getSourceName(post.source_url) : "Cộng đồng";
+    const postTitle = post.title || "Bài viết cộng đồng";
 
     return (
         <main className="min-h-screen bg-[#050505] text-gray-200 font-sans selection:bg-cyan-500/20 selection:text-cyan-200 pb-20">
@@ -71,7 +73,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                 <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-2 text-xs text-gray-500">
                     <Link href="/" className="hover:text-white transition-colors">Home</Link>
                     <span>/</span>
-                    <span className="text-gray-300 truncate max-w-[300px]">{post.title}</span>
+                    <span className="text-gray-300 truncate max-w-[300px]">{postTitle}</span>
                 </div>
             </div>
 
@@ -89,7 +91,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                     <div className="col-span-1 lg:col-span-8 xl:col-span-6">
                         <article>
                             <h1 className="text-3xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-6">
-                                {post.title}
+                                {postTitle}
                             </h1>
 
                             <div className="flex items-center gap-4 text-xs text-gray-400 mb-8 border-b border-white/5 pb-6">
@@ -100,6 +102,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                 <span className="bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">
                                     {sourceName}
                                 </span>
+                                {isCommunityPost && post.author && (
+                                    <Link href={`/profile/${post.author.id}`} className="inline-flex items-center gap-1.5 text-gray-300 hover:text-cyan-300 transition-colors">
+                                        <UserRound className="w-4 h-4" />
+                                        {post.author.username || "Thành viên CryptoCheck"}
+                                    </Link>
+                                )}
                             </div>
 
                             {/* Featured Image */}
@@ -128,6 +136,13 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                 <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
                                     <Share2 className="w-4 h-4" /> Share this article
                                 </button>
+
+                                {isCommunityPost && (
+                                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                                        <span className="inline-flex items-center gap-1.5"><Heart className="w-4 h-4 text-rose-300" />{post.reaction_count || 0}</span>
+                                        <span className="inline-flex items-center gap-1.5"><MessageCircle className="w-4 h-4 text-cyan-300" />{post.comment_count || 0}</span>
+                                    </div>
+                                )}
 
                                 {post.source_url && (
                                     <a

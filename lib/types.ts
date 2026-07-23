@@ -11,6 +11,13 @@ export interface Post {
     created_at: string;
     updated_at: string;
     deleted_at?: string | null;
+    reaction_count?: number;
+    comment_count?: number;
+    author?: {
+        id: string;
+        username: string;
+        avatar_url?: string;
+    };
 }
 
 export interface PaginationParams {
