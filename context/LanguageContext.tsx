@@ -22,3 +22,11 @@ export function useLanguage() {
   if (!value) throw new Error("useLanguage must be used inside LanguageProvider");
   return value;
 }
+
+export function translate(language: Language, vietnamese: string, english: string) {
+  return language === "vi" ? vietnamese : english;
+}
+
+export function languageLocale(language: Language) {
+  return language === "vi" ? "vi-VN" : "en-US";
+}

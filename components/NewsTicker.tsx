@@ -6,8 +6,10 @@ import { Post } from "@/lib/types";
 import { truncateText } from "@/lib/utils";
 import { Zap } from "lucide-react";
 import Link from "next/link";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 export default function NewsTicker() {
+    const { language } = useLanguage();
     const [headlines, setHeadlines] = useState<Post[]>([]);
 
     useEffect(() => {
@@ -29,7 +31,7 @@ export default function NewsTicker() {
         <div className="w-full bg-cyan-950/20 border-b border-cyan-900/30 overflow-hidden py-2 flex items-center relative z-30">
             <div className="flex items-center gap-2 px-4 border-r border-cyan-500/20 shrink-0 bg-[#050510] z-10 text-xs font-bold text-cyan-500 uppercase tracking-wider">
                 <Zap className="w-3 h-3 text-cyan-400 fill-cyan-400 animate-pulse" />
-                Breaking News
+                {translate(language, "Tin nóng", "Breaking news")}
             </div>
 
             {/* Ticker Container */}

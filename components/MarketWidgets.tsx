@@ -1,5 +1,8 @@
+"use client";
+
 import { TrendingUp, TrendingDown, Activity, Calendar, Wallet, Clock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 interface FNGData {
     value: string;
@@ -9,6 +12,7 @@ interface FNGData {
 }
 
 export default function MarketWidgets() {
+    const { language } = useLanguage();
     const [fng, setFng] = useState<FNGData | null>(null);
     const [loadingFng, setLoadingFng] = useState(true);
 
@@ -56,7 +60,7 @@ export default function MarketWidgets() {
             <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase flex items-center gap-2">
-                        <Activity className="w-3 h-3" /> Market Sentiment
+                        <Activity className="w-3 h-3" /> {translate(language, "Tâm lý thị trường", "Market sentiment")}
                     </h3>
                 </div>
 
@@ -68,7 +72,7 @@ export default function MarketWidgets() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-end">
                             <div>
-                                <div className="text-gray-500 text-[10px] uppercase font-bold mb-1">Fear & Greed Index</div>
+                                <div className="text-gray-500 text-[10px] uppercase font-bold mb-1">{translate(language, "Chỉ số sợ hãi & tham lam", "Fear & Greed index")}</div>
                                 <div className={`text-2xl font-bold ${getFngColor(parseInt(fng.value))}`}>
                                     {fng.value}
                                 </div>
@@ -91,12 +95,12 @@ export default function MarketWidgets() {
                         </div>
 
                         <div className="flex justify-between text-[10px] font-medium text-gray-500 pt-1">
-                            <span>Extreme Fear 0</span>
-                            <span>100 Extreme Greed</span>
+                            <span>{translate(language, "Cực sợ hãi 0", "Extreme fear 0")}</span>
+                            <span>{translate(language, "100 Cực tham lam", "100 Extreme greed")}</span>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-gray-500 text-xs">Failed to load data</div>
+                    <div className="text-gray-500 text-xs">{translate(language, "Không tải được dữ liệu", "Failed to load data")}</div>
                 )}
             </div>
 
@@ -104,9 +108,9 @@ export default function MarketWidgets() {
             <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase flex items-center gap-2">
-                        <Calendar className="w-3 h-3" /> Economic Calendar
+                        <Calendar className="w-3 h-3" /> {translate(language, "Lịch kinh tế", "Economic calendar")}
                     </h3>
-                    <span className="text-[10px] text-blue-400 cursor-pointer hover:underline">VIEW ALL</span>
+                    <span className="text-[10px] text-blue-400 cursor-pointer hover:underline">{translate(language, "XEM TẤT CẢ", "VIEW ALL")}</span>
                 </div>
 
                 <div className="space-y-4">
@@ -138,7 +142,7 @@ export default function MarketWidgets() {
             <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase flex items-center gap-2">
-                        <Wallet className="w-3 h-3" /> On-Chain Flows
+                        <Wallet className="w-3 h-3" /> {translate(language, "Dòng tiền on-chain", "On-chain flows")}
                     </h3>
                 </div>
 
@@ -148,7 +152,7 @@ export default function MarketWidgets() {
                             <TrendingDown className="w-4 h-4" />
                         </div>
                         <div>
-                            <div className="text-white text-xs font-medium">Exchange Outflow</div>
+                            <div className="text-white text-xs font-medium">{translate(language, "Dòng tiền rút khỏi sàn", "Exchange outflow")}</div>
                             <div className="text-green-400 text-[10px] font-bold">-45,200 BTC <span className="text-gray-500 font-normal">(24h)</span></div>
                         </div>
                     </div>
@@ -157,8 +161,8 @@ export default function MarketWidgets() {
                             <Activity className="w-4 h-4" />
                         </div>
                         <div>
-                            <div className="text-white text-xs font-medium">Whale Alert</div>
-                            <div className="text-blue-400 text-[10px] font-bold">12,000 ETH <span className="text-gray-500 font-normal">moved</span></div>
+                            <div className="text-white text-xs font-medium">{translate(language, "Cảnh báo cá voi", "Whale alert")}</div>
+                            <div className="text-blue-400 text-[10px] font-bold">12,000 ETH <span className="text-gray-500 font-normal">{translate(language, "đã dịch chuyển", "moved")}</span></div>
                         </div>
                     </div>
                 </div>

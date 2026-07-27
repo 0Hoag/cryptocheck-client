@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUp, ArrowDown, Activity } from "lucide-react";
+import { useLanguage, languageLocale, translate } from "@/context/LanguageContext";
 
 interface CryptoPrice {
     symbol: string;
@@ -10,6 +11,7 @@ interface CryptoPrice {
 }
 
 export default function CryptoTicker() {
+    const { language } = useLanguage();
     const [prices, setPrices] = useState<CryptoPrice[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export default function CryptoTicker() {
                     .filter((item: any) => symbols.includes(item.symbol))
                     .map((item: any) => ({
                         symbol: item.symbol.replace("USDT", ""),
-                        price: parseFloat(item.lastPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        price: parseFloat(item.lastPrice).toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                         percentChange: parseFloat(item.priceChangePercent),
                     }));
 
@@ -51,7 +53,7 @@ export default function CryptoTicker() {
         const interval = setInterval(fetchPrices, 60000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [language]);
 
     if (loading) return null;
 
@@ -59,7 +61,7 @@ export default function CryptoTicker() {
         <div className="w-full bg-[#0a0a0a] border-b border-white/5 overflow-hidden py-2 flex items-center relative z-40">
             <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0 bg-[#0a0a0a] z-10 text-xs font-bold text-gray-400 uppercase tracking-wider">
                 <Activity className="w-3 h-3 text-cyan-500" />
-                Live Market
+                {translate(language, "Thị trường trực tiếp", "Live market")}
             </div>
 
             {/* Ticker Container */}
