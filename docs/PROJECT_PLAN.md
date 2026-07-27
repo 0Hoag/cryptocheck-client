@@ -41,7 +41,7 @@ npm run build
 - [x] Let project owners edit and remove their own prelaunch watchlist records without exposing owner IDs. (production build passed)
 - [x] Add API-backed scan history for signed-in users, including saved input, scope type, score and timestamp; allow one-click re-scan. (production build passed)
 - [x] Add EVM address validation, request timeout/retry, explicit explorer/source availability states, and clear empty-24h-volume wording. (production build passed)
-- [ ] Add chain-aware address validation for non-EVM contracts before claiming direct-address coverage outside EVM.
+- [x] Add chain-aware address validation for non-EVM contracts before claiming direct-address coverage outside EVM. (Solana SPL mint base58 validation; unsupported direct addresses are stopped locally with actionable guidance; production build passed)
 - [ ] Render Free versus Premium capability/limit information from API entitlements.
 
 ## 3. Community social experience

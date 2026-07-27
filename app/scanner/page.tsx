@@ -80,6 +80,18 @@ function publicTokenIcon(symbol: string) {
   return normalized ? `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${normalized}.png` : "";
 }
 
+function isEvmAddress(value: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+function isSolanaMintAddress(value: string) {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+}
+
+function looksLikeDirectAddress(value: string) {
+  return value.length >= 30 && !/\s/.test(value);
+}
+
 function TokenAvatar({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
   const imageSources = Array.from(new Set([imageURL, publicTokenIcon(symbol || "")].filter(Boolean))) as string[];
   const [imageIndex, setImageIndex] = useState(0);
@@ -129,6 +141,9 @@ export default function ScannerPage() {
     if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {
       return "Địa chỉ EVM phải gồm 0x và đúng 40 ký tự hexadecimal. Nếu quét bằng mã token, hãy nhập symbol như ENA thay vì địa chỉ dở dang.";
     }
+    if (looksLikeDirectAddress(query) && !isEvmAddress(query) && !isSolanaMintAddress(query)) {
+      return "Địa chỉ trực tiếp hiện hỗ trợ EVM (0x + 40 ký tự) hoặc Solana SPL mint (base58, 32–44 ký tự). Với chain khác, hãy nhập symbol để chọn đúng market profile trước.";
+    }
     if (query.length > 128) return "Giá trị quét quá dài. Hãy nhập symbol hoặc địa chỉ contract hợp lệ.";
     return "";
   }
@@ -156,9 +171,9 @@ export default function ScannerPage() {
       setError(validationError);
       return;
     }
-    const isEvmAddress = /^0x[a-fA-F0-9]{40}$/.test(query);
+    const directAddress = isEvmAddress(query) || isSolanaMintAddress(query);
     const isNativeAsset = ["BTC", "ETH", "BNB", "SOL"].includes(query.toUpperCase());
-    if (isEvmAddress || isNativeAsset) {
+    if (directAddress || isNativeAsset) {
       await runScan(query);
       return;
     }
@@ -186,13 +201,13 @@ export default function ScannerPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Kiểm tra rủi ro trước khi xuống tiền.</h1>
           <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">CryptoCheck phân tích tín hiệu từ source contract công khai đã verify và dữ liệu thị trường để hỗ trợ quyết định.</p>
           <form onSubmit={handleScan} className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <label className="sr-only" htmlFor="token">Địa chỉ contract</label>
-            <input id="token" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Dán địa chỉ contract (0x...)" className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-950/80 px-4 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-slate-500 focus:border-sky-400" />
+            <label className="sr-only" htmlFor="token">Symbol hoặc địa chỉ contract</label>
+            <input id="token" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Symbol, EVM 0x... hoặc Solana mint" className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-950/80 px-4 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-slate-500 focus:border-sky-400" />
             <button disabled={loading || !token.trim()} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {loading ? "Đang quét" : "Quét token"}
             </button>
           </form>
-          <p className="mt-3 text-xs text-slate-500">Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có market profile từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.</p>
+          <p className="mt-3 text-xs text-slate-500">Quét trực tiếp hỗ trợ địa chỉ EVM và Solana SPL mint. Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có market profile từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.</p>
         </div>
       </section>
 
