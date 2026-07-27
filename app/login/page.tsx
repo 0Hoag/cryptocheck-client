@@ -24,7 +24,8 @@ export default function LoginPage() {
       const token = login.data.data.token;
       const me = await apiClient.get<{ data: AuthUser }>("/api/v1/news-feed/users/myinfo", { headers: { Authorization: `Bearer ${token}` } });
       saveAuth(token, me.data.data);
-      router.replace("/");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
     } catch (err: any) {
       setError(err?.response?.data?.message || (vi ? "Không thể đăng nhập. Hãy kiểm tra lại số điện thoại và mật khẩu." : "Unable to sign in. Check your phone number and password."));
     } finally { setLoading(false); }

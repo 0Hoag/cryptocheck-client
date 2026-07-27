@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Globe2, LogIn, LogOut, Menu, ShieldCheck, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Activity, ChevronDown, Globe2, LogIn, LogOut, Menu, ShieldCheck, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { clearAuth, getAuthUser, AuthUser } from "@/lib/auth";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -11,11 +11,20 @@ export default function Header() {
     const pathname = usePathname();
     const { language, setLanguage } = useLanguage();
     const [user, setUser] = useState<AuthUser | null>(null);
+    const [accountOpen, setAccountOpen] = useState(false);
+    const accountMenuRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const sync = () => setUser(getAuthUser());
         sync();
         window.addEventListener("cryptocheck-auth-change", sync);
         return () => window.removeEventListener("cryptocheck-auth-change", sync);
+    }, []);
+    useEffect(() => {
+        const closeOnOutsideClick = (event: MouseEvent) => {
+            if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) setAccountOpen(false);
+        };
+        window.addEventListener("mousedown", closeOnOutsideClick);
+        return () => window.removeEventListener("mousedown", closeOnOutsideClick);
     }, []);
     const navigation = [
         { href: "/", label: language === "vi" ? "Trang chủ" : "Home" },
@@ -45,7 +54,7 @@ export default function Header() {
                     <div className="flex items-center gap-2">
                     <button onClick={() => setLanguage(language === "vi" ? "en" : "vi")} className="hidden h-9 items-center gap-1.5 rounded-lg border border-slate-800 px-2.5 text-xs font-semibold text-slate-300 transition hover:bg-slate-900 sm:flex" aria-label="Đổi ngôn ngữ"><Globe2 className="h-3.5 w-3.5" />{language === "vi" ? "VN" : "EN"}</button>
                     <div className="hidden items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 sm:flex"><Activity className="h-3.5 w-3.5" /> Live</div>
-                    {user ? <><Link href={`/profile/${user.id}`} className="hidden items-center gap-1.5 rounded-lg border border-slate-800 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-900 sm:flex"><UserRound className="h-4 w-4 text-sky-400" />{user.username}</Link><button onClick={() => clearAuth()} className="hidden rounded-lg p-2 text-slate-400 transition hover:bg-slate-900 hover:text-white sm:grid" aria-label="Đăng xuất"><LogOut className="h-4 w-4" /></button></> : <><Link href="/login" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white sm:flex"><LogIn className="h-4 w-4" />{language === "vi" ? "Đăng nhập" : "Sign in"}</Link><Link href="/register" className="hidden rounded-lg bg-sky-500 px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 sm:block">{language === "vi" ? "Đăng ký" : "Sign up"}</Link></>}
+                    {user ? <div ref={accountMenuRef} className="relative hidden sm:block"><button type="button" onClick={() => setAccountOpen((current) => !current)} aria-expanded={accountOpen} aria-haspopup="menu" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-900"><UserRound className="h-4 w-4 text-sky-400" />{user.username}<ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition ${accountOpen ? "rotate-180" : ""}`} /></button>{accountOpen && <div role="menu" className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-800 bg-slate-950 p-1.5 shadow-xl shadow-black/40"><Link role="menuitem" href="/account" onClick={() => setAccountOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-900"><UserRound className="h-4 w-4 text-sky-300" />Tài khoản</Link><Link role="menuitem" href={`/profile/${user.id}`} onClick={() => setAccountOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-900"><UserRound className="h-4 w-4 text-sky-300" />Hồ sơ công khai</Link><div className="my-1 h-px bg-slate-800" /><button type="button" role="menuitem" onClick={() => { setAccountOpen(false); clearAuth(); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-200 hover:bg-red-500/10"><LogOut className="h-4 w-4" />Đăng xuất</button></div>}</div> : <><Link href="/login" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white sm:flex"><LogIn className="h-4 w-4" />{language === "vi" ? "Đăng nhập" : "Sign in"}</Link><Link href="/register" className="hidden rounded-lg bg-sky-500 px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 sm:block">{language === "vi" ? "Đăng ký" : "Sign up"}</Link></>}
                     <button className="grid h-9 w-9 place-items-center rounded-lg border border-slate-800 text-slate-300 md:hidden" aria-label="Mở menu"><Menu className="h-4 w-4" /></button>
                 </div>
             </div>

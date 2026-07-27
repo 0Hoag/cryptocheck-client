@@ -16,7 +16,7 @@
 - [x] Login and registration forms call the API and persist the session locally.
 - [x] Google sign-in affordance is visible as “coming soon”; no fake OAuth flow is enabled.
 - [x] Clear expired/401 local sessions so stale authentication is not reused (production build passed).
-- [ ] Add route protection and a full user profile menu/page.
+- [x] Add route protection and a full user profile menu/page. (protected `/account` route redirects unauthenticated users to login and returns them after sign-in; production build passed)
 - [ ] Replace localStorage-only auth with the final secure session strategy agreed with the API.
 
 Pass checks:
