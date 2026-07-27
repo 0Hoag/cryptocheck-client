@@ -1,23 +1,24 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { formatDistanceToNow, format } from "date-fns";
+import { enUS, vi } from "date-fns/locale";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function formatDate(dateString: string): string {
+export function formatDate(dateString: string, language: "vi" | "en" = "vi"): string {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     // If less than 24 hours, show relative time
     if (diffInHours < 24) {
-        return formatDistanceToNow(date, { addSuffix: true });
+        return formatDistanceToNow(date, { addSuffix: true, locale: language === "vi" ? vi : enUS });
     }
 
     // Otherwise show formatted date
-    return format(date, "MMM d, yyyy");
+    return format(date, "MMM d, yyyy", { locale: language === "vi" ? vi : enUS });
 }
 
 export function extractDomain(url: string): string {
@@ -53,5 +54,4 @@ export function extractImageUrl(content: string): string | null {
     const match = content.match(/!\[.*?\]\((https?:\/\/[^\)]+)\)/);
     return match ? match[1] : null;
 }
-
 

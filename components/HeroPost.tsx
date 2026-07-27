@@ -1,13 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { Post } from "@/lib/types";
 import { formatDate, getSourceName, extractImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 interface HeroPostProps {
     post: Post;
 }
 
 export default function HeroPost({ post }: HeroPostProps) {
+    const { language } = useLanguage();
     const imageUrl = extractImageUrl(post.content);
     const sourceName = post.source_url ? getSourceName(post.source_url) : "CryptoNews";
 
@@ -29,7 +33,7 @@ export default function HeroPost({ post }: HeroPostProps) {
             <div className="absolute inset-0 z-10 flex flex-col justify-end p-6 md:p-10 max-w-3xl">
                 <div className="mb-4 flex items-center gap-2">
                     <span className="rounded-md bg-sky-400 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-950">
-                        Tin nổi bật
+                        {translate(language, "Tin nổi bật", "Featured story")}
                     </span>
                     <span className="flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-950/55 px-2 py-1 text-xs font-medium text-slate-200 backdrop-blur-sm">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-400" />
@@ -44,7 +48,7 @@ export default function HeroPost({ post }: HeroPostProps) {
                 <div className="flex items-center gap-4 text-xs text-slate-300 md:text-sm">
                     <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
-                        {formatDate(post.created_at)}
+                        {formatDate(post.created_at, language)}
                     </span>
                 </div>
             </div>

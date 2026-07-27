@@ -13,8 +13,10 @@ import CryptoRanking from "@/components/CryptoRanking";
 import MarketWidgets from "@/components/MarketWidgets";
 import RelatedNews from "@/components/RelatedNews";
 import rehypeRaw from "rehype-raw";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { language } = useLanguage();
     const { id } = use(params);
     const [post, setPost] = useState<Post | null>(null);
     const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
@@ -56,14 +58,14 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         );
     }
 
-    if (!post) return <div className="text-white text-center py-20 min-h-screen bg-[#050505]">Post not found</div>;
+    if (!post) return <div className="text-white text-center py-20 min-h-screen bg-[#050505]">{translate(language, "Không tìm thấy bài viết", "Post not found")}</div>;
 
     const imageUrl = extractImageUrl(post.content);
     // Remove image md syntax from content to avoid duplicate images
     const cleanContent = post.content.replace(/!\[.*?\]\(.*?\)/g, "").trim();
     const isCommunityPost = !post.source_url;
-    const sourceName = post.source_url ? getSourceName(post.source_url) : "Cộng đồng";
-    const postTitle = post.title || "Bài viết cộng đồng";
+    const sourceName = post.source_url ? getSourceName(post.source_url) : translate(language, "Cộng đồng", "Community");
+    const postTitle = post.title || translate(language, "Bài viết cộng đồng", "Community post");
 
     return (
         <main className="min-h-screen bg-[#050505] text-gray-200 font-sans selection:bg-cyan-500/20 selection:text-cyan-200 pb-20">
@@ -71,7 +73,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             {/* Breadcrumb / Nav */}
             <div className="border-b border-white/5 bg-[#050505]">
                 <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-2 text-xs text-gray-500">
-                    <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                    <Link href="/" className="hover:text-white transition-colors">{translate(language, "Trang chủ", "Home")}</Link>
                     <span>/</span>
                     <span className="text-gray-300 truncate max-w-[300px]">{postTitle}</span>
                 </div>
@@ -97,7 +99,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                             <div className="flex items-center gap-4 text-xs text-gray-400 mb-8 border-b border-white/5 pb-6">
                                 <span className="flex items-center gap-1.5">
                                     <Clock className="w-4 h-4" />
-                                    {formatDate(post.created_at)}
+                                    {formatDate(post.created_at, language)}
                                 </span>
                                 <span className="bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">
                                     {sourceName}
@@ -105,7 +107,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                 {isCommunityPost && post.author && (
                                     <Link href={`/profile/${post.author.id}`} className="inline-flex items-center gap-1.5 text-gray-300 hover:text-cyan-300 transition-colors">
                                         <UserRound className="w-4 h-4" />
-                                        {post.author.username || "Thành viên CryptoCheck"}
+                                        {post.author.username || translate(language, "Thành viên CryptoCheck", "CryptoCheck member")}
                                     </Link>
                                 )}
                             </div>
@@ -134,7 +136,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                             {/* Footer Actions */}
                             <div className="mt-12 flex items-center justify-between border-t border-white/10 pt-8">
                                 <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
-                                    <Share2 className="w-4 h-4" /> Share this article
+                                    <Share2 className="w-4 h-4" /> {translate(language, "Chia sẻ bài viết", "Share this article")}
                                 </button>
 
                                 {isCommunityPost && (
@@ -151,7 +153,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium border border-cyan-500/20 px-4 py-2 rounded-lg hover:bg-cyan-500/10"
                                     >
-                                        Original Article <ExternalLink className="w-4 h-4" />
+                                        {translate(language, "Bài viết gốc", "Original article")} <ExternalLink className="w-4 h-4" />
                                     </a>
                                 )}
                             </div>

@@ -1,20 +1,24 @@
+"use client";
+
 import { Post } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { extractImageUrl } from "@/lib/utils";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 interface RelatedNewsProps {
     posts: Post[];
 }
 
 export default function RelatedNews({ posts }: RelatedNewsProps) {
+    const { language } = useLanguage();
     if (!posts || posts.length === 0) return null;
 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase">Related News</h3>
+                <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase">{translate(language, "Tin liên quan", "Related news")}</h3>
             </div>
 
             {posts.slice(0, 5).map((post) => {
@@ -26,7 +30,7 @@ export default function RelatedNews({ posts }: RelatedNewsProps) {
                                 {post.title}
                             </h4>
                             <span className="text-[10px] text-gray-500 mt-2 block">
-                                {formatDate(post.created_at)}
+                                {formatDate(post.created_at, language)}
                             </span>
                         </div>
                         {imageUrl && (

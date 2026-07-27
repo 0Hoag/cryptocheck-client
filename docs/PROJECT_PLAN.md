@@ -14,6 +14,7 @@
 - [x] Landing page, news dashboard, scanner and shared Header/Footer are restored.
 - [x] Vietnamese/English switcher is restored and persisted locally.
 - [ ] Complete Vietnamese/English coverage across every shared widget, route and async/error state; verify both languages manually on the running app.
+  - [x] Translate the news dashboard, article cards, article detail and shared market/news widgets; make relative timestamps locale-aware. (production build passed)
 - [x] Login and registration forms call the API and persist the session locally.
 - [x] Google sign-in affordance is visible as “coming soon”; no fake OAuth flow is enabled.
 - [x] Clear expired/401 local sessions so stale authentication is not reused (production build passed).

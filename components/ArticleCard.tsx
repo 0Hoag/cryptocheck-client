@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Post } from "@/lib/types";
 import { formatDate, getSourceName, extractImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 interface ArticleCardProps {
     post: Post;
@@ -11,9 +14,10 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ post, variant = "default", className }: ArticleCardProps) {
+    const { language } = useLanguage();
     const sourceName = post.source_url ? getSourceName(post.source_url) : "CryptoNews";
     const imageUrl = extractImageUrl(post.content);
-    const title = post.title || "Untitled Article";
+    const title = post.title || translate(language, "Bài viết chưa có tiêu đề", "Untitled article");
 
     return (
         <Link
@@ -45,7 +49,7 @@ export default function ArticleCard({ post, variant = "default", className }: Ar
                     {variant === "default" && (
                         <span className="flex items-center gap-1 text-[10px] text-slate-500">
                             <Clock className="w-3 h-3" />
-                            {formatDate(post.created_at)}
+                            {formatDate(post.created_at, language)}
                         </span>
                     )}
                 </div>
@@ -60,10 +64,10 @@ export default function ArticleCard({ post, variant = "default", className }: Ar
                 {variant === "default" && (
                     <div className="mt-auto flex items-center justify-between border-t border-slate-800 pt-4 text-[11px] text-slate-500">
                         <span className="flex items-center gap-1.5 opacity-60">
-                            By {sourceName}
+                            {translate(language, "Bởi", "By")} {sourceName}
                         </span>
                         <span className="flex items-center gap-0.5 text-slate-400 transition group-hover:translate-x-1 group-hover:text-sky-200">
-                            Đọc bài &rarr;
+                            {translate(language, "Đọc bài", "Read article")} &rarr;
                         </span>
                     </div>
                 )}

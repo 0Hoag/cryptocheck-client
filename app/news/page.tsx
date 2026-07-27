@@ -9,8 +9,10 @@ import MarketWidgets from "@/components/MarketWidgets";
 import ArticleCard from "@/components/ArticleCard";
 import { ArrowUpRight, Loader2, Radio, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 export default function Home() {
+  const { language } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,14 +26,14 @@ export default function Home() {
         setPosts(fetchedPosts);
       } catch (err) {
         console.error("Failed to fetch posts:", err);
-        setError("Failed to load posts. Please try again later.");
+        setError(translate(language, "Không tải được bài viết. Vui lòng thử lại sau.", "Failed to load posts. Please try again later."));
       } finally {
         setLoading(false);
       }
     };
 
     fetchPosts();
-  }, []);
+  }, [language]);
 
   if (loading) {
     return (
@@ -54,12 +56,12 @@ export default function Home() {
       <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:py-8">
         <section className="mb-6 flex flex-col gap-4 border-b border-slate-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-2 eyebrow"><Radio className="h-3.5 w-3.5 text-emerald-400" /> cập nhật liên tục</div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bức tranh thị trường hôm nay</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Tin tức được tổng hợp, sắp xếp để đọc nhanh, và phân tích rủi ro token ngay khi cần.</p>
+            <div className="mb-2 flex items-center gap-2 eyebrow"><Radio className="h-3.5 w-3.5 text-emerald-400" /> {translate(language, "Cập nhật liên tục", "Live updates")}</div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{translate(language, "Bức tranh thị trường hôm nay", "Today’s market view")}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{translate(language, "Tin tức được tổng hợp, sắp xếp để đọc nhanh, và phân tích rủi ro token ngay khi cần.", "News is aggregated and organized for faster reading, with token-risk analysis when you need it.")}</p>
           </div>
           <Link href="/scanner" className="group inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-3 text-sm font-semibold text-sky-200 transition hover:border-sky-400/50 hover:bg-sky-500/20">
-            <ShieldCheck className="h-4 w-4" /> Quét độ tin cậy token <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <ShieldCheck className="h-4 w-4" /> {translate(language, "Quét độ tin cậy token", "Scan token reliability")} <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </section>
 
@@ -82,7 +84,7 @@ export default function Home() {
             {subStories.length > 0 && (
               <div>
                 <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-200">
-                  <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" /> Đáng đọc
+                  <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" /> {translate(language, "Đáng đọc", "Worth reading")}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {subStories.map(post => (
@@ -96,7 +98,7 @@ export default function Home() {
             {otherNews.length > 0 && (
               <div>
                 <h2 className="mb-4 border-t border-slate-800 pt-8 text-sm font-bold uppercase tracking-[0.14em] text-slate-200">
-                  Tin mới nhất
+                  {translate(language, "Tin mới nhất", "Latest news")}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {otherNews.map(post => (
