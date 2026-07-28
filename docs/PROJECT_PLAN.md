@@ -80,6 +80,7 @@ npm run build
   - [x] Show member roles/status from the authenticated group-members API in group detail. (production build passed)
   - [x] Let group owner/admin approve pending join requests; owner can update member/admin/moderator roles through API-enforced permissions. (production build passed)
   - [x] Let active post authors and API-authorized group moderators delete group posts with confirmation, retry feedback and in-place UI update. (production build passed)
+  - [x] Let non-owner members leave a group or withdraw a pending request through the API, with confirmation and in-place membership updates. (production build passed)
 - [ ] Gate “Create group” and enhanced scan actions from API entitlement, with an upgrade CTA.
   - [x] Make group privacy selection entitlement-aware using the authenticated server quota; Free users get a clear private-group upgrade explanation while the API remains the enforcement point. (production build passed)
 - [ ] Add checkout UI only after payment provider/API webhook work is complete.
