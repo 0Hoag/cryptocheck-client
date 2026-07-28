@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, S
 import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
+import { isEvmAddress, isSolanaMintAddress, validateScanInput } from "@/lib/scanner-input";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
@@ -82,18 +83,6 @@ function dateTime(language: Language, value: string) {
 function publicTokenIcon(symbol: string) {
   const normalized = symbol.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
   return normalized ? `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${normalized}.png` : "";
-}
-
-function isEvmAddress(value: string) {
-  return /^0x[a-fA-F0-9]{40}$/.test(value);
-}
-
-function isSolanaMintAddress(value: string) {
-  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
-}
-
-function looksLikeDirectAddress(value: string) {
-  return value.length >= 30 && !/\s/.test(value);
 }
 
 function TokenAvatarImage({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
@@ -178,13 +167,14 @@ export default function ScannerPage() {
   }, [loadHistory, loadQuota]);
 
   function validateQuery(query: string) {
-    if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {
+    const issue = validateScanInput(query);
+    if (issue === "invalid_evm") {
       return translate(language, "Địa chỉ EVM phải gồm 0x và đúng 40 ký tự hexadecimal. Nếu quét bằng mã token, hãy nhập symbol như ENA thay vì địa chỉ dở dang.", "An EVM address must start with 0x and contain exactly 40 hexadecimal characters. For a symbol scan, enter a symbol such as ENA instead of a partial address.");
     }
-    if (looksLikeDirectAddress(query) && !isEvmAddress(query) && !isSolanaMintAddress(query)) {
+    if (issue === "unsupported_direct") {
       return translate(language, "Địa chỉ trực tiếp hiện hỗ trợ EVM (0x + 40 ký tự) hoặc Solana SPL mint (base58, 32–44 ký tự). Với chain khác, hãy nhập symbol để chọn đúng market profile trước.", "Direct addresses currently support EVM (0x + 40 characters) and Solana SPL mints (base58, 32–44 characters). For another chain, enter the symbol first and choose the correct market profile.");
     }
-    if (query.length > 128) return translate(language, "Giá trị quét quá dài. Hãy nhập symbol hoặc địa chỉ contract hợp lệ.", "This scan input is too long. Enter a symbol or a valid contract address.");
+    if (issue === "too_long") return translate(language, "Giá trị quét quá dài. Hãy nhập symbol hoặc địa chỉ contract hợp lệ.", "This scan input is too long. Enter a symbol or a valid contract address.");
     return "";
   }
 

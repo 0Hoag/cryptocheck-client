@@ -112,6 +112,7 @@ npm run build
 - [ ] Add component/integration tests for auth, scanner and community states.
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
+  - [x] Extract Scanner direct-address classification and cover EVM, Solana Base58, malformed and oversized inputs. (9 tests passed; targeted lint + production build passed; dynamic token-image warning remains)
 - [ ] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
   - [x] Run the Vitest suite before the production build on every pull request and push to `main`. (local 3-test suite + production build passed)
