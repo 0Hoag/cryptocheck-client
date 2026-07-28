@@ -103,3 +103,5 @@ npm run build
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
 - [ ] Add component/integration tests for auth, scanner and community states.
 - [ ] Add CI for build, lint and tests.
+  - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
+  - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.
