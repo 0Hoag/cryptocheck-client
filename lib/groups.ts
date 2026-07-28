@@ -62,6 +62,10 @@ export async function leaveGroup(id: string) {
   await apiClient.delete(`/api/v1/news-feed/groups/${id}/members/me`);
 }
 
+export async function deleteGroup(id: string) {
+  await apiClient.delete(`/api/v1/news-feed/groups/${id}`);
+}
+
 export async function getGroupMembers(id: string) {
   return (await apiClient.get<{ data: GroupMembership[] }>(`/api/v1/news-feed/groups/${id}/members`)).data.data;
 }

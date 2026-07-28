@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Lock, Send, Trash2, UserPlus, UsersRound } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
-import { CommunityGroup, GroupMembership, GroupPost, createGroupPost, deleteGroupPost, getGroup, getGroupMembers, getGroupPosts, joinGroup, leaveGroup, updateGroupMember } from "@/lib/groups";
+import { CommunityGroup, GroupMembership, GroupPost, createGroupPost, deleteGroup, deleteGroupPost, getGroup, getGroupMembers, getGroupPosts, joinGroup, leaveGroup, updateGroupMember } from "@/lib/groups";
 import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { language } = useLanguage();
+  const router = useRouter();
   const [groupID, setGroupID] = useState("");
   const [group, setGroup] = useState<CommunityGroup | null>(null);
   const [posts, setPosts] = useState<GroupPost[]>([]);
@@ -20,6 +22,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [groupDeleting, setGroupDeleting] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postDeletingID, setPostDeletingID] = useState("");
   const [content, setContent] = useState("");
@@ -71,6 +74,18 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     } finally { setLeaving(false); }
   }
 
+  async function removeGroup() {
+    if (!group || !window.confirm(translate(language, `Xóa group “${group.name}”? Toàn bộ group sẽ không còn hiển thị.`, `Delete “${group.name}”? The group will no longer be visible.`))) return;
+    setGroupDeleting(true); setError("");
+    try {
+      await deleteGroup(group.id);
+      router.push("/groups");
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, translate(language, "Không thể xóa group lúc này.", "Unable to delete this group right now.")));
+      setGroupDeleting(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!group || !content.trim()) return;
@@ -115,6 +130,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         {!signedIn ? <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-400"><UserPlus className="h-4 w-4" />{translate(language, "Đăng nhập để tham gia", "Sign in to join")}</Link> : !group.membership ? <button type="button" onClick={() => void join()} disabled={joining || group.join_policy === "invite"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50">{joining && <Loader2 className="h-4 w-4 animate-spin" />}<UserPlus className="h-4 w-4" />{group.join_policy === "invite" ? translate(language, "Chỉ mời", "Invite only") : group.join_policy === "approval" ? translate(language, "Gửi yêu cầu", "Request to join") : translate(language, "Tham gia group", "Join group")}</button> : group.membership.role === "owner" ? <span className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-200">{translate(language, "Bạn là chủ group", "You own this group")}</span> : <button type="button" onClick={() => void leave()} disabled={leaving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-400/25 px-4 py-2.5 text-sm font-semibold text-red-200 hover:bg-red-500/10 disabled:opacity-50">{leaving && <Loader2 className="h-4 w-4 animate-spin" />}{activeMember ? translate(language, "Rời group", "Leave group") : translate(language, "Rút yêu cầu", "Withdraw request")}</button>}</div></section>
       {activeMember && <form onSubmit={submit} className="surface mt-5 p-5"><label className="sr-only" htmlFor="group-post">{translate(language, "Nội dung bài viết", "Post content")}</label><textarea id="group-post" value={content} onChange={(event) => setContent(event.target.value)} maxLength={10000} rows={4} placeholder={translate(language, "Chia sẻ góc nhìn với group…", "Share an insight with the group…")} className="w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" /><div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3"><span className="text-xs text-slate-500">{content.length}/10000</span><button disabled={posting || !content.trim()} className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{translate(language, "Đăng bài", "Publish")}</button></div></form>}
       <section className="mt-6"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Bài viết trong group", "Group posts")}</div><div className="mt-4 space-y-3">{posts.length ? posts.map((post) => { const canDelete = activeMember && (canModeratePosts || post.author_id === group.membership?.user_id); return <article key={post.id} className="surface p-5"><div className="flex items-start justify-between gap-4"><div className="min-w-0">{post.title && <h2 className="font-semibold text-white">{post.title}</h2>}<p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p></div>{canDelete && <button type="button" onClick={() => void removePost(post)} disabled={postDeletingID === post.id} aria-label={translate(language, "Xóa bài viết", "Delete post")} className="shrink-0 rounded-lg border border-red-400/25 p-2 text-red-200 hover:bg-red-500/10 disabled:opacity-50">{postDeletingID === post.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</button>}</div></article>; }) : <div className="surface p-8 text-center text-sm text-slate-400">{translate(language, "Chưa có bài viết trong group này.", "There are no posts in this group yet.")}</div>}</div></section>
+      {group.membership?.role === "owner" && <section className="mt-6 rounded-xl border border-red-500/25 bg-red-500/5 p-5"><h2 className="font-semibold text-red-100">{translate(language, "Khu vực nguy hiểm", "Danger zone")}</h2><p className="mt-1 text-sm leading-6 text-red-100/70">{translate(language, "Xóa group sẽ ẩn group khỏi cộng đồng. Chỉ chủ group mới có quyền này.", "Deleting a group hides it from the community. Only the group owner can do this.")}</p><button type="button" onClick={() => void removeGroup()} disabled={groupDeleting} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-400/30 px-4 py-2 text-sm font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-50">{groupDeleting && <Loader2 className="h-4 w-4 animate-spin" />}<Trash2 className="h-4 w-4" />{translate(language, "Xóa group", "Delete group")}</button></section>}
       {signedIn && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Thành viên", "Members")}</div>{membersLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{members.length ? <div className="mt-4 flex flex-wrap gap-2">{members.map((member) => <div key={member.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs"><span className="font-mono text-slate-400">…{member.user_id.slice(-5)}</span><span className={`rounded px-1.5 py-0.5 font-semibold ${member.status === "pending" ? "bg-amber-500/10 text-amber-200" : "bg-sky-500/10 text-sky-200"}`}>{member.status === "pending" ? translate(language, "Chờ duyệt", "Pending") : member.role === "owner" ? translate(language, "Chủ group", "Owner") : member.role === "admin" ? "Admin" : member.role === "moderator" ? translate(language, "Kiểm duyệt", "Moderator") : translate(language, "Thành viên", "Member")}</span>{canManageMembers && member.status === "pending" && <button type="button" disabled={memberUpdatingID === member.id} onClick={() => void updateMember(member, { status: "active" })} className="rounded border border-emerald-400/25 px-1.5 py-0.5 font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50">{translate(language, "Duyệt", "Approve")}</button>}{canSetRoles && member.role !== "owner" && <select value={member.role} disabled={memberUpdatingID === member.id} onChange={(event) => void updateMember(member, { role: event.target.value as GroupMembership["role"] })} aria-label={translate(language, "Đổi role thành viên", "Change member role")} className="rounded border border-slate-700 bg-slate-950 px-1 py-0.5 text-slate-200 disabled:opacity-50"><option value="member">{translate(language, "Thành viên", "Member")}</option><option value="moderator">{translate(language, "Kiểm duyệt", "Moderator")}</option><option value="admin">Admin</option></select>}</div>)}</div> : !membersLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Không thể hiển thị thành viên hoặc group chưa có thành viên.", "Members are unavailable or this group has no members yet.")}</p>}</section>}
     </>}</section></main>;
 }
