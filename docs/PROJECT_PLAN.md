@@ -64,6 +64,7 @@ npm run build
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
 - [ ] Add reporting, moderation state and content-safe rendering.
+  - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
 
 Pass checks:
 

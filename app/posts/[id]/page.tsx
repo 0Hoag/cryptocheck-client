@@ -3,17 +3,19 @@
 import { useEffect, useState, use } from "react";
 import { getPostById, getPosts } from "@/lib/api";
 import { Post } from "@/lib/types";
-import { formatDate, extractImageUrl, getSourceName } from "@/lib/utils";
+import { formatDate, extractImageUrl, getErrorMessage, getSourceName } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import Image from "next/image";
-import { Share2, Clock, ExternalLink, Heart, Loader2, MessageCircle, UserRound } from "lucide-react";
+import { Share2, Clock, ExternalLink, Flag, Heart, Loader2, MessageCircle, UserRound } from "lucide-react";
 import CryptoRanking from "@/components/CryptoRanking";
 import MarketWidgets from "@/components/MarketWidgets";
 import RelatedNews from "@/components/RelatedNews";
 import rehypeRaw from "rehype-raw";
 import { translate, useLanguage } from "@/context/LanguageContext";
+import { apiClient } from "@/lib/api";
+import { getAuthToken } from "@/lib/auth";
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
     const { language } = useLanguage();
@@ -21,6 +23,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const [post, setPost] = useState<Post | null>(null);
     const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [reportOpen, setReportOpen] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reportDetails, setReportDetails] = useState("");
+    const [reporting, setReporting] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [reportSuccess, setReportSuccess] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,6 +67,21 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     }
 
     if (!post) return <div className="text-white text-center py-20 min-h-screen bg-[#050505]">{translate(language, "Không tìm thấy bài viết", "Post not found")}</div>;
+
+    async function submitReport() {
+        if (!post) return;
+        if (reportReason.trim().length < 3) {
+            setReportError(translate(language, "Hãy nhập lý do ít nhất 3 ký tự.", "Please enter a reason of at least 3 characters."));
+            return;
+        }
+        setReporting(true); setReportError("");
+        try {
+            await apiClient.post("/api/v1/news-feed/reports", { target_type: "post", target_id: post.id, reason: reportReason.trim(), details: reportDetails.trim() });
+            setReportSuccess(true); setReportOpen(false); setReportReason(""); setReportDetails("");
+        } catch (error) {
+            setReportError(getErrorMessage(error, translate(language, "Không thể gửi báo cáo lúc này. Hãy thử lại.", "Unable to submit the report right now. Please try again.")));
+        } finally { setReporting(false); }
+    }
 
     const imageUrl = extractImageUrl(post.content);
     // Remove image md syntax from content to avoid duplicate images
@@ -134,10 +157,11 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="mt-12 flex items-center justify-between border-t border-white/10 pt-8">
-                                <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
-                                    <Share2 className="w-4 h-4" /> {translate(language, "Chia sẻ bài viết", "Share this article")}
-                                </button>
+                            <div className="mt-12 border-t border-white/10 pt-8">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
+                                        <Share2 className="w-4 h-4" /> {translate(language, "Chia sẻ bài viết", "Share this article")}
+                                    </button>
 
                                 {isCommunityPost && (
                                     <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -146,16 +170,22 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                     </div>
                                 )}
 
-                                {post.source_url && (
-                                    <a
-                                        href={post.source_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium border border-cyan-500/20 px-4 py-2 rounded-lg hover:bg-cyan-500/10"
-                                    >
-                                        {translate(language, "Bài viết gốc", "Original article")} <ExternalLink className="w-4 h-4" />
-                                    </a>
-                                )}
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        {getAuthToken() ? <button type="button" onClick={() => { setReportOpen((current) => !current); setReportError(""); setReportSuccess(false); }} className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-400 transition-colors hover:border-amber-400/30 hover:bg-amber-400/5 hover:text-amber-200"><Flag className="w-4 h-4" />{translate(language, "Báo cáo", "Report")}</button> : <Link href="/login" className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-400 transition-colors hover:border-amber-400/30 hover:text-amber-200"><Flag className="w-4 h-4" />{translate(language, "Đăng nhập để báo cáo", "Sign in to report")}</Link>}
+                                        {post.source_url && (
+                                            <a
+                                                href={post.source_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium border border-cyan-500/20 px-4 py-2 rounded-lg hover:bg-cyan-500/10"
+                                            >
+                                                {translate(language, "Bài viết gốc", "Original article")} <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                                {reportSuccess && <p role="status" className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">{translate(language, "Đã gửi báo cáo. Đội ngũ kiểm duyệt sẽ xem xét.", "Your report was submitted. The moderation team will review it.")}</p>}
+                                {reportOpen && <section className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4"><h2 className="font-semibold text-amber-100">{translate(language, "Báo cáo nội dung", "Report content")}</h2><p className="mt-1 text-sm text-slate-400">{translate(language, "Chỉ báo cáo nội dung vi phạm. Không dùng tính năng này cho tranh luận đầu tư thông thường.", "Only report content that violates the rules. Do not use this for ordinary investment disagreements.")}</p><label className="mt-4 block text-sm text-slate-300">{translate(language, "Lý do", "Reason")}<input value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={250} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-amber-300" /></label><label className="mt-3 block text-sm text-slate-300">{translate(language, "Chi tiết (không bắt buộc)", "Details (optional)")}<textarea value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} maxLength={1000} rows={3} className="mt-1.5 w-full resize-none rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-amber-300" /></label>{reportError && <p role="alert" className="mt-3 text-sm text-red-200">{reportError}</p>}<div className="mt-4 flex gap-2"><button type="button" onClick={() => void submitReport()} disabled={reporting || reportReason.trim().length < 3} className="inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{reporting && <Loader2 className="h-4 w-4 animate-spin" />}{translate(language, "Gửi báo cáo", "Submit report")}</button><button type="button" onClick={() => setReportOpen(false)} disabled={reporting} className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">{translate(language, "Huỷ", "Cancel")}</button></div></section>}
                             </div>
                         </article>
                     </div>
