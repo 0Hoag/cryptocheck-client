@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, LineStyle, ISeriesApi, IChartApi, Time } from 'lightweight-charts';
+import { createChart, LineStyle, type ISeriesApi, type IChartApi, type MouseEventParams, type UTCTimestamp } from 'lightweight-charts';
 import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
 
 interface ProfessionalChartProps {
@@ -10,12 +10,71 @@ interface ProfessionalChartProps {
 }
 
 interface CandleData {
-    time: number;
+    time: UTCTimestamp;
     open: number;
     high: number;
     low: number;
     close: number;
     volume: number;
+}
+
+interface BinanceKlineEvent {
+    k: { t: number; o: string; h: string; l: string; c: string; v: string };
+}
+
+interface BinanceTickerEvent {
+    h: string;
+    l: string;
+    v: string;
+}
+
+interface BinanceTickerStats {
+    highPrice: string;
+    lowPrice: string;
+    volume: string;
+}
+
+const TIMEFRAMES = [
+    { label: '5m', value: '5m', limit: 1000, total: 5000 },
+    { label: '15m', value: '15m', limit: 1000, total: 3000 },
+    { label: '1h', value: '1h', limit: 1000, total: 2000 },
+    { label: '4h', value: '4h', limit: 1000, total: 1000 },
+    { label: '1d', value: '1d', limit: 1000, total: 1000 },
+    { label: '1w', value: '1w', limit: 1000, total: 1000 },
+] as const;
+
+function toChartTime(milliseconds: number): UTCTimestamp {
+    return (Math.floor(milliseconds / 1000) + 25200) as UTCTimestamp;
+}
+
+function isBinanceKline(value: unknown): value is [number, string, string, string, string, string, ...unknown[]] {
+    return Array.isArray(value)
+        && typeof value[0] === 'number'
+        && typeof value[1] === 'string'
+        && typeof value[2] === 'string'
+        && typeof value[3] === 'string'
+        && typeof value[4] === 'string'
+        && typeof value[5] === 'string';
+}
+
+function isBinanceKlineEvent(value: unknown): value is BinanceKlineEvent {
+    if (typeof value !== 'object' || value === null) return false;
+    const kline = (value as Record<string, unknown>).k;
+    if (typeof kline !== 'object' || kline === null) return false;
+    const data = kline as Record<string, unknown>;
+    return typeof data.t === 'number' && typeof data.o === 'string' && typeof data.h === 'string' && typeof data.l === 'string' && typeof data.c === 'string' && typeof data.v === 'string';
+}
+
+function isBinanceTickerEvent(value: unknown): value is BinanceTickerEvent {
+    if (typeof value !== 'object' || value === null) return false;
+    const ticker = value as Record<string, unknown>;
+    return typeof ticker.h === 'string' && typeof ticker.l === 'string' && typeof ticker.v === 'string';
+}
+
+function isBinanceTickerStats(value: unknown): value is BinanceTickerStats {
+    if (typeof value !== 'object' || value === null) return false;
+    const ticker = value as Record<string, unknown>;
+    return typeof ticker.highPrice === 'string' && typeof ticker.lowPrice === 'string' && typeof ticker.volume === 'string';
 }
 
 export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: ProfessionalChartProps) {
@@ -28,8 +87,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     const ema7SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
     const ema25SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
     const ema99SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
-    const ma7SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
-    const ma25SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
     const [interval, setInterval] = useState<string>('15m');
     const currentPriceRef = useRef<string>("0.00");
@@ -39,24 +96,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         _setCurrentPrice(price);
     };
     const [priceChange, setPriceChange] = useState<number>(0);
-
-    const timeframes = [
-        { label: '5m', value: '5m', limit: 1000, total: 5000 },   // Fetch 5000 candles total
-        { label: '15m', value: '15m', limit: 1000, total: 3000 }, // Fetch 3000 candles total
-        { label: '1h', value: '1h', limit: 1000, total: 2000 },   // Fetch 2000 candles total
-        { label: '4h', value: '4h', limit: 1000, total: 1000 },
-        { label: '1d', value: '1d', limit: 1000, total: 1000 },
-        { label: '1w', value: '1w', limit: 1000, total: 1000 },
-    ];
-
-    // Calculate Moving Averages
-    const calculateMA = (data: CandleData[], period: number) => {
-        return data.map((item, index) => {
-            if (index < period - 1) return { time: item.time, value: null };
-            const sum = data.slice(index - period + 1, index + 1).reduce((acc, d) => acc + d.close, 0);
-            return { time: item.time, value: sum / period };
-        });
-    };
 
     // Helper to calculate EMA
     const calculateEMA = (data: CandleData[], count: number) => {
@@ -70,6 +109,9 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         }
         return emaData;
     };
+
+    const [stats, setStats] = useState({ high: '0.00', low: '0.00', vol: '0.00' });
+    const [cursorData, setCursorData] = useState<{ visible: boolean; x: number; y: number; price: string; percentDiff: string } | null>(null);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -200,7 +242,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
         window.addEventListener('resize', handleResize);
 
-        const handleCrosshairMove = (param: any) => {
+        const handleCrosshairMove = (param: MouseEventParams) => {
             // Check if point is valid (remove !param.time check to allow empty space)
             if (
                 param.point === undefined ||
@@ -251,8 +293,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         };
     }, []); // Only run once on mount (technically depends on nothing)
 
-    const [stats, setStats] = useState({ high: '0.00', low: '0.00', vol: '0.00' });
-    const [cursorData, setCursorData] = useState<{ visible: boolean; x: number; y: number; price: string; percentDiff: string } | null>(null);
     // Data Fetching
     useEffect(() => {
         const fetchData = async () => {
@@ -260,14 +300,16 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             try {
                 // Fetch 24h stats
                 const statsRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
-                const statsData = await statsRes.json();
+                if (!statsRes.ok) throw new Error(`Binance returned ${statsRes.status}`);
+                const statsData: unknown = await statsRes.json();
+                if (!isBinanceTickerStats(statsData)) throw new Error('Invalid Binance ticker payload');
                 setStats({
                     high: parseFloat(statsData.highPrice).toFixed(2),
                     low: parseFloat(statsData.lowPrice).toFixed(2),
                     vol: parseFloat(statsData.volume).toFixed(2)
                 });
 
-                const timeframe = timeframes.find(tf => tf.value === interval);
+                const timeframe = TIMEFRAMES.find(tf => tf.value === interval);
                 const limit = timeframe?.limit || 1000;
                 // const total = timeframe?.total || 1000;
                 // const batches = Math.ceil(total / limit);
@@ -282,7 +324,9 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 // : `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
                 const response: Response = await fetch(url);
-                const data: any[] = await response.json();
+                if (!response.ok) throw new Error(`Binance returned ${response.status}`);
+                const payload: unknown = await response.json();
+                const data = Array.isArray(payload) ? payload.filter(isBinanceKline) : [];
 
                 // if (data.length === 0) break;
 
@@ -292,8 +336,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 // await new Promise(resolve => setTimeout(resolve, 100)); // Rate limit delay
                 // }
 
-                const formattedData: CandleData[] = data.map((item: any) => ({
-                    time: Math.floor(item[0] / 1000) + 25200, // Add 7 hours for UTC+7 (Vietnam)
+                const formattedData: CandleData[] = data.map((item) => ({
+                    time: toChartTime(item[0]), // Add 7 hours for UTC+7 (Vietnam)
                     open: parseFloat(item[1]),
                     high: parseFloat(item[2]),
                     low: parseFloat(item[3]),
@@ -301,15 +345,15 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     volume: parseFloat(item[5]),
                 }));
 
-                const volumeData = data.map((item: any) => ({
-                    time: Math.floor(item[0] / 1000) + 25200,
+                const volumeData = data.map((item) => ({
+                    time: toChartTime(item[0]),
                     value: parseFloat(item[5]),
                     color: parseFloat(item[4]) >= parseFloat(item[1]) ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
                 }));
 
                 if (candlestickSeriesRef.current && volumeSeriesRef.current) {
-                    candlestickSeriesRef.current.setData(formattedData as any);
-                    volumeSeriesRef.current.setData(volumeData as any);
+                    candlestickSeriesRef.current.setData(formattedData);
+                    volumeSeriesRef.current.setData(volumeData);
 
                     // Set EMA Data
                     if (formattedData.length > 0) {
@@ -317,12 +361,12 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                         const ema25Data = calculateEMA(formattedData, 25);
                         const ema99Data = calculateEMA(formattedData, 99);
 
-                        ema7SeriesRef.current?.setData(ema7Data as any);
-                        ema25SeriesRef.current?.setData(ema25Data as any);
-                        ema99SeriesRef.current?.setData(ema99Data as any);
+                        ema7SeriesRef.current?.setData(ema7Data);
+                        ema25SeriesRef.current?.setData(ema25Data);
+                        ema99SeriesRef.current?.setData(ema99Data);
 
                         // Add 10 empty candles for future grid
-                        const lastTime = formattedData[formattedData.length - 1].time as number;
+                        const lastTime = formattedData[formattedData.length - 1].time;
                         const intervalSeconds =
                             interval === '5m' ? 300 :
                                 interval === '15m' ? 900 :
@@ -331,7 +375,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                                             interval === '1d' ? 86400 : 604800; // 1w
 
                         for (let i = 1; i <= 10; i++) {
-                            candlestickSeriesRef.current.update({ time: (lastTime + (i * intervalSeconds)) as any } as any);
+                            candlestickSeriesRef.current.update({ time: (lastTime + (i * intervalSeconds)) as UTCTimestamp });
                         }
                     }
                 }
@@ -353,8 +397,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
                     // 1. Set zoom level
                     chartRef.current.timeScale().setVisibleRange({
-                        from: startTime as any,
-                        to: latestTime as any,
+                        from: startTime,
+                        to: latestTime,
                     });
 
                     // 2. Shift view to center
@@ -372,12 +416,13 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         const ws = new WebSocket(wsUrl);
 
         ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const message: unknown = JSON.parse(event.data);
+            if (!isBinanceKlineEvent(message)) return;
             const candle = message.k;
 
             if (candle && candlestickSeriesRef.current) {
                 const newCandle = {
-                    time: (Math.floor(candle.t / 1000) + 25200) as any,
+                    time: toChartTime(candle.t),
                     open: parseFloat(candle.o),
                     high: parseFloat(candle.h),
                     low: parseFloat(candle.l),
@@ -416,8 +461,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         const tickerWs = new WebSocket(tickerWsUrl);
 
         tickerWs.onmessage = (event) => {
-            const ticker = JSON.parse(event.data);
-            if (ticker) {
+            const ticker: unknown = JSON.parse(event.data);
+            if (isBinanceTickerEvent(ticker)) {
                 setStats({
                     high: parseFloat(ticker.h).toFixed(2),
                     low: parseFloat(ticker.l).toFixed(2),
@@ -478,7 +523,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
                 {/* Timeframe Selector */}
                 <div className="flex flex-wrap gap-2">
-                    {timeframes.map((tf) => (
+                    {TIMEFRAMES.map((tf) => (
                         <button
                             key={tf.value}
                             onClick={() => setInterval(tf.value)}
