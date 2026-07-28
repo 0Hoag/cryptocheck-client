@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
 
 export async function getPosts(params?: PaginationParams): Promise<PostsResponse> {
     try {
-        const response = await apiClient.get<{ data: { items: Post[], meta: any } }>("/api/v1/news-feed/posts", {
+        const response = await apiClient.get<{ data: { items: Post[]; meta: NonNullable<PostsResponse["pagination"]> } }>("/api/v1/news-feed/posts", {
             params: {
                 page: params?.page || 1,
                 limit: params?.limit || 30,
