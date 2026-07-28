@@ -30,6 +30,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const [reporting, setReporting] = useState(false);
     const [reportError, setReportError] = useState("");
     const [reportSuccess, setReportSuccess] = useState(false);
+    const [shareStatus, setShareStatus] = useState<"" | "success" | "error">("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -82,6 +83,22 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         } catch (error) {
             setReportError(getErrorMessage(error, translate(language, "Không thể gửi báo cáo lúc này. Hãy thử lại.", "Unable to submit the report right now. Please try again.")));
         } finally { setReporting(false); }
+    }
+
+    async function sharePost() {
+        const url = window.location.href;
+        setShareStatus("");
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: postTitle, text: postTitle, url });
+            } else {
+                await navigator.clipboard.writeText(url);
+            }
+            setShareStatus("success");
+        } catch (error) {
+            if ((error as DOMException)?.name === "AbortError") return;
+            setShareStatus("error");
+        }
     }
 
     const imageUrl = extractImageUrl(post.content);
@@ -160,7 +177,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                             {/* Footer Actions */}
                             <div className="mt-12 border-t border-white/10 pt-8">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
+                                    <button type="button" onClick={() => void sharePost()} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-lg border border-white/5 hover:border-white/10">
                                         <Share2 className="w-4 h-4" /> {translate(language, "Chia sẻ bài viết", "Share this article")}
                                     </button>
 
@@ -186,6 +203,8 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                     </div>
                                 </div>
                                 {reportSuccess && <p role="status" className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">{translate(language, "Đã gửi báo cáo. Đội ngũ kiểm duyệt sẽ xem xét.", "Your report was submitted. The moderation team will review it.")}</p>}
+                                {shareStatus === "success" && <p role="status" className="mt-4 text-sm text-emerald-200">{translate(language, "Đã mở trình chia sẻ hoặc sao chép liên kết bài viết.", "The share sheet was opened or the article link was copied.")}</p>}
+                                {shareStatus === "error" && <p role="alert" className="mt-4 text-sm text-red-200">{translate(language, "Không thể chia sẻ liên kết lúc này. Hãy sao chép URL trên thanh địa chỉ.", "Unable to share the link right now. Please copy the URL from the address bar.")}</p>}
                                 {reportOpen && <section className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4"><h2 className="font-semibold text-amber-100">{translate(language, "Báo cáo nội dung", "Report content")}</h2><p className="mt-1 text-sm text-slate-400">{translate(language, "Chỉ báo cáo nội dung vi phạm. Không dùng tính năng này cho tranh luận đầu tư thông thường.", "Only report content that violates the rules. Do not use this for ordinary investment disagreements.")}</p><label className="mt-4 block text-sm text-slate-300">{translate(language, "Lý do", "Reason")}<input value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={250} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-amber-300" /></label><label className="mt-3 block text-sm text-slate-300">{translate(language, "Chi tiết (không bắt buộc)", "Details (optional)")}<textarea value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} maxLength={1000} rows={3} className="mt-1.5 w-full resize-none rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-amber-300" /></label>{reportError && <p role="alert" className="mt-3 text-sm text-red-200">{reportError}</p>}<div className="mt-4 flex gap-2"><button type="button" onClick={() => void submitReport()} disabled={reporting || reportReason.trim().length < 3} className="inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{reporting && <Loader2 className="h-4 w-4 animate-spin" />}{translate(language, "Gửi báo cáo", "Submit report")}</button><button type="button" onClick={() => setReportOpen(false)} disabled={reporting} className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">{translate(language, "Huỷ", "Cancel")}</button></div></section>}
                             </div>
                         </article>
