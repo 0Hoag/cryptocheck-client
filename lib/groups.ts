@@ -58,6 +58,10 @@ export async function joinGroup(id: string) {
   return (await apiClient.post<{ data: GroupMembership }>(`/api/v1/news-feed/groups/${id}/join`)).data.data;
 }
 
+export async function getGroupMembers(id: string) {
+  return (await apiClient.get<{ data: GroupMembership[] }>(`/api/v1/news-feed/groups/${id}/members`)).data.data;
+}
+
 export async function createGroupPost(id: string, content: string, title = "") {
   return (await apiClient.post<{ data: GroupPost }>(`/api/v1/news-feed/groups/${id}/posts`, { content, title, source_url: "" })).data.data;
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Lock, Send, UserPlus, UsersRound } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
-import { CommunityGroup, GroupPost, createGroupPost, getGroup, getGroupPosts, joinGroup } from "@/lib/groups";
+import { CommunityGroup, GroupMembership, GroupPost, createGroupPost, getGroup, getGroupMembers, getGroupPosts, joinGroup } from "@/lib/groups";
 import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
 
@@ -13,6 +13,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [groupID, setGroupID] = useState("");
   const [group, setGroup] = useState<CommunityGroup | null>(null);
   const [posts, setPosts] = useState<GroupPost[]>([]);
+  const [members, setMembers] = useState<GroupMembership[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(false);
@@ -28,6 +30,14 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       const loadedGroup = await getGroup(id);
       setGroup(loadedGroup);
       setPosts(await getGroupPosts(id));
+      if (getAuthToken()) {
+        setMembersLoading(true);
+        try { setMembers(await getGroupMembers(id)); }
+        catch { setMembers([]); }
+        finally { setMembersLoading(false); }
+      } else {
+        setMembers([]);
+      }
     } catch (requestError) {
       setError(getErrorMessage(requestError, translate(language, "Không tải được group này. Có thể group riêng tư hoặc không còn tồn tại.", "Unable to load this group. It may be private or no longer exist.")));
       setGroup(null);
@@ -65,5 +75,6 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         {!signedIn ? <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-400"><UserPlus className="h-4 w-4" />{translate(language, "Đăng nhập để tham gia", "Sign in to join")}</Link> : !group.membership ? <button type="button" onClick={() => void join()} disabled={joining || group.join_policy === "invite"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50">{joining && <Loader2 className="h-4 w-4 animate-spin" />}<UserPlus className="h-4 w-4" />{group.join_policy === "invite" ? translate(language, "Chỉ mời", "Invite only") : group.join_policy === "approval" ? translate(language, "Gửi yêu cầu", "Request to join") : translate(language, "Tham gia group", "Join group")}</button> : <span className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-200">{activeMember ? translate(language, "Bạn là thành viên", "You are a member") : translate(language, "Đang chờ duyệt", "Awaiting approval")}</span>}</div></section>
       {activeMember && <form onSubmit={submit} className="surface mt-5 p-5"><label className="sr-only" htmlFor="group-post">{translate(language, "Nội dung bài viết", "Post content")}</label><textarea id="group-post" value={content} onChange={(event) => setContent(event.target.value)} maxLength={10000} rows={4} placeholder={translate(language, "Chia sẻ góc nhìn với group…", "Share an insight with the group…")} className="w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" /><div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3"><span className="text-xs text-slate-500">{content.length}/10000</span><button disabled={posting || !content.trim()} className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{translate(language, "Đăng bài", "Publish")}</button></div></form>}
       <section className="mt-6"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Bài viết trong group", "Group posts")}</div><div className="mt-4 space-y-3">{posts.length ? posts.map((post) => <article key={post.id} className="surface p-5">{post.title && <h2 className="font-semibold text-white">{post.title}</h2>}<p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p></article>) : <div className="surface p-8 text-center text-sm text-slate-400">{translate(language, "Chưa có bài viết trong group này.", "There are no posts in this group yet.")}</div>}</div></section>
+      {signedIn && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Thành viên", "Members")}</div>{membersLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{members.length ? <div className="mt-4 flex flex-wrap gap-2">{members.map((member) => <span key={member.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs"><span className="font-mono text-slate-400">…{member.user_id.slice(-5)}</span><span className={`rounded px-1.5 py-0.5 font-semibold ${member.status === "pending" ? "bg-amber-500/10 text-amber-200" : "bg-sky-500/10 text-sky-200"}`}>{member.status === "pending" ? translate(language, "Chờ duyệt", "Pending") : member.role === "owner" ? translate(language, "Chủ group", "Owner") : member.role === "admin" ? "Admin" : member.role === "moderator" ? translate(language, "Kiểm duyệt", "Moderator") : translate(language, "Thành viên", "Member")}</span></span>)}</div> : !membersLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Không thể hiển thị thành viên hoặc group chưa có thành viên.", "Members are unavailable or this group has no members yet.")}</p>}</section>}
     </>}</section></main>;
 }
