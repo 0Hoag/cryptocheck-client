@@ -18,6 +18,7 @@
   - [x] Translate the account and pre-launch watchlist workflows, including forms, confirmation/error states and dates. (production build passed)
   - [x] Translate profile follow and post-management controls, including destructive confirmations and ARIA labels. (production build passed)
   - [x] Translate the analysis market list, price/order-book panels and chart statistics; add explicit unavailable/error states for the live order book and keyboard-accessible coin selection. (production build passed)
+  - [x] Translate landing-page and empty-state copy; localize the crypto-ranking widget while reducing its Binance request from the full market payload to the ten displayed symbols and adding a retry state. (production build passed)
 - [x] Login and registration forms call the API and persist the session locally.
 - [x] Google sign-in affordance is visible as “coming soon”; no fake OAuth flow is enabled.
 - [x] Clear expired/401 local sessions so stale authentication is not reused (production build passed).

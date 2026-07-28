@@ -1,6 +1,9 @@
+"use client";
+
 import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
 interface CoinData {
     rank: number;
@@ -9,17 +12,21 @@ interface CoinData {
     change: number;
 }
 
+const trackedSymbols = ["BTC", "ETH", "BNB", "XRP", "SOL", "TRX", "DOGE", "ADA", "BCH", "LINK"];
+
 export default function CryptoRanking() {
+    const { language } = useLanguage();
     const [coins, setCoins] = useState<CoinData[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Initial list to maintain order and selection
-    const trackedSymbols = ["BTC", "ETH", "BNB", "XRP", "SOL", "TRX", "DOGE", "ADA", "BCH", "LINK"];
+    const [error, setError] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         const fetchPrices = async () => {
             try {
-                const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
+                const symbols = trackedSymbols.map((symbol) => `${symbol}USDT`);
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`);
+                if (!res.ok) throw new Error(`Binance returned ${res.status}`);
                 const data = await res.json();
 
                 const updatedCoins = trackedSymbols.map((sym, index) => {
@@ -33,18 +40,19 @@ export default function CryptoRanking() {
                 });
 
                 setCoins(updatedCoins);
+                setError(false);
                 setLoading(false);
             } catch (error) {
                 console.error("Failed to fetch crypto ranking:", error);
+                setError(true);
                 setLoading(false);
             }
         };
 
         fetchPrices();
-        // efficient polling every 30s
-        const interval = setInterval(fetchPrices, 30000);
+        const interval = setInterval(fetchPrices, 60000);
         return () => clearInterval(interval);
-    }, []);
+    }, [refreshKey]);
 
     if (loading) {
         return (
@@ -54,10 +62,14 @@ export default function CryptoRanking() {
         );
     }
 
+    if (error) {
+        return <div className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#111] p-5 text-center"><p className="text-sm text-slate-400">{translate(language, "Không tải được bảng giá crypto.", "Could not load the crypto ranking.")}</p><button type="button" onClick={() => { setLoading(true); setRefreshKey((key) => key + 1); }} className="mt-3 rounded-lg border border-sky-400/30 px-3 py-1.5 text-xs font-semibold text-sky-200 hover:bg-sky-500/10">{translate(language, "Thử lại", "Retry")}</button></div>;
+    }
+
     return (
         <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
             <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase mb-5 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-gray-600"></span> Top 10 Crypto
+                <span className="w-2 h-2 rounded-full bg-gray-600"></span> {translate(language, "Top 10 crypto", "Top 10 crypto")}
             </h3>
 
             <div className="space-y-4">
@@ -81,7 +93,7 @@ export default function CryptoRanking() {
 
                         <div className="text-right">
                             <div className="text-white text-xs font-medium">
-                                ${coin.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.price < 1 ? 4 : 2 })}
+                                ${coin.price.toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: coin.price < 1 ? 4 : 2 })}
                             </div>
                             <div className={`text-[10px] flex items-center justify-end gap-1 ${coin.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                 {coin.change >= 0 ? '+' : ''}{coin.change.toFixed(2)}%

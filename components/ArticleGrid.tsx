@@ -1,11 +1,15 @@
+"use client";
+
 import { Post } from "@/lib/types";
 import ArticleCard from "./ArticleCard";
+import { translate, useLanguage } from "@/context/LanguageContext";
 
 interface ArticleGridProps {
     posts: Post[];
 }
 
 export default function ArticleGrid({ posts }: ArticleGridProps) {
+    const { language } = useLanguage();
     if (posts.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -24,8 +28,8 @@ export default function ArticleGrid({ posts }: ArticleGridProps) {
                         />
                     </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-300 mb-2">No articles found</h3>
-                <p className="text-gray-500">Check back later for the latest crypto news!</p>
+                <h3 className="text-xl font-semibold text-gray-300 mb-2">{translate(language, "Chưa có bài viết", "No articles found")}</h3>
+                <p className="text-gray-500">{translate(language, "Hãy quay lại sau để xem tin crypto mới nhất.", "Check back later for the latest crypto news!")}</p>
             </div>
         );
     }
