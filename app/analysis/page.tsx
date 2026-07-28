@@ -6,13 +6,17 @@ import CoinList from "@/components/CoinList";
 import axios from "axios";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
+type OrderBookRow = { price: string; amount: string; total: string; fill: number };
+type DepthMessage = { asks: [string, string][]; bids: [string, string][] };
+
 export default function AnalysisPage() {
     const { language } = useLanguage();
     const locale = languageLocale(language);
     const [selectedSymbol, setSelectedSymbol] = useState("BTCUSDT");
     const [selectedCoinName, setSelectedCoinName] = useState("Bitcoin");
     const [currentPrice, setCurrentPrice] = useState(82695.50);
-    const [orderBook, setOrderBook] = useState<{ bids: any[], asks: any[] }>({ bids: [], asks: [] });
+    const [orderBook, setOrderBook] = useState<{ bids: OrderBookRow[]; asks: OrderBookRow[] }>({ bids: [], asks: [] });
+    const [orderBookSymbol, setOrderBookSymbol] = useState("BTCUSDT");
     const [orderBookState, setOrderBookState] = useState<"loading" | "ready" | "error" | "unsupported">("loading");
 
     // Helper to format large numbers
@@ -25,9 +29,6 @@ export default function AnalysisPage() {
     // Fetch current price and Order Book via WebSocket
     useEffect(() => {
         let active = true;
-        setOrderBook({ bids: [], asks: [] });
-        setOrderBookState(selectedSymbol === "XAUUSD" ? "unsupported" : "loading");
-
         // Initial price fetch
         const fetchPrice = async () => {
             // ... existing axios logic if needed, but WS handles it better
@@ -50,15 +51,15 @@ export default function AnalysisPage() {
             const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${selectedSymbol.toLowerCase()}@depth20@1000ms`);
 
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const asks = data.asks.map((ask: any) => ({
+                const data = JSON.parse(event.data) as DepthMessage;
+                const asks = data.asks.map((ask) => ({
                     price: parseFloat(ask[0]).toFixed(2),
                     amount: parseFloat(ask[1]).toFixed(4),
                     total: formatTotal(parseFloat(ask[0]) * parseFloat(ask[1])),
                     fill: Math.min(100, parseFloat(ask[1]) * 100), // Simple visual depth
                 })).reverse().slice(0, 15); // Show top 15
 
-                const bids = data.bids.map((bid: any) => ({
+                const bids = data.bids.map((bid) => ({
                     price: parseFloat(bid[0]).toFixed(2),
                     amount: parseFloat(bid[1]).toFixed(4),
                     total: formatTotal(parseFloat(bid[0]) * parseFloat(bid[1])),
@@ -67,6 +68,7 @@ export default function AnalysisPage() {
 
                 if (active) {
                     setOrderBook({ asks, bids });
+                    setOrderBookSymbol(selectedSymbol);
                     setOrderBookState("ready");
                 }
             };
@@ -84,9 +86,11 @@ export default function AnalysisPage() {
         return () => { active = false; };
     }, [selectedSymbol]);
 
-    const orderBookMessage = orderBookState === "unsupported"
+    const visibleOrderBook = orderBookSymbol === selectedSymbol ? orderBook : { bids: [], asks: [] };
+    const visibleOrderBookState = selectedSymbol === "XAUUSD" ? "unsupported" : orderBookSymbol === selectedSymbol ? orderBookState : "loading";
+    const orderBookMessage = visibleOrderBookState === "unsupported"
         ? translate(language, "Thị trường này chưa có sổ lệnh trực tiếp.", "This market does not have a live order book yet.")
-        : orderBookState === "error"
+        : visibleOrderBookState === "error"
             ? translate(language, "Không thể tải sổ lệnh. Vui lòng thử lại sau.", "Could not load the order book. Please try again later.")
             : translate(language, "Đang tải…", "Loading…");
 
@@ -110,7 +114,7 @@ export default function AnalysisPage() {
 
                         {/* Asks (Sell) */}
                         <div className="py-1">
-                            {orderBook.asks.length > 0 ? orderBook.asks.map((ask, i) => (
+                            {visibleOrderBook.asks.length > 0 ? visibleOrderBook.asks.map((ask, i) => (
                                 <div key={i} className="grid grid-cols-3 px-3 py-0.5 hover:bg-white/5 relative group cursor-pointer">
                                     <span className="text-red-400 z-10">{ask.price}</span>
                                     <span className="text-right text-gray-300 z-10">{ask.amount}</span>
@@ -130,7 +134,7 @@ export default function AnalysisPage() {
 
                         {/* Bids (Buy) */}
                         <div className="py-1">
-                            {orderBook.bids.length > 0 ? orderBook.bids.map((bid, i) => (
+                            {visibleOrderBook.bids.length > 0 ? visibleOrderBook.bids.map((bid, i) => (
                                 <div key={i} className="grid grid-cols-3 px-3 py-0.5 hover:bg-white/5 relative group cursor-pointer">
                                     <span className="text-green-400 z-10">{bid.price}</span>
                                     <span className="text-right text-gray-300 z-10">{bid.amount}</span>
