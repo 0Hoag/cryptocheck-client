@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
@@ -10,6 +10,18 @@ interface CoinData {
     symbol: string;
     price: number;
     change: number;
+}
+
+interface BinanceTicker24h {
+    symbol: string;
+    lastPrice: string;
+    priceChangePercent: string;
+}
+
+function isBinanceTicker24h(value: unknown): value is BinanceTicker24h {
+    if (typeof value !== "object" || value === null) return false;
+    const ticker = value as Record<string, unknown>;
+    return typeof ticker.symbol === "string" && typeof ticker.lastPrice === "string" && typeof ticker.priceChangePercent === "string";
 }
 
 const trackedSymbols = ["BTC", "ETH", "BNB", "XRP", "SOL", "TRX", "DOGE", "ADA", "BCH", "LINK"];
@@ -27,10 +39,11 @@ export default function CryptoRanking() {
                 const symbols = trackedSymbols.map((symbol) => `${symbol}USDT`);
                 const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`);
                 if (!res.ok) throw new Error(`Binance returned ${res.status}`);
-                const data = await res.json();
+                const payload: unknown = await res.json();
+                const data = Array.isArray(payload) ? payload.filter(isBinanceTicker24h) : [];
 
                 const updatedCoins = trackedSymbols.map((sym, index) => {
-                    const ticker = data.find((t: any) => t.symbol === `${sym}USDT`);
+                    const ticker = data.find((item) => item.symbol === `${sym}USDT`);
                     return {
                         rank: index + 1,
                         symbol: sym,

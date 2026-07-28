@@ -10,13 +10,24 @@ interface CryptoPrice {
     percentChange: number;
 }
 
+const trackedSymbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT", "TRXUSDT"];
+
+interface BinanceTicker24h {
+    symbol: string;
+    lastPrice: string;
+    priceChangePercent: string;
+}
+
+function isBinanceTicker24h(value: unknown): value is BinanceTicker24h {
+    if (typeof value !== "object" || value === null) return false;
+    const ticker = value as Record<string, unknown>;
+    return typeof ticker.symbol === "string" && typeof ticker.lastPrice === "string" && typeof ticker.priceChangePercent === "string";
+}
+
 export default function CryptoTicker() {
     const { language } = useLanguage();
     const [prices, setPrices] = useState<CryptoPrice[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Symbols to track (vs USDT)
-    const symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT", "TRXUSDT"];
 
     useEffect(() => {
         const fetchPrices = async () => {
@@ -24,13 +35,15 @@ export default function CryptoTicker() {
                 // Request only the symbols rendered in this global component.
                 // The unfiltered endpoint returns every Binance ticker (~hundreds of KB)
                 // and was being downloaded every 10 seconds on every route.
-                const requestedSymbols = encodeURIComponent(JSON.stringify(symbols));
+                const requestedSymbols = encodeURIComponent(JSON.stringify(trackedSymbols));
                 const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${requestedSymbols}`);
-                const data = await res.json();
+                if (!res.ok) throw new Error(`Binance returned ${res.status}`);
+                const payload: unknown = await res.json();
+                const data = Array.isArray(payload) ? payload.filter(isBinanceTicker24h) : [];
 
                 const filtered = data
-                    .filter((item: any) => symbols.includes(item.symbol))
-                    .map((item: any) => ({
+                    .filter((item) => trackedSymbols.includes(item.symbol))
+                    .map((item) => ({
                         symbol: item.symbol.replace("USDT", ""),
                         price: parseFloat(item.lastPrice).toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                         percentChange: parseFloat(item.priceChangePercent),
@@ -38,7 +51,7 @@ export default function CryptoTicker() {
 
                 // Sort by specified order
                 const sorted = filtered.sort((a: CryptoPrice, b: CryptoPrice) =>
-                    symbols.indexOf(a.symbol + "USDT") - symbols.indexOf(b.symbol + "USDT")
+                    trackedSymbols.indexOf(a.symbol + "USDT") - trackedSymbols.indexOf(b.symbol + "USDT")
                 );
 
                 setPrices(sorted);

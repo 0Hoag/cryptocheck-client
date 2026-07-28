@@ -113,4 +113,5 @@ npm run build
   - [x] Type the shared post-feed pagination response instead of accepting an untyped API metadata object. (targeted lint + production build passed)
   - [x] Remove Scanner lint errors by using typed request-error handling and key-based token-icon resets instead of synchronous effect state. (targeted lint + production build passed)
   - [x] Type Analysis order-book messages and prevent stale rows from appearing while a newly selected market is loading. (targeted lint + production build passed)
+  - [x] Type Binance ticker payloads in the global ticker and top-ranking widgets, and reject invalid provider payloads safely. (targeted lint + production build passed)
   - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.
