@@ -13,6 +13,7 @@ import CryptoRanking from "@/components/CryptoRanking";
 import MarketWidgets from "@/components/MarketWidgets";
 import RelatedNews from "@/components/RelatedNews";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { translate, useLanguage } from "@/context/LanguageContext";
 import { apiClient } from "@/lib/api";
 import { getAuthToken } from "@/lib/auth";
@@ -151,7 +152,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
                             {/* Main Content */}
                             <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed prose-headings:text-white prose-a:text-cyan-400 hover:prose-a:text-cyan-300 prose-img:rounded-xl">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
                                     {cleanContent}
                                 </ReactMarkdown>
                             </div>

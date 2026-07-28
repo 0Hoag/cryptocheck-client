@@ -65,6 +65,7 @@ npm run build
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
 - [ ] Add reporting, moderation state and content-safe rendering.
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
+  - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)
 
 Pass checks:
 
