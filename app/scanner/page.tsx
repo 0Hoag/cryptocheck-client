@@ -95,17 +95,27 @@ function looksLikeDirectAddress(value: string) {
   return value.length >= 30 && !/\s/.test(value);
 }
 
-function TokenAvatar({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
+function TokenAvatarImage({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
   const imageSources = Array.from(new Set([imageURL, publicTokenIcon(symbol || "")].filter(Boolean))) as string[];
   const [imageIndex, setImageIndex] = useState(0);
-
-  useEffect(() => setImageIndex(0), [imageURL, symbol]);
 
   const imageSource = imageSources[imageIndex];
   if (!imageSource) {
     return <span aria-label={`${name} token icon`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>;
   }
   return <img src={imageSource} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageIndex((index) => index + 1)} />;
+}
+
+function TokenAvatar({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {
+  return <TokenAvatarImage key={`${imageURL || ""}:${symbol || ""}`} name={name} symbol={symbol} imageURL={imageURL} />;
+}
+
+function scannerErrorMessage(error: unknown, language: Language) {
+  const candidate = error as { code?: unknown; response?: { data?: { message?: unknown } } };
+  const message = typeof candidate.response?.data?.message === "string" ? candidate.response.data.message : "";
+  if (candidate.code === "ECONNABORTED") return translate(language, "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút.", "The scan took longer than 45 seconds. The upstream source may be slow — please try again shortly.");
+  if (message.includes("DexScreener")) return translate(language, "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng.", "This token was not found. Use the full contract address or correct symbol; BTC, ETH, BNB and SOL have dedicated native-asset reports.");
+  return message || translate(language, "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.", "This token could not be scanned. Check the address or try a supported network.");
 }
 
 export default function ScannerPage() {
@@ -185,9 +195,8 @@ export default function ScannerPage() {
       setResult(response.data.data);
       void loadHistory();
       void loadQuota();
-    } catch (err: any) {
-      const message = err?.response?.data?.message;
-      setError(err?.code === "ECONNABORTED" ? translate(language, "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút.", "The scan took longer than 45 seconds. The upstream source may be slow — please try again shortly.") : (message?.includes("DexScreener") ? translate(language, "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng.", "This token was not found. Use the full contract address or correct symbol; BTC, ETH, BNB and SOL have dedicated native-asset reports.") : (message || translate(language, "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.", "This token could not be scanned. Check the address or try a supported network."))));
+    } catch (error) {
+      setError(scannerErrorMessage(error, language));
     } finally { setLoading(false); }
   }
 
@@ -211,9 +220,8 @@ export default function ScannerPage() {
     try {
       const response = await apiClient.get<{ data: TokenCandidate[] }>("/api/v1/news-feed/scanner/candidates", { params: { token: query }, timeout: 15000 });
       setCandidates(response.data.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message;
-      setError(err?.code === "ECONNABORTED" ? translate(language, "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút.", "The scan took longer than 45 seconds. The upstream source may be slow — please try again shortly.") : (message?.includes("DexScreener") ? translate(language, "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng.", "This token was not found. Use the full contract address or correct symbol; BTC, ETH, BNB and SOL have dedicated native-asset reports.") : (message || translate(language, "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.", "This token could not be scanned. Check the address or try a supported network."))));
+    } catch (error) {
+      setError(scannerErrorMessage(error, language));
     } finally { setLoading(false); }
   }
 
