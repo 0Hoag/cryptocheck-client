@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
+import { getErrorMessage } from "@/lib/utils";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
@@ -116,23 +117,26 @@ export default function ScannerPage() {
   const [candidates, setCandidates] = useState<TokenCandidate[]>([]);
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
   const [quota, setQuota] = useState<ScanQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = useState(false);
+  const [quotaError, setQuotaError] = useState("");
   const [lastAttempt, setLastAttempt] = useState("");
 
   async function loadHistory() {
     if (!getAuthToken()) {
       setHistory([]);
+      setHistoryError("");
       return;
     }
     setHistoryLoading(true);
+    setHistoryError("");
     try {
       const response = await apiClient.get<{ data: ScanHistoryItem[] }>("/api/v1/news-feed/scanner/history", { params: { limit: 8 } });
       setHistory(response.data.data);
-    } catch {
-      // The shared API interceptor handles expired sessions. History is optional
-      // and must never block an otherwise usable scanner.
+    } catch (requestError) {
       setHistory([]);
+      setHistoryError(getErrorMessage(requestError, translate(language, "Không tải được lịch sử quét.", "Unable to load scan history.")));
     } finally {
       setHistoryLoading(false);
     }
@@ -141,16 +145,17 @@ export default function ScannerPage() {
   async function loadQuota() {
     if (!getAuthToken()) {
       setQuota(null);
+      setQuotaError("");
       return;
     }
     setQuotaLoading(true);
+    setQuotaError("");
     try {
       const response = await apiClient.get<{ data: ScanQuota }>("/api/v1/news-feed/scanner/quota");
       setQuota(response.data.data);
-    } catch {
-      // Quota is informative. A scan continues to rely on the API's enforced
-      // entitlement, even if this optional status request is unavailable.
+    } catch (requestError) {
       setQuota(null);
+      setQuotaError(getErrorMessage(requestError, translate(language, "Không tải được quyền quét hiện tại.", "Unable to load your current scan access.")));
     } finally {
       setQuotaLoading(false);
     }
@@ -241,16 +246,19 @@ export default function ScannerPage() {
                 ? translate(language, "Đang kiểm tra quyền quét…", "Checking scanner entitlement…")
                 : quota?.unlimited
                   ? translate(language, "Premium đang hoạt động — lượt quét không giới hạn.", "Premium is active — scans are unlimited.")
-                  : quota
+                    : quota
                     ? translate(language, `Gói Free: đã dùng ${quota.used}/${quota.limit} lượt quét thành công hôm nay.`, `Free plan: ${quota.used}/${quota.limit} successful scans used today.`)
-                    : translate(language, "Quyền quét sẽ được máy chủ kiểm tra trước mỗi lượt quét.", "The server will verify your scanner entitlement before every scan.")}
+                    : quotaError
+                      ? translate(language, "Chưa tải được quyền quét — máy chủ vẫn sẽ kiểm tra trước mỗi lượt quét.", "Scan access could not be loaded — the server will still verify it before every scan.")
+                      : translate(language, "Quyền quét sẽ được máy chủ kiểm tra trước mỗi lượt quét.", "The server will verify your scanner entitlement before every scan.")}
+            {!quotaLoading && quotaError && <button type="button" onClick={() => void loadQuota()} className="shrink-0 font-semibold text-sky-200 underline underline-offset-2 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button>}
           </div>
         </div>
       </section>
 
       {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => { setError(""); setResult(null); }} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Nhập lại", "Edit input")}</button>{lastAttempt && <button type="button" onClick={() => void startScan(lastAttempt)} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Thử lại", "Retry")}</button>}</div></div>}
 
-      {getAuthToken() && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{translate(language, "Tài khoản của bạn", "Your account")}</div><h2 className="mt-1 text-base font-semibold text-white">{translate(language, "Lịch sử quét gần đây", "Recent scan history")}</h2></div>{historyLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{history.length > 0 ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={item.id} type="button" onClick={() => { setToken(item.input); void runScan(item.input); }} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/55 px-3 py-2.5 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5"><div className="min-w-0"><div className="truncate font-mono text-sm font-semibold text-slate-100">{item.input}</div><div className="mt-1 text-xs text-slate-500">{item.network} · {dateTime(language, item.created_at)}</div></div>{item.score_available ? <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold ${scoreTone(item.trust_score)}`}>{item.trust_score}/100</span> : <span className="shrink-0 rounded-md bg-sky-500/10 px-2 py-1 text-xs font-medium text-sky-200">{translate(language, "Thị trường", "Market")}</span>}</button>)}</div> : !historyLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Chưa có lượt quét nào được lưu trong tài khoản này.", "No scans have been saved to this account yet.")}</p>}</section>}
+      {getAuthToken() && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{translate(language, "Tài khoản của bạn", "Your account")}</div><h2 className="mt-1 text-base font-semibold text-white">{translate(language, "Lịch sử quét gần đây", "Recent scan history")}</h2></div>{historyLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{historyError ? <div role="alert" className="mt-4 rounded-lg border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-100"><p>{historyError}</p><button type="button" onClick={() => void loadHistory()} className="mt-2 font-semibold text-sky-300 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button></div> : history.length > 0 ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={item.id} type="button" onClick={() => { setToken(item.input); void runScan(item.input); }} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/55 px-3 py-2.5 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5"><div className="min-w-0"><div className="truncate font-mono text-sm font-semibold text-slate-100">{item.input}</div><div className="mt-1 text-xs text-slate-500">{item.network} · {dateTime(language, item.created_at)}</div></div>{item.score_available ? <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold ${scoreTone(item.trust_score)}`}>{item.trust_score}/100</span> : <span className="shrink-0 rounded-md bg-sky-500/10 px-2 py-1 text-xs font-medium text-sky-200">{translate(language, "Thị trường", "Market")}</span>}</button>)}</div> : !historyLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Chưa có lượt quét nào được lưu trong tài khoản này.", "No scans have been saved to this account yet.")}</p>}</section>}
 
       {candidates.length > 0 && <section className="surface mt-6 p-6"><div className="flex items-center gap-2 eyebrow"><Search className="h-4 w-4 text-sky-400" /> {translate(language, "Chọn đúng tài sản để quét", "Choose the asset to scan")}</div><p className="mt-2 text-sm leading-6 text-slate-400">{translate(language, "So sánh logo, giá, chain, thanh khoản, volume và DEX trước khi chọn token đúng.", "Compare logo, price, chain, liquidity, volume and DEX before selecting the correct token.")}</p><div className="mt-5 grid gap-3">{candidates.map((candidate) => <button key={`${candidate.network}-${candidate.address}`} type="button" onClick={() => { setToken(candidate.address); void runScan(candidate.address); }} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 items-start gap-3"><TokenAvatar name={candidate.name} symbol={candidate.symbol} imageURL={candidate.image_url} /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-100">{candidate.name} ({candidate.symbol})</span><span className="rounded-md border border-slate-700 bg-slate-950/40 px-2 py-0.5 text-xs text-slate-300">{candidate.network}</span>{candidate.contract_scan_supported ? <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">{translate(language, "Có thể security scan", "Security scan available")}</span> : <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-200">{translate(language, "Hồ sơ thị trường", "Market profile")}</span>}</div><div className="mt-1 break-all font-mono text-xs text-slate-500">{candidate.address}</div><div className="mt-1 text-xs text-slate-500">DEX: {candidate.dex_id || translate(language, "Chưa rõ", "Unknown")} · {translate(language, "Pair từ", "Pair since")} {dateFromUnixMs(language, candidate.pair_created_at)}</div></div></div><div className="grid grid-cols-3 gap-4 text-xs text-slate-400 sm:text-right"><span>{translate(language, "Giá hiện tại", "Current price")}<strong className="mt-1 block text-sm text-sky-200">{tokenPrice(language, candidate.price_usd)}</strong></span><span>{translate(language, "Thanh khoản", "Liquidity")}<strong className="mt-1 block text-sm text-slate-200">{usd(language, candidate.liquidity_usd)}</strong></span><span>{translate(language, "Volume 24h", "24h volume")}<strong className="mt-1 block text-sm text-slate-200">{volume24h(language, candidate.volume_h24)}</strong></span></div></button>)}</div></section>}
 

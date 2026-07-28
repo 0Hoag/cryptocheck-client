@@ -50,6 +50,7 @@ npm run build
 - [x] Add EVM address validation, request timeout/retry, explicit explorer/source availability states, and clear empty-24h-volume wording. (production build passed)
 - [x] Add chain-aware address validation for non-EVM contracts before claiming direct-address coverage outside EVM. (Solana SPL mint base58 validation; unsupported direct addresses are stopped locally with actionable guidance; production build passed)
 - [x] Render Free versus Premium scanner entitlement/limit information from the authenticated API quota endpoint; server remains the source of truth. (production build passed)
+  - [x] Show independent retryable errors for optional quota and scan-history requests, without blocking a scanner request that the API can still authorize. (production build passed)
 
 ## 3. Community social experience
 
