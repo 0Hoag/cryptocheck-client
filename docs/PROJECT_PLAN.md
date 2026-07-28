@@ -96,6 +96,7 @@ npm run build
   - [x] Add owner-only group editing for identity, visibility and join policy; private visibility remains enforced by the API entitlement check. (production build passed)
 - [ ] Gate “Create group” and enhanced scan actions from API entitlement, with an upgrade CTA.
   - [x] Make group privacy selection entitlement-aware using the authenticated server quota; Free users get a clear private-group upgrade explanation while the API remains the enforcement point. (production build passed)
+  - [x] Restrict the group-creation entry point to active Premium users and show Free users an Account/Premium CTA; the API enforces the same rule. (production build passed)
 - [ ] Add checkout UI only after payment provider/API webhook work is complete.
 
 ## 5. Quality and release
