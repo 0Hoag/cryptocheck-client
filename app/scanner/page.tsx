@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
@@ -260,6 +261,7 @@ export default function ScannerPage() {
                       ? translate(language, "Chưa tải được quyền quét — máy chủ vẫn sẽ kiểm tra trước mỗi lượt quét.", "Scan access could not be loaded — the server will still verify it before every scan.")
                       : translate(language, "Quyền quét sẽ được máy chủ kiểm tra trước mỗi lượt quét.", "The server will verify your scanner entitlement before every scan.")}
             {!quotaLoading && quotaError && <button type="button" onClick={() => void loadQuota()} className="shrink-0 font-semibold text-sky-200 underline underline-offset-2 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button>}
+            {!quotaLoading && quota && !quota.unlimited && <Link href="/account#premium" className="shrink-0 font-semibold text-amber-200 underline underline-offset-2 hover:text-amber-100">{translate(language, "Xem Premium", "View Premium")}</Link>}
           </div>
         </div>
       </section>
