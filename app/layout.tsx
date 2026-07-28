@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="vi" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
         <LanguageProvider>
         <div className="min-h-screen bg-transparent">

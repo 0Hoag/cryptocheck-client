@@ -13,6 +13,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const saved = window.localStorage.getItem("cryptocheck-language");
     if (saved === "vi" || saved === "en") setLanguageState(saved);
   }, []);
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
   const setLanguage = (next: Language) => { setLanguageState(next); window.localStorage.setItem("cryptocheck-language", next); };
   return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>;
 }
