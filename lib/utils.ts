@@ -40,6 +40,13 @@ export function getSourceName(url: string): string {
     return domain;
 }
 
+export function getErrorMessage(error: unknown, fallback: string): string {
+    const candidate = error as { response?: { data?: { message?: unknown } } };
+    return typeof candidate?.response?.data?.message === "string" && candidate.response.data.message.trim()
+        ? candidate.response.data.message
+        : fallback;
+}
+
 export function truncateText(text: string, maxLength: number): string {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength).trim() + "...";
@@ -54,4 +61,3 @@ export function extractImageUrl(content: string): string | null {
     const match = content.match(/!\[.*?\]\((https?:\/\/[^\)]+)\)/);
     return match ? match[1] : null;
 }
-
