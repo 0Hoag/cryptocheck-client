@@ -118,4 +118,5 @@ npm run build
   - [x] Validate Binance mini-ticker websocket payloads and initialize the market coin list without synchronous effect state updates. (targeted lint + production build passed; remote-image warning remains)
   - [x] Validate CustomChart REST/websocket candle payloads and keep the candle renderer stable outside React render. (targeted lint + production build passed)
   - [x] Type ProfessionalChart REST/websocket market payloads, remove unsafe chart-series casts and fix crosshair state initialization. (targeted lint + production build passed)
+  - [x] Reduce the global lint baseline to one user-owned Community type error plus 13 non-blocking warnings; do not claim full lint completion until that isolated file and remaining warnings are addressed. (global lint audited)
   - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.
