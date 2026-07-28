@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { ArrowRight, Crown, Loader2, Lock, Plus, UsersRound } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
@@ -26,15 +26,15 @@ export default function GroupsPage() {
   const [creating, setCreating] = useState(false);
   const [entitlement, setEntitlement] = useState<"loading" | "premium" | "free" | "unknown">("unknown");
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try { setGroups(await getGroups()); }
     catch (requestError) { setError(getErrorMessage(requestError, translate(language, "Không tải được danh sách group. Vui lòng thử lại.", "Unable to load groups. Please try again."))); }
     finally { setLoading(false); }
-  }
+  }, [language]);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
     if (!getAuthToken()) { setEntitlement("unknown"); return; }

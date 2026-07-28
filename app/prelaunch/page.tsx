@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CalendarClock, ExternalLink, Loader2, Pencil, Radar, Trash2, X } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { getAuthToken } from "@/lib/auth";
@@ -68,7 +68,7 @@ export default function PrelaunchPage() {
   const [editingID, setEditingID] = useState<string | null>(null);
   const [form, setForm] = useState<ProjectForm>(blankForm);
 
-  async function loadProjects() {
+  const loadProjects = useCallback(async () => {
     setLoading(true);
     setListError("");
     try {
@@ -80,9 +80,9 @@ export default function PrelaunchPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [language]);
 
-  useEffect(() => { void loadProjects(); }, [language]);
+  useEffect(() => { void loadProjects(); }, [loadProjects]);
 
   function cancelEditing() {
     setEditingID(null);
