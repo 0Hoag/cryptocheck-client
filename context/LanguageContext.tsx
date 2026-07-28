@@ -1,22 +1,41 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useSyncExternalStore } from "react";
 
 export type Language = "vi" | "en";
 
 type LanguageContextValue = { language: Language; setLanguage: (language: Language) => void };
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+const LANGUAGE_STORAGE_KEY = "cryptocheck-language";
+const LANGUAGE_CHANGE_EVENT = "cryptocheck-language-change";
+
+function getStoredLanguage(): Language {
+  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return saved === "en" ? "en" : "vi";
+}
+
+function getServerLanguage(): Language {
+  return "vi";
+}
+
+function subscribeToLanguage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(LANGUAGE_CHANGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(LANGUAGE_CHANGE_EVENT, callback);
+  };
+}
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("vi");
-  useEffect(() => {
-    const saved = window.localStorage.getItem("cryptocheck-language");
-    if (saved === "vi" || saved === "en") setLanguageState(saved);
-  }, []);
+  const language = useSyncExternalStore(subscribeToLanguage, getStoredLanguage, getServerLanguage);
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
-  const setLanguage = (next: Language) => { setLanguageState(next); window.localStorage.setItem("cryptocheck-language", next); };
+  const setLanguage = (next: Language) => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
+    window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
+  };
   return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>;
 }
 
