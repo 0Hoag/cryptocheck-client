@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CalendarClock, ExternalLink, Loader2, Pencil, Radar, Trash2, X } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { getAuthToken } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/utils";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
 type Project = {
@@ -30,11 +31,6 @@ type ProjectForm = {
 };
 
 const blankForm: ProjectForm = { name: "", symbol: "", website_url: "", claimed_chain: "", social_urls: "", evidence: "", launch_at: "" };
-
-function getErrorMessage(error: unknown, fallback: string) {
-  const candidate = error as { response?: { data?: { message?: string } } };
-  return candidate.response?.data?.message || fallback;
-}
 
 function toForm(project: Project): ProjectForm {
   return {
