@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import RequireAuth from "@/components/RequireAuth";
 import { apiClient } from "@/lib/api";
@@ -42,7 +42,7 @@ function NotificationsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadNotifications() {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -53,7 +53,7 @@ function NotificationsContent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [language]);
 
   async function markRead(id: string) {
     try {
@@ -73,7 +73,7 @@ function NotificationsContent() {
     }
   }
 
-  useEffect(() => { void loadNotifications(); }, []);
+  useEffect(() => { void loadNotifications(); }, [loadNotifications]);
   const hasUnread = notifications.some((item) => !item.read_at);
 
   return <main className="min-h-screen px-4 py-8 sm:px-6 lg:py-12">

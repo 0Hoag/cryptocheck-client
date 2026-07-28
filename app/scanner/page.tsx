@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
@@ -133,7 +133,7 @@ export default function ScannerPage() {
   const [quotaError, setQuotaError] = useState("");
   const [lastAttempt, setLastAttempt] = useState("");
 
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     if (!getAuthToken()) {
       setHistory([]);
       setHistoryError("");
@@ -150,9 +150,9 @@ export default function ScannerPage() {
     } finally {
       setHistoryLoading(false);
     }
-  }
+  }, [language]);
 
-  async function loadQuota() {
+  const loadQuota = useCallback(async () => {
     if (!getAuthToken()) {
       setQuota(null);
       setQuotaError("");
@@ -169,12 +169,12 @@ export default function ScannerPage() {
     } finally {
       setQuotaLoading(false);
     }
-  }
+  }, [language]);
 
   useEffect(() => {
     void loadHistory();
     void loadQuota();
-  }, []);
+  }, [loadHistory, loadQuota]);
 
   function validateQuery(query: string) {
     if (query.startsWith("0x") && !/^0x[a-fA-F0-9]{40}$/.test(query)) {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Activity, Bell, CheckCheck, ChevronDown, Globe2, Loader2, LogIn, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clearAuth, getAuthUser, AuthUser } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
 import { formatDate, getErrorMessage } from "@/lib/utils";
@@ -58,13 +58,13 @@ export default function Header() {
         window.addEventListener("mousedown", closeOnOutsideClick);
         return () => window.removeEventListener("mousedown", closeOnOutsideClick);
     }, []);
-    async function loadNotifications() {
+    const loadNotifications = useCallback(async () => {
         if (!getAuthUser()) return;
         setNotificationsLoading(true); setNotificationError("");
         try { setNotifications((await apiClient.get<{ data: AppNotification[] }>("/api/v1/news-feed/notifications")).data.data); }
         catch (error) { setNotificationError(getErrorMessage(error, translate(language, "Không tải được thông báo.", "Unable to load notifications."))); }
         finally { setNotificationsLoading(false); }
-    }
+    }, [language]);
     async function markNotificationRead(id: string) {
         try {
             await apiClient.post(`/api/v1/news-feed/notifications/${id}/read`);
@@ -80,7 +80,7 @@ export default function Header() {
     useEffect(() => {
         if (!user) { setNotifications([]); setNotificationError(""); return; }
         void loadNotifications();
-    }, [user?.id]);
+    }, [user, loadNotifications]);
     const navigation = [
         { href: "/", label: language === "vi" ? "Trang chủ" : "Home" },
         { href: "/news", label: language === "vi" ? "Tin tức" : "News" },
