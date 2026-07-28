@@ -54,6 +54,10 @@ export async function createGroup(input: CreateGroupInput) {
   return (await apiClient.post<{ data: CommunityGroup }>("/api/v1/news-feed/groups", input)).data.data;
 }
 
+export async function updateGroup(id: string, input: CreateGroupInput) {
+  return (await apiClient.patch<{ data: CommunityGroup }>(`/api/v1/news-feed/groups/${id}`, input)).data.data;
+}
+
 export async function joinGroup(id: string) {
   return (await apiClient.post<{ data: GroupMembership }>(`/api/v1/news-feed/groups/${id}/join`)).data.data;
 }
