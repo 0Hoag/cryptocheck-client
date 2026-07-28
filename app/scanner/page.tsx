@@ -10,6 +10,7 @@ type ScanIssue = { type: string; name: string; description: string; impact: numb
 type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset" | "solana_mint"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; price_usd?: number; image_url?: string; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
 type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; price_usd: number; image_url?: string; dex_id?: string; pair_created_at?: number; contract_scan_supported: boolean };
 type ScanHistoryItem = { id: string; input: string; network: string; analysis_type: ScanResult["analysis_type"]; trust_score: number; score_available: boolean; engine_version: string; created_at: string };
+type ScanQuota = { plan: "free" | "premium"; limit: number; used: number; unlimited: boolean };
 
 function scoreTone(score: number) {
   if (score >= 75) return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
@@ -115,6 +116,8 @@ export default function ScannerPage() {
   const [candidates, setCandidates] = useState<TokenCandidate[]>([]);
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [quota, setQuota] = useState<ScanQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
   const [lastAttempt, setLastAttempt] = useState("");
 
   async function loadHistory() {
@@ -135,8 +138,27 @@ export default function ScannerPage() {
     }
   }
 
+  async function loadQuota() {
+    if (!getAuthToken()) {
+      setQuota(null);
+      return;
+    }
+    setQuotaLoading(true);
+    try {
+      const response = await apiClient.get<{ data: ScanQuota }>("/api/v1/news-feed/scanner/quota");
+      setQuota(response.data.data);
+    } catch {
+      // Quota is informative. A scan continues to rely on the API's enforced
+      // entitlement, even if this optional status request is unavailable.
+      setQuota(null);
+    } finally {
+      setQuotaLoading(false);
+    }
+  }
+
   useEffect(() => {
     void loadHistory();
+    void loadQuota();
   }, []);
 
   function validateQuery(query: string) {
@@ -157,6 +179,7 @@ export default function ScannerPage() {
       const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: language }, timeout: 45000 });
       setResult(response.data.data);
       void loadHistory();
+      void loadQuota();
     } catch (err: any) {
       const message = err?.response?.data?.message;
       setError(err?.code === "ECONNABORTED" ? translate(language, "Quét token mất quá 45 giây. Máy chủ nguồn có thể đang chậm — hãy thử lại sau ít phút.", "The scan took longer than 45 seconds. The upstream source may be slow — please try again shortly.") : (message?.includes("DexScreener") ? translate(language, "Không tìm thấy token này. Hãy dùng địa chỉ contract đầy đủ hoặc thử đúng symbol; BTC, ETH, BNB và SOL đã có native asset report riêng.", "This token was not found. Use the full contract address or correct symbol; BTC, ETH, BNB and SOL have dedicated native-asset reports.") : (message || translate(language, "Không thể quét token này. Hãy kiểm tra lại địa chỉ hoặc thử mạng được hỗ trợ.", "This token could not be scanned. Check the address or try a supported network."))));
@@ -210,6 +233,18 @@ export default function ScannerPage() {
             </button>
           </form>
           <p className="mt-3 text-xs text-slate-500">{translate(language, "Quét trực tiếp hỗ trợ địa chỉ EVM và Solana SPL mint. Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có hồ sơ thị trường từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.", "Direct scanning supports EVM addresses and Solana SPL mints. Verified contracts on ETH, BSC, Base, Arbitrum and Polygon receive a security scan; tokens on other chains can still receive a DexScreener market profile without a security score. Automated results are not an audit or safety guarantee.")}</p>
+          <div aria-live="polite" className="mt-5 inline-flex max-w-full items-center gap-2 rounded-lg border border-sky-400/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-100">
+            <Sparkles className="h-4 w-4 shrink-0 text-sky-300" />
+            {!getAuthToken()
+              ? translate(language, "Đăng nhập để dùng gói Free: 2 lượt quét thành công mỗi ngày. Premium: không giới hạn.", "Sign in to use Free: 2 successful scans per day. Premium: unlimited.")
+              : quotaLoading
+                ? translate(language, "Đang kiểm tra quyền quét…", "Checking scanner entitlement…")
+                : quota?.unlimited
+                  ? translate(language, "Premium đang hoạt động — lượt quét không giới hạn.", "Premium is active — scans are unlimited.")
+                  : quota
+                    ? translate(language, `Gói Free: đã dùng ${quota.used}/${quota.limit} lượt quét thành công hôm nay.`, `Free plan: ${quota.used}/${quota.limit} successful scans used today.`)
+                    : translate(language, "Quyền quét sẽ được máy chủ kiểm tra trước mỗi lượt quét.", "The server will verify your scanner entitlement before every scan.")}
+          </div>
         </div>
       </section>
 

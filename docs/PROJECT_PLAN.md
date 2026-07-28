@@ -47,7 +47,7 @@ npm run build
 - [x] Add API-backed scan history for signed-in users, including saved input, scope type, score and timestamp; allow one-click re-scan. (production build passed)
 - [x] Add EVM address validation, request timeout/retry, explicit explorer/source availability states, and clear empty-24h-volume wording. (production build passed)
 - [x] Add chain-aware address validation for non-EVM contracts before claiming direct-address coverage outside EVM. (Solana SPL mint base58 validation; unsupported direct addresses are stopped locally with actionable guidance; production build passed)
-- [ ] Render Free versus Premium capability/limit information from API entitlements.
+- [x] Render Free versus Premium scanner entitlement/limit information from the authenticated API quota endpoint; server remains the source of truth. (production build passed)
 
 ## 3. Community social experience
 
