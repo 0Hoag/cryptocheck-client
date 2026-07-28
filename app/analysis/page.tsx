@@ -92,7 +92,7 @@ export default function AnalysisPage() {
 
     return (
         <main className="min-h-screen bg-[#050505] text-gray-200 p-4">
-            <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-140px)]">
+            <div className="mx-auto grid max-w-[1920px] grid-cols-1 gap-4 lg:grid-cols-12 lg:h-[calc(100vh-140px)]">
 
                 {/* LEFT: Order Book (Real-time) */}
                 <div className="hidden lg:block lg:col-span-2 xl:col-span-2 bg-[#111] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
@@ -147,6 +147,17 @@ export default function AnalysisPage() {
                 {/* MIDDLE: Chart */}
                 <div className="col-span-1 lg:col-span-7 xl:col-span-8 bg-[#111] border border-white/5 rounded-2xl overflow-hidden relative">
                     <ProfessionalChart symbol={selectedSymbol} coinName={selectedCoinName} />
+                </div>
+
+                {/* Mobile keeps asset selection usable instead of hiding it with the desktop sidebar. */}
+                <div className="h-72 lg:hidden">
+                    <CoinList
+                        selectedSymbol={selectedSymbol}
+                        onCoinSelect={(symbol, name) => {
+                            setSelectedSymbol(symbol);
+                            setSelectedCoinName(name);
+                        }}
+                    />
                 </div>
 
                 {/* RIGHT: Coin List (Clickable) */}

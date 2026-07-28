@@ -83,6 +83,7 @@ npm run build
 - [x] Reduce global market-ticker polling from the full Binance ticker payload every 10s to the eight displayed symbols every 60s. (production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
+  - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
 - [ ] Add component/integration tests for auth, scanner and community states.
 - [ ] Add CI for build, lint and tests.

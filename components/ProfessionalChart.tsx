@@ -443,8 +443,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     return (
         <div className="relative w-full h-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-8">
+            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
                     <div>
                         <div className="flex items-baseline gap-3">
                             <span className="text-4xl font-bold text-white">
@@ -460,7 +460,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     </div>
 
                     {/* 24h Stats */}
-                    <div className="flex gap-8 text-sm">
+                    <div className="flex flex-wrap gap-4 text-sm sm:gap-8">
                         <div className="flex flex-col">
                             <span className="text-gray-500 text-xs mb-1">{translate(language, "Đỉnh 24h", "24h high")}</span>
                             <span className="text-gray-200 font-medium">{formatPrice(stats.high)}</span>
@@ -477,7 +477,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 </div>
 
                 {/* Timeframe Selector */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {timeframes.map((tf) => (
                         <button
                             key={tf.value}
