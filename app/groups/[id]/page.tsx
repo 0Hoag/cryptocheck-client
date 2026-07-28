@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Lock, Send, Trash2, UserPlus, UsersRound } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import { CommunityGroup, CreateGroupInput, GroupMembership, GroupPost, createGroupPost, deleteGroup, deleteGroupPost, getGroup, getGroupMembers, getGroupPosts, joinGroup, leaveGroup, updateGroup, updateGroupMember } from "@/lib/groups";
@@ -33,7 +33,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => { void params.then(({ id }) => setGroupID(id)); }, [params]);
 
-  async function loadMembers(id = groupID) {
+  const loadMembers = useCallback(async (id = groupID) => {
     if (!id || !getAuthToken()) {
       setMembers([]);
       setMembersError("");
@@ -49,9 +49,9 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     } finally {
       setMembersLoading(false);
     }
-  }
+  }, [groupID, language]);
 
-  async function load(id = groupID) {
+  const load = useCallback(async (id = groupID) => {
     if (!id) return;
     setLoading(true); setError("");
     try {
@@ -68,9 +68,9 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       setError(getErrorMessage(requestError, translate(language, "Không tải được group này. Có thể group riêng tư hoặc không còn tồn tại.", "Unable to load this group. It may be private or no longer exist.")));
       setGroup(null);
     } finally { setLoading(false); }
-  }
+  }, [groupID, language, loadMembers]);
 
-  useEffect(() => { if (groupID) void load(groupID); }, [groupID]);
+  useEffect(() => { if (groupID) void load(groupID); }, [groupID, load]);
 
   async function join() {
     if (!group) return;

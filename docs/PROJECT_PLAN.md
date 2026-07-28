@@ -121,4 +121,5 @@ npm run build
   - [x] Reduce the global lint baseline to one user-owned Community type error plus 13 non-blocking warnings; do not claim full lint completion until that isolated file and remaining warnings are addressed. (global lint audited)
   - [x] Stabilize notification and scanner data loaders with dependency-safe callbacks, so language changes do not retain stale async closures. (targeted lint + production build passed)
   - [x] Stabilize Group-list and Prelaunch watchlist loaders so translated API errors and refreshes use the active language. (targeted lint + production build passed; remote group-avatar warning remains)
+  - [x] Stabilize Group-detail and member-list loading dependencies without changing group CRUD behavior. (targeted lint + production build passed; remote group-avatar warning remains)
   - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.
