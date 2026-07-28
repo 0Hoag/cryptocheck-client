@@ -69,3 +69,7 @@ export async function updateGroupMember(groupID: string, userID: string, update:
 export async function createGroupPost(id: string, content: string, title = "") {
   return (await apiClient.post<{ data: GroupPost }>(`/api/v1/news-feed/groups/${id}/posts`, { content, title, source_url: "" })).data.data;
 }
+
+export async function deleteGroupPost(groupID: string, postID: string) {
+  await apiClient.delete(`/api/v1/news-feed/groups/${groupID}/posts/${postID}`);
+}

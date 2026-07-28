@@ -79,6 +79,7 @@ npm run build
   - [x] Add API-backed public group directory and detail views, including authentication-aware join/request states and an active-member post composer. (production build passed)
   - [x] Show member roles/status from the authenticated group-members API in group detail. (production build passed)
   - [x] Let group owner/admin approve pending join requests; owner can update member/admin/moderator roles through API-enforced permissions. (production build passed)
+  - [x] Let active post authors and API-authorized group moderators delete group posts with confirmation, retry feedback and in-place UI update. (production build passed)
 - [ ] Gate “Create group” and enhanced scan actions from API entitlement, with an upgrade CTA.
 - [ ] Add checkout UI only after payment provider/API webhook work is complete.
 
