@@ -19,6 +19,79 @@ interface CandleData {
     ma25?: number;
 }
 
+interface CandleStickProps {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    payload?: CandleData;
+}
+
+interface BinanceKlineEvent {
+    k: {
+        t: number;
+        o: string;
+        h: string;
+        l: string;
+        c: string;
+        v: string;
+    };
+}
+
+const TIMEFRAMES = [
+    { label: '5m', value: '5m', limit: 100 },
+    { label: '15m', value: '15m', limit: 100 },
+    { label: '1h', value: '1h', limit: 168 },
+    { label: '4h', value: '4h', limit: 168 },
+    { label: '1d', value: '1d', limit: 90 },
+    { label: '1w', value: '1w', limit: 52 },
+] as const;
+
+function isBinanceKline(value: unknown): value is [number, string, string, string, string, string, ...unknown[]] {
+    return Array.isArray(value)
+        && typeof value[0] === 'number'
+        && typeof value[1] === 'string'
+        && typeof value[2] === 'string'
+        && typeof value[3] === 'string'
+        && typeof value[4] === 'string'
+        && typeof value[5] === 'string';
+}
+
+function isBinanceKlineEvent(value: unknown): value is BinanceKlineEvent {
+    if (typeof value !== 'object' || value === null) return false;
+    const kline = (value as Record<string, unknown>).k;
+    if (typeof kline !== 'object' || kline === null) return false;
+    const data = kline as Record<string, unknown>;
+    return typeof data.t === 'number'
+        && typeof data.o === 'string'
+        && typeof data.h === 'string'
+        && typeof data.l === 'string'
+        && typeof data.c === 'string'
+        && typeof data.v === 'string';
+}
+
+function CandleStick({ x = 0, y = 0, width = 0, height = 0, payload }: CandleStickProps) {
+    if (!payload || !Number.isFinite(payload.open) || !Number.isFinite(payload.close) || !Number.isFinite(payload.high) || !Number.isFinite(payload.low)) return null;
+
+    const { open, close, high, low } = payload;
+    const isGreen = close >= open;
+    const color = isGreen ? '#26a69a' : '#ef5350';
+    const range = high - low;
+    if (range === 0) return null;
+
+    const priceToPixel = height / range;
+    const wickX = x + width / 2;
+    const bodyTop = y + (high - Math.max(open, close)) * priceToPixel;
+    const bodyHeight = Math.abs(close - open) * priceToPixel;
+
+    return (
+        <g>
+            <line x1={wickX} y1={y} x2={wickX} y2={y + height} stroke={color} strokeWidth={1} />
+            <rect x={x + 1} y={bodyTop} width={Math.max(width - 2, 1)} height={Math.max(bodyHeight, 1)} fill={color} stroke={color} strokeWidth={0.5} />
+        </g>
+    );
+}
+
 export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
     const [chartData, setChartData] = useState<CandleData[]>([]);
     const [currentPrice, setCurrentPrice] = useState<string>('0');
@@ -30,16 +103,6 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
     const [startX, setStartX] = useState(0);
     const [dataWindow, setDataWindow] = useState({ start: 0, end: 50 });
     const chartRef = useRef<HTMLDivElement>(null);
-
-    // Timeframe options
-    const timeframes = [
-        { label: '5m', value: '5m', limit: 100 },
-        { label: '15m', value: '15m', limit: 100 },
-        { label: '1h', value: '1h', limit: 168 },
-        { label: '4h', value: '4h', limit: 168 },
-        { label: '1d', value: '1d', limit: 90 },
-        { label: '1w', value: '1w', limit: 52 },
-    ];
 
     // Calculate Moving Averages
     const calculateMA = (data: CandleData[], period: number): CandleData[] => {
@@ -60,7 +123,7 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
     };
 
     useEffect(() => {
-        const currentTimeframe = timeframes.find(tf => tf.value === interval);
+        const currentTimeframe = TIMEFRAMES.find(tf => tf.value === interval);
         const limit = currentTimeframe?.limit || 100;
 
         // Fetch historical candlestick data
@@ -69,9 +132,11 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
                 const response = await fetch(
                     `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
                 );
-                const data = await response.json();
+                if (!response.ok) throw new Error(`Binance returned ${response.status}`);
+                const payload: unknown = await response.json();
+                const data = Array.isArray(payload) ? payload.filter(isBinanceKline) : [];
 
-                let formattedData: CandleData[] = data.map((d: any) => ({
+                let formattedData: CandleData[] = data.map((d) => ({
                     time: new Date(d[0]).toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -115,7 +180,8 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${wsSymbol}@kline_${interval}`);
 
         ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const message: unknown = JSON.parse(event.data);
+            if (!isBinanceKlineEvent(message)) return;
             const kline = message.k;
 
             const newCandle: CandleData = {
@@ -205,58 +271,6 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
 
     const isPositive = priceChange >= 0;
 
-    // Custom Candlestick Shape
-    const CandleStick = (props: any) => {
-        const { x, y, width, height, payload } = props;
-        if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) return null;
-
-        const { open, close, high, low } = payload;
-        const isGreen = close >= open;
-        const color = isGreen ? '#26a69a' : '#ef5350';
-
-        // Calculate positions
-        const range = high - low;
-        if (range === 0) return null;
-
-        // Y position is top of the bar (corresponds to 'high')
-        // Height is the total range from high to low
-        const priceToPixel = height / range;
-
-        // Wick positions (always from high to low)
-        const wickTop = y;
-        const wickBottom = y + height;
-        const wickX = x + width / 2;
-
-        // Body positions
-        const bodyTop = y + (high - Math.max(open, close)) * priceToPixel;
-        const bodyHeight = Math.abs(close - open) * priceToPixel;
-        const minBodyHeight = 1; // Minimum visible height
-
-        return (
-            <g>
-                {/* Wick (high-low line) */}
-                <line
-                    x1={wickX}
-                    y1={wickTop}
-                    x2={wickX}
-                    y2={wickBottom}
-                    stroke={color}
-                    strokeWidth={1}
-                />
-                {/* Body (open-close rectangle) */}
-                <rect
-                    x={x + 1}
-                    y={bodyTop}
-                    width={Math.max(width - 2, 1)}
-                    height={Math.max(bodyHeight, minBodyHeight)}
-                    fill={color}
-                    stroke={color}
-                    strokeWidth={0.5}
-                />
-            </g>
-        );
-    };
-
     // Get max volume for scaling
     const maxVolume = Math.max(...chartData.map(d => d.volume));
 
@@ -290,7 +304,7 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
 
                     {/* Timeframe Selector */}
                     <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg p-1">
-                        {timeframes.map((tf) => (
+                        {TIMEFRAMES.map((tf) => (
                             <button
                                 key={tf.value}
                                 onClick={() => setInterval(tf.value)}
