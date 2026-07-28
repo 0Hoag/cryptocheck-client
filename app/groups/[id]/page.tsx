@@ -17,6 +17,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [posts, setPosts] = useState<GroupPost[]>([]);
   const [members, setMembers] = useState<GroupMembership[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState("");
   const [memberUpdatingID, setMemberUpdatingID] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,6 +33,24 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => { void params.then(({ id }) => setGroupID(id)); }, [params]);
 
+  async function loadMembers(id = groupID) {
+    if (!id || !getAuthToken()) {
+      setMembers([]);
+      setMembersError("");
+      return;
+    }
+    setMembersLoading(true);
+    setMembersError("");
+    try {
+      setMembers(await getGroupMembers(id));
+    } catch (requestError) {
+      setMembers([]);
+      setMembersError(getErrorMessage(requestError, translate(language, "Không tải được danh sách thành viên.", "Unable to load the member list.")));
+    } finally {
+      setMembersLoading(false);
+    }
+  }
+
   async function load(id = groupID) {
     if (!id) return;
     setLoading(true); setError("");
@@ -40,12 +59,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       setGroup(loadedGroup);
       setPosts(await getGroupPosts(id));
       if (getAuthToken()) {
-        setMembersLoading(true);
-        try { setMembers(await getGroupMembers(id)); }
-        catch { setMembers([]); }
-        finally { setMembersLoading(false); }
+        await loadMembers(id);
       } else {
         setMembers([]);
+        setMembersError("");
       }
     } catch (requestError) {
       setError(getErrorMessage(requestError, translate(language, "Không tải được group này. Có thể group riêng tư hoặc không còn tồn tại.", "Unable to load this group. It may be private or no longer exist.")));
@@ -153,6 +170,6 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       {activeMember && <form onSubmit={submit} className="surface mt-5 p-5"><label className="sr-only" htmlFor="group-post">{translate(language, "Nội dung bài viết", "Post content")}</label><textarea id="group-post" value={content} onChange={(event) => setContent(event.target.value)} maxLength={10000} rows={4} placeholder={translate(language, "Chia sẻ góc nhìn với group…", "Share an insight with the group…")} className="w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" /><div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3"><span className="text-xs text-slate-500">{content.length}/10000</span><button disabled={posting || !content.trim()} className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{translate(language, "Đăng bài", "Publish")}</button></div></form>}
       <section className="mt-6"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Bài viết trong group", "Group posts")}</div><div className="mt-4 space-y-3">{posts.length ? posts.map((post) => { const canDelete = activeMember && (canModeratePosts || post.author_id === group.membership?.user_id); return <article key={post.id} className="surface p-5"><div className="flex items-start justify-between gap-4"><div className="min-w-0">{post.title && <h2 className="font-semibold text-white">{post.title}</h2>}<p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p></div>{canDelete && <button type="button" onClick={() => void removePost(post)} disabled={postDeletingID === post.id} aria-label={translate(language, "Xóa bài viết", "Delete post")} className="shrink-0 rounded-lg border border-red-400/25 p-2 text-red-200 hover:bg-red-500/10 disabled:opacity-50">{postDeletingID === post.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</button>}</div></article>; }) : <div className="surface p-8 text-center text-sm text-slate-400">{translate(language, "Chưa có bài viết trong group này.", "There are no posts in this group yet.")}</div>}</div></section>
       {group.membership?.role === "owner" && <section className="mt-6 rounded-xl border border-red-500/25 bg-red-500/5 p-5"><h2 className="font-semibold text-red-100">{translate(language, "Khu vực nguy hiểm", "Danger zone")}</h2><p className="mt-1 text-sm leading-6 text-red-100/70">{translate(language, "Xóa group sẽ ẩn group khỏi cộng đồng. Chỉ chủ group mới có quyền này.", "Deleting a group hides it from the community. Only the group owner can do this.")}</p><button type="button" onClick={() => void removeGroup()} disabled={groupDeleting} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-400/30 px-4 py-2 text-sm font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-50">{groupDeleting && <Loader2 className="h-4 w-4 animate-spin" />}<Trash2 className="h-4 w-4" />{translate(language, "Xóa group", "Delete group")}</button></section>}
-      {signedIn && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Thành viên", "Members")}</div>{membersLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{members.length ? <div className="mt-4 flex flex-wrap gap-2">{members.map((member) => <div key={member.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs"><span className="font-mono text-slate-400">…{member.user_id.slice(-5)}</span><span className={`rounded px-1.5 py-0.5 font-semibold ${member.status === "pending" ? "bg-amber-500/10 text-amber-200" : "bg-sky-500/10 text-sky-200"}`}>{member.status === "pending" ? translate(language, "Chờ duyệt", "Pending") : member.role === "owner" ? translate(language, "Chủ group", "Owner") : member.role === "admin" ? "Admin" : member.role === "moderator" ? translate(language, "Kiểm duyệt", "Moderator") : translate(language, "Thành viên", "Member")}</span>{canManageMembers && member.status === "pending" && <button type="button" disabled={memberUpdatingID === member.id} onClick={() => void updateMember(member, { status: "active" })} className="rounded border border-emerald-400/25 px-1.5 py-0.5 font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50">{translate(language, "Duyệt", "Approve")}</button>}{canSetRoles && member.role !== "owner" && <select value={member.role} disabled={memberUpdatingID === member.id} onChange={(event) => void updateMember(member, { role: event.target.value as GroupMembership["role"] })} aria-label={translate(language, "Đổi role thành viên", "Change member role")} className="rounded border border-slate-700 bg-slate-950 px-1 py-0.5 text-slate-200 disabled:opacity-50"><option value="member">{translate(language, "Thành viên", "Member")}</option><option value="moderator">{translate(language, "Kiểm duyệt", "Moderator")}</option><option value="admin">Admin</option></select>}</div>)}</div> : !membersLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Không thể hiển thị thành viên hoặc group chưa có thành viên.", "Members are unavailable or this group has no members yet.")}</p>}</section>}
+      {signedIn && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div className="eyebrow"><UsersRound className="h-4 w-4 text-sky-400" />{translate(language, "Thành viên", "Members")}</div>{membersLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{membersError ? <div role="alert" className="mt-4 rounded-lg border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-100"><p>{membersError}</p><button type="button" onClick={() => void loadMembers()} className="mt-2 font-semibold text-sky-300 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button></div> : members.length ? <div className="mt-4 flex flex-wrap gap-2">{members.map((member) => <div key={member.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs"><span className="font-mono text-slate-400">…{member.user_id.slice(-5)}</span><span className={`rounded px-1.5 py-0.5 font-semibold ${member.status === "pending" ? "bg-amber-500/10 text-amber-200" : "bg-sky-500/10 text-sky-200"}`}>{member.status === "pending" ? translate(language, "Chờ duyệt", "Pending") : member.role === "owner" ? translate(language, "Chủ group", "Owner") : member.role === "admin" ? "Admin" : member.role === "moderator" ? translate(language, "Kiểm duyệt", "Moderator") : translate(language, "Thành viên", "Member")}</span>{canManageMembers && member.status === "pending" && <button type="button" disabled={memberUpdatingID === member.id} onClick={() => void updateMember(member, { status: "active" })} className="rounded border border-emerald-400/25 px-1.5 py-0.5 font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50">{translate(language, "Duyệt", "Approve")}</button>}{canSetRoles && member.role !== "owner" && <select value={member.role} disabled={memberUpdatingID === member.id} onChange={(event) => void updateMember(member, { role: event.target.value as GroupMembership["role"] })} aria-label={translate(language, "Đổi role thành viên", "Change member role")} className="rounded border border-slate-700 bg-slate-950 px-1 py-0.5 text-slate-200 disabled:opacity-50"><option value="member">{translate(language, "Thành viên", "Member")}</option><option value="moderator">{translate(language, "Kiểm duyệt", "Moderator")}</option><option value="admin">Admin</option></select>}</div>)}</div> : !membersLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Group chưa có thành viên để hiển thị.", "This group has no members to show yet.")}</p>}</section>}
     </>}</section></main>;
 }
