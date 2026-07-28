@@ -74,7 +74,7 @@ npm run build
 
 ## 4. Premium and group UX
 
-- [ ] Add plans and entitlement status page once API domain is available.
+- [x] Add authenticated plan and entitlement status to Account using the API quota endpoint, with loading/retry/error states and explicit server-authority wording. (production build passed)
 - [ ] Add group directory, group detail, member roles and group post composer.
   - [x] Add API-backed public group directory and detail views, including authentication-aware join/request states and an active-member post composer. (production build passed)
   - [x] Show member roles/status from the authenticated group-members API in group detail. (production build passed)
