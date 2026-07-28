@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Activity, Calendar, Wallet, Clock, Loader2 } from "lucide-react";
+import { TrendingDown, Activity, Calendar, Wallet, Clock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { translate, useLanguage } from "@/context/LanguageContext";
 

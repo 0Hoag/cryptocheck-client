@@ -125,6 +125,7 @@ npm run build
   - [x] Validate CustomChart REST/websocket candle payloads and keep the candle renderer stable outside React render. (targeted lint + production build passed)
   - [x] Type ProfessionalChart REST/websocket market payloads, remove unsafe chart-series casts and fix crosshair state initialization. (targeted lint + production build passed)
   - [x] Reduce the global lint baseline to one user-owned Community type error plus 13 non-blocking warnings; do not claim full lint completion until that isolated file and remaining warnings are addressed. (global lint audited)
+  - [x] Remove the unused market-widget icon import; the remaining image warnings use dynamic third-party URLs and need a safe media-proxy/allowlist decision rather than a cosmetic suppression. (targeted lint + 9 tests + production build passed)
   - [x] Stabilize notification and scanner data loaders with dependency-safe callbacks, so language changes do not retain stale async closures. (targeted lint + production build passed)
   - [x] Stabilize Group-list and Prelaunch watchlist loaders so translated API errors and refreshes use the active language. (targeted lint + production build passed; remote group-avatar warning remains)
   - [x] Stabilize Group-detail and member-list loading dependencies without changing group CRUD behavior. (targeted lint + production build passed; remote group-avatar warning remains)
