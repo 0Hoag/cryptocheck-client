@@ -114,4 +114,5 @@ npm run build
   - [x] Remove Scanner lint errors by using typed request-error handling and key-based token-icon resets instead of synchronous effect state. (targeted lint + production build passed)
   - [x] Type Analysis order-book messages and prevent stale rows from appearing while a newly selected market is loading. (targeted lint + production build passed)
   - [x] Type Binance ticker payloads in the global ticker and top-ranking widgets, and reject invalid provider payloads safely. (targeted lint + production build passed)
+  - [x] Validate Binance mini-ticker websocket payloads and initialize the market coin list without synchronous effect state updates. (targeted lint + production build passed; remote-image warning remains)
   - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.

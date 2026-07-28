@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
 interface CoinListProps {
@@ -19,13 +19,42 @@ interface CoinData {
     tvSymbol?: string;
 }
 
+interface CoinDefinition {
+    id: string;
+    symbol: string;
+    name: string;
+    tvSymbol?: string;
+}
+
+interface BinanceMiniTicker {
+    s: string;
+    c: string;
+    o: string;
+}
+
+function isBinanceMiniTicker(value: unknown): value is BinanceMiniTicker {
+    if (typeof value !== "object" || value === null) return false;
+    const ticker = value as Record<string, unknown>;
+    return typeof ticker.s === "string" && typeof ticker.c === "string" && typeof ticker.o === "string";
+}
+
+function createInitialCoins(coinMapping: readonly CoinDefinition[]): CoinData[] {
+    return coinMapping.map((coin) => ({
+        id: coin.id,
+        symbol: coin.symbol,
+        name: coin.name,
+        price: "0.00",
+        change: "0.00",
+        changePercent: "0.00",
+        icon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png`,
+        tvSymbol: coin.tvSymbol,
+    }));
+}
+
 export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps) {
     const { language } = useLanguage();
     const locale = languageLocale(language);
-    const [coins, setCoins] = useState<CoinData[]>([]);
-    const pendingTickersRef = useRef<Map<string, any>>(new Map());
-
-    const coinMapping = [
+    const coinMapping = useMemo<CoinDefinition[]>(() => [
         // Commodity (separated at top)
         { symbol: "XAUUSD", name: "Gold", id: "gold", logo: "gold", tvSymbol: "OANDA:XAUUSD", isGold: true },
 
@@ -55,22 +84,11 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
         { symbol: "ENAUSDT", name: "Ethena", id: "30171", logo: "ena", tvSymbol: "BINANCE:ENAUSDT" },
         { symbol: "OPUSDT", name: "Optimism", id: "11840", logo: "op", tvSymbol: "BINANCE:OPUSDT" },
         { symbol: "SHIBUSDT", name: "Shiba Inu", id: "5994", logo: "shib", tvSymbol: "BINANCE:SHIBUSDT" },
-    ];
+    ], []);
+    const [coins, setCoins] = useState<CoinData[]>(() => createInitialCoins(coinMapping));
+    const pendingTickersRef = useRef<Map<string, BinanceMiniTicker>>(new Map());
 
     useEffect(() => {
-        // Initial setup from config
-        const initialCoins = coinMapping.map(c => ({
-            id: c.id,
-            symbol: c.symbol,
-            name: c.name,
-            price: "0.00",
-            change: "0.00",
-            changePercent: "0.00",
-            icon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${c.id}.png`,
-            tvSymbol: c.tvSymbol
-        }));
-        setCoins(initialCoins);
-
         const trackedSymbols = new Set(coinMapping.map((coin) => coin.symbol));
 
         // Binance sends every listed market through this stream. Buffer the
@@ -79,9 +97,10 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            const payload: unknown = JSON.parse(event.data);
+            if (!Array.isArray(payload)) return;
 
-            data.forEach((ticker: any) => {
+            payload.filter(isBinanceMiniTicker).forEach((ticker) => {
                 if (trackedSymbols.has(ticker.s)) pendingTickersRef.current.set(ticker.s, ticker);
             });
         };
@@ -131,7 +150,7 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
             pendingTickersRef.current.clear();
             ws.close();
         };
-    }, [locale]);
+    }, [coinMapping, locale]);
 
     return (
         <div className="h-full w-full bg-[#111] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
