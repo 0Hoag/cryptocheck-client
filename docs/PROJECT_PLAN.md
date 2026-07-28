@@ -59,6 +59,7 @@ npm run build
 - [x] Add member profile page and author-filtered post feed.
 - [x] Add profile follow/unfollow control backed by the API (production build passed).
 - [x] Add API-backed follower/following counts to member profiles using the public aggregate-count endpoint. (production build passed)
+- [x] Add authenticated Header notification inbox backed by the API, including unread state, bilingual event copy, read/read-all actions, loading and retry states. (production build passed)
 - [x] Make the post-detail route community-aware, with author profile link and API reaction/comment counts. (production build passed)
 - [x] Make post-detail sharing functional with native sharing, clipboard fallback and visible completion/error feedback. (production build passed)
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
