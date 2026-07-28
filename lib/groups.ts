@@ -62,6 +62,10 @@ export async function getGroupMembers(id: string) {
   return (await apiClient.get<{ data: GroupMembership[] }>(`/api/v1/news-feed/groups/${id}/members`)).data.data;
 }
 
+export async function updateGroupMember(groupID: string, userID: string, update: Partial<Pick<GroupMembership, "role" | "status">>) {
+  return (await apiClient.patch<{ data: GroupMembership }>(`/api/v1/news-feed/groups/${groupID}/members/${userID}`, update)).data.data;
+}
+
 export async function createGroupPost(id: string, content: string, title = "") {
   return (await apiClient.post<{ data: GroupPost }>(`/api/v1/news-feed/groups/${id}/posts`, { content, title, source_url: "" })).data.data;
 }
