@@ -5,11 +5,8 @@ import { use, useEffect, useState } from "react";
 import { ArrowLeft, Check, Loader2, Pencil, Trash2, UserCheck, UserPlus, UserRound, X } from "lucide-react";
 import { AuthUser, getAuthUser } from "@/lib/auth";
 import { CommunityPost, Follow, createFollow, deleteCommunityPost, deleteFollow, getCommunityPosts, getFollowCounts, getFollows, updateCommunityPost } from "@/lib/social";
+import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
-
-function getErrorMessage(error: any, fallback: string) {
-  return error?.response?.data?.message || fallback;
-}
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { language } = useLanguage();

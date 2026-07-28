@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { AuthUser, saveAuth } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function LoginPage() {
@@ -26,8 +27,8 @@ export default function LoginPage() {
       saveAuth(token, me.data.data);
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
-    } catch (err: any) {
-      setError(err?.response?.data?.message || (vi ? "Không thể đăng nhập. Hãy kiểm tra lại số điện thoại và mật khẩu." : "Unable to sign in. Check your phone number and password."));
+    } catch (error) {
+      setError(getErrorMessage(error, vi ? "Không thể đăng nhập. Hãy kiểm tra lại số điện thoại và mật khẩu." : "Unable to sign in. Check your phone number and password."));
     } finally { setLoading(false); }
   }
 

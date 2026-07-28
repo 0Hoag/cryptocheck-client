@@ -109,4 +109,5 @@ npm run build
 - [ ] Add component/integration tests for auth, scanner and community states.
 - [ ] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
+  - [x] Remove targeted lint errors from News, Login, Register and Profile by using the shared safe API-error reader and const-correct data handling. (targeted lint + production build passed)
   - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.

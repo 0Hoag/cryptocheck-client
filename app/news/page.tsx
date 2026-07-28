@@ -21,7 +21,7 @@ export default function Home() {
     const fetchPosts = async () => {
       try {
         const response = await getPosts();
-        let fetchedPosts = response.posts;
+        const fetchedPosts = response.posts;
 
         setPosts(fetchedPosts);
       } catch (err) {
