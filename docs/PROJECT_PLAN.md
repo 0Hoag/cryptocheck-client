@@ -101,6 +101,7 @@ npm run build
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
+  - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
 - [ ] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)

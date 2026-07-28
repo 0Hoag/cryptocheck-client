@@ -35,10 +35,11 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <LanguageProvider>
         <div className="min-h-screen bg-transparent">
+          <a href="#main-content" className="skip-link">Skip to main content</a>
           <Header />
           <CryptoTicker />
           <NewsTicker />
-          <main>{children}</main>
+          <div id="main-content" tabIndex={-1}>{children}</div>
           <Footer />
         </div>
         </LanguageProvider>
