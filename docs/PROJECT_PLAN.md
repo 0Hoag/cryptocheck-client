@@ -110,6 +110,7 @@ npm run build
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
   - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
+  - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
 - [ ] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
   - [x] Remove targeted lint errors from News, Login, Register and Profile by using the shared safe API-error reader and const-correct data handling. (targeted lint + production build passed)
