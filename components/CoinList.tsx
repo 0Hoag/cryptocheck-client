@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
 interface CoinListProps {
     onCoinSelect: (symbol: string, name: string) => void;
@@ -20,6 +20,8 @@ interface CoinData {
 }
 
 export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps) {
+    const { language } = useLanguage();
+    const locale = languageLocale(language);
     const [coins, setCoins] = useState<CoinData[]>([]);
     const pendingTickersRef = useRef<Map<string, any>>(new Map());
 
@@ -98,7 +100,7 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                     if (index !== -1) {
                         newCoins[index] = {
                             ...newCoins[index],
-                            price: parseFloat(ticker.c).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                            price: parseFloat(ticker.c).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                             change: (parseFloat(ticker.c) - parseFloat(ticker.o)).toFixed(2),
                             changePercent: ((parseFloat(ticker.c) - parseFloat(ticker.o)) / parseFloat(ticker.o) * 100).toFixed(2),
                         };
@@ -112,7 +114,7 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                 if (goldIndex !== -1) {
                     newCoins[goldIndex] = {
                         ...newCoins[goldIndex],
-                        price: "2,650.00",
+                        price: (2650).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                         change: "+5.20",
                         changePercent: "+0.20"
                     };
@@ -129,12 +131,12 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
             pendingTickersRef.current.clear();
             ws.close();
         };
-    }, []);
+    }, [locale]);
 
     return (
         <div className="h-full w-full bg-[#111] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
             <div className="p-4 border-b border-white/5">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Market Overview</h3>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{translate(language, "Tổng quan thị trường", "Market overview")}</h3>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {coins.map((coin, index) => {
@@ -147,10 +149,13 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
 
                     return (
                         <div key={coin.symbol}>
-                            <div
+                            <button
+                                type="button"
                                 onClick={() => onCoinSelect(coin.symbol, coin.name)}
+                                aria-pressed={isSelected}
+                                aria-label={translate(language, `Xem biểu đồ ${coin.name}`, `View ${coin.name} chart`)}
                                 className={`
-                                    px-3 py-3 cursor-pointer transition-all border-b border-white/5
+                                    w-full text-left px-3 py-3 cursor-pointer transition-all border-b border-white/5
                                     ${isSelected
                                         ? 'bg-blue-600/20 border-l-2 border-l-blue-500'
                                         : 'hover:bg-white/5'
@@ -180,13 +185,13 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </button>
 
                             {/* Separator after Gold */}
                             {showSeparator && (
                                 <div className="my-2 mx-3 border-t-2 border-dashed border-gray-700 relative">
                                     <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#111] px-2 text-[9px] text-gray-500 uppercase tracking-wider">
-                                        Cryptocurrencies
+                                        {translate(language, "Tiền mã hóa", "Cryptocurrencies")}
                                     </span>
                                 </div>
                             )}

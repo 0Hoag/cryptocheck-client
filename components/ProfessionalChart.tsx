@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, LineStyle, ISeriesApi, IChartApi, Time } from 'lightweight-charts';
+import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
 
 interface ProfessionalChartProps {
     symbol?: string;
+    coinName?: string;
 }
 
 interface CandleData {
@@ -16,7 +18,9 @@ interface CandleData {
     volume: number;
 }
 
-export default function ProfessionalChart({ symbol = "BTCUSDT" }: ProfessionalChartProps) {
+export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: ProfessionalChartProps) {
+    const { language } = useLanguage();
+    const locale = languageLocale(language);
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -433,7 +437,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT" }: ProfessionalCh
     const formatPrice = (value: string | number) => {
         const val = typeof value === 'string' ? parseFloat(value) : value;
         if (isNaN(val)) return '0,00';
-        return val.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     return (
@@ -451,22 +455,22 @@ export default function ProfessionalChart({ symbol = "BTCUSDT" }: ProfessionalCh
                             </span>
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
-                            {symbol.replace('USDT', '')}/USDT
+                            {coinName || symbol.replace('USDT', '')} · {symbol.replace('USDT', '')}/USDT
                         </div>
                     </div>
 
                     {/* 24h Stats */}
                     <div className="flex gap-8 text-sm">
                         <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs mb-1">24h High</span>
+                            <span className="text-gray-500 text-xs mb-1">{translate(language, "Đỉnh 24h", "24h high")}</span>
                             <span className="text-gray-200 font-medium">{formatPrice(stats.high)}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs mb-1">24h Low</span>
+                            <span className="text-gray-500 text-xs mb-1">{translate(language, "Đáy 24h", "24h low")}</span>
                             <span className="text-gray-200 font-medium">{formatPrice(stats.low)}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs mb-1">24h Vol</span>
+                            <span className="text-gray-500 text-xs mb-1">Khối lượng 24h</span>
                             <span className="text-gray-200 font-medium">{formatPrice(stats.vol)}</span>
                         </div>
                     </div>

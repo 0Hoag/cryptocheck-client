@@ -3,14 +3,17 @@
 import { useState, useEffect } from "react";
 import ProfessionalChart from "@/components/ProfessionalChart";
 import CoinList from "@/components/CoinList";
-import { ArrowUp, ArrowDown } from "lucide-react";
 import axios from "axios";
+import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
 export default function AnalysisPage() {
+    const { language } = useLanguage();
+    const locale = languageLocale(language);
     const [selectedSymbol, setSelectedSymbol] = useState("BTCUSDT");
     const [selectedCoinName, setSelectedCoinName] = useState("Bitcoin");
     const [currentPrice, setCurrentPrice] = useState(82695.50);
     const [orderBook, setOrderBook] = useState<{ bids: any[], asks: any[] }>({ bids: [], asks: [] });
+    const [orderBookState, setOrderBookState] = useState<"loading" | "ready" | "error" | "unsupported">("loading");
 
     // Helper to format large numbers
     const formatTotal = (num: number) => {
@@ -21,6 +24,10 @@ export default function AnalysisPage() {
 
     // Fetch current price and Order Book via WebSocket
     useEffect(() => {
+        let active = true;
+        setOrderBook({ bids: [], asks: [] });
+        setOrderBookState(selectedSymbol === "XAUUSD" ? "unsupported" : "loading");
+
         // Initial price fetch
         const fetchPrice = async () => {
             // ... existing axios logic if needed, but WS handles it better
@@ -30,9 +37,10 @@ export default function AnalysisPage() {
                     return;
                 }
                 const res = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${selectedSymbol}`);
-                setCurrentPrice(parseFloat(res.data.price));
+                if (active) setCurrentPrice(parseFloat(res.data.price));
             } catch (error) {
                 console.error("Failed to fetch price:", error);
+                if (active) setOrderBookState("error");
             }
         };
         fetchPrice();
@@ -57,12 +65,30 @@ export default function AnalysisPage() {
                     fill: Math.min(100, parseFloat(bid[1]) * 100),
                 })).slice(0, 15);
 
-                setOrderBook({ asks, bids });
+                if (active) {
+                    setOrderBook({ asks, bids });
+                    setOrderBookState("ready");
+                }
             };
 
-            return () => ws.close();
+            ws.onerror = () => {
+                if (active) setOrderBookState("error");
+            };
+
+            return () => {
+                active = false;
+                ws.close();
+            };
         }
+
+        return () => { active = false; };
     }, [selectedSymbol]);
+
+    const orderBookMessage = orderBookState === "unsupported"
+        ? translate(language, "Thị trường này chưa có sổ lệnh trực tiếp.", "This market does not have a live order book yet.")
+        : orderBookState === "error"
+            ? translate(language, "Không thể tải sổ lệnh. Vui lòng thử lại sau.", "Could not load the order book. Please try again later.")
+            : translate(language, "Đang tải…", "Loading…");
 
     return (
         <main className="min-h-screen bg-[#050505] text-gray-200 p-4">
@@ -71,15 +97,15 @@ export default function AnalysisPage() {
                 {/* LEFT: Order Book (Real-time) */}
                 <div className="hidden lg:block lg:col-span-2 xl:col-span-2 bg-[#111] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
                     <div className="p-3 border-b border-white/5 flex justify-between items-center">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Order Book</h3>
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{translate(language, "Sổ lệnh", "Order book")}</h3>
                         <span className="text-[10px] text-gray-600">{selectedSymbol.replace('USDT', '')}/USDT</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar text-[10px] font-mono">
                         <div className="sticky top-0 bg-[#111] grid grid-cols-3 px-3 py-2 text-gray-500 font-bold border-b border-white/5 z-10">
-                            <span>Price</span>
-                            <span className="text-right">Amount</span>
-                            <span className="text-right">Total</span>
+                            <span>{translate(language, "Giá", "Price")}</span>
+                            <span className="text-right">{translate(language, "Khối lượng", "Amount")}</span>
+                            <span className="text-right">{translate(language, "Tổng", "Total")}</span>
                         </div>
 
                         {/* Asks (Sell) */}
@@ -93,13 +119,13 @@ export default function AnalysisPage() {
                                     <div className="absolute top-0 right-0 bottom-0 bg-red-500/10 transition-all duration-300" style={{ width: `${ask.fill}%` }}></div>
                                 </div>
                             )) : (
-                                <div className="text-center py-4 text-gray-600">Loading...</div>
+                                <div className="text-center py-4 text-gray-600 px-3">{orderBookMessage}</div>
                             )}
                         </div>
 
                         <div className="px-3 py-2 text-center text-lg font-bold text-white border-y border-white/5 bg-white/5 my-1">
-                            {currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            <span className="text-[10px] text-gray-400 ml-2 font-normal">${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            {currentPrice.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <span className="text-[10px] text-gray-400 ml-2 font-normal">${currentPrice.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
 
                         {/* Bids (Buy) */}
@@ -112,7 +138,7 @@ export default function AnalysisPage() {
                                     <div className="absolute top-0 right-0 bottom-0 bg-green-500/10 transition-all duration-300" style={{ width: `${bid.fill}%` }}></div>
                                 </div>
                             )) : (
-                                <div className="text-center py-4 text-gray-600">Loading...</div>
+                                <div className="text-center py-4 text-gray-600 px-3">{orderBookMessage}</div>
                             )}
                         </div>
                     </div>
@@ -120,7 +146,7 @@ export default function AnalysisPage() {
 
                 {/* MIDDLE: Chart */}
                 <div className="col-span-1 lg:col-span-7 xl:col-span-8 bg-[#111] border border-white/5 rounded-2xl overflow-hidden relative">
-                    <ProfessionalChart symbol={selectedSymbol} />
+                    <ProfessionalChart symbol={selectedSymbol} coinName={selectedCoinName} />
                 </div>
 
                 {/* RIGHT: Coin List (Clickable) */}
