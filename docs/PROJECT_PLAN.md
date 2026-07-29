@@ -77,7 +77,7 @@ npm run build
   - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
 	- [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
-	- [x] Add metadata-backed profile-feed pagination with deduplicated “load more” results and a separate retryable failure state. (targeted lint + Vitest + production build passed)
+	- [x] Add metadata-backed profile-feed pagination with deduplicated “load more” results, a separate retryable failure state, and malformed-response contract coverage. (targeted lint + 14 Vitest tests + production build passed)
 - [ ] Add reporting, moderation state and content-safe rendering.
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
   - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)

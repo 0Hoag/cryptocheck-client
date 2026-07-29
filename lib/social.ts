@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api";
+import { apiClient } from "./api";
 
 export type CommunityAuthor = { id: string; username: string; avatar_url: string };
 export type PostPermission = "public" | "justme" | "followers";
@@ -9,19 +9,27 @@ export type Follow = { id: string; author_id: string; followee_id: string; creat
 type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number; current_page?: number } };
 export type CommunityPostsPage = { posts: CommunityPost[]; page: number; hasMore: boolean };
 
+export function parseCommunityPostsPage(payload: unknown, page = 1, limit = 12): CommunityPostsPage {
+  const response = payload as { data?: { items?: unknown; meta?: unknown } };
+  if (!Array.isArray(response?.data?.items)) throw new Error("Invalid community-post response");
+  const meta = response.data.meta;
+  if (meta !== undefined && (typeof meta !== "object" || meta === null)) throw new Error("Invalid community-post pagination");
+  const values = (meta ?? {}) as Record<string, unknown>;
+  const currentPage = typeof values.current_page === "number" ? values.current_page : page;
+  const totalPages = typeof values.total_pages === "number" ? values.total_pages : undefined;
+  return {
+    posts: response.data.items.filter((post): post is CommunityPost => typeof post === "object" && post !== null && !(post as CommunityPost).source_url),
+    page: currentPage,
+    hasMore: totalPages !== undefined ? currentPage < totalPages : response.data.items.length === limit,
+  };
+}
+
 export async function getCommunityPosts(authorId?: string) {
   return (await getCommunityPostsPage(authorId, 1, 50)).posts;
 }
 export async function getCommunityPostsPage(authorId?: string, page = 1, limit = 12): Promise<CommunityPostsPage> {
   const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page, limit, sort: "-created_at", author_id: authorId } });
-  const result = response.data.data;
-  const totalPages = result.meta?.total_pages;
-  const currentPage = result.meta?.current_page ?? page;
-  return {
-    posts: result.items.filter((post) => !post.source_url),
-    page: currentPage,
-    hasMore: typeof totalPages === "number" ? currentPage < totalPages : result.items.length === limit,
-  };
+  return parseCommunityPostsPage(response.data, page, limit);
 }
 export async function createPost(content: string, permission: PostPermission = "public") { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] })).data.data; }
 export async function updateCommunityPost(id: string, content: string, permission: PostPermission = "public") {
