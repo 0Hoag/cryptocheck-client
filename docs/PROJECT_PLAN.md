@@ -72,6 +72,7 @@ npm run build
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
   - [x] Show a distinct retryable error when authenticated group-member data fails to load, rather than presenting an unavailable list as empty. (production build passed)
+  - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
   - [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
 - [ ] Add reporting, moderation state and content-safe rendering.

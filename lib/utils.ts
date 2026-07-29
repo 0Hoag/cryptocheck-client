@@ -41,10 +41,14 @@ export function getSourceName(url: string): string {
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {
-    const candidate = error as { response?: { data?: { message?: unknown } } };
-    return typeof candidate?.response?.data?.message === "string" && candidate.response.data.message.trim()
+    const candidate = error as { response?: { data?: { message?: unknown; request_id?: unknown } } };
+    const message = typeof candidate?.response?.data?.message === "string" && candidate.response.data.message.trim()
         ? candidate.response.data.message
         : fallback;
+    const requestID = candidate?.response?.data?.request_id;
+    return typeof requestID === "string" && requestID.trim()
+        ? `${message} (Request ID: ${requestID.trim()})`
+        : message;
 }
 
 export function truncateText(text: string, maxLength: number): string {

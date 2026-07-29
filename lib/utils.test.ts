@@ -4,6 +4,7 @@ import { extractDomain, extractImageUrl, getErrorMessage, getSourceName, truncat
 describe("shared content and API helpers", () => {
   it("keeps only non-empty API error messages", () => {
     expect(getErrorMessage({ response: { data: { message: "Scanner quota reached" } } }, "Fallback")).toBe("Scanner quota reached");
+    expect(getErrorMessage({ response: { data: { message: "Service unavailable", request_id: "trace-1234" } } }, "Fallback")).toBe("Service unavailable (Request ID: trace-1234)");
     expect(getErrorMessage({ response: { data: { message: "   " } } }, "Fallback")).toBe("Fallback");
     expect(getErrorMessage(new Error("network"), "Fallback")).toBe("Fallback");
   });
