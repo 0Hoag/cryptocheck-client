@@ -59,6 +59,7 @@ npm run build
 
 - [x] `/community` feed is restored and excludes crawler news posts.
 - [x] Authenticated users can create a public post, like/unlike, comment and share a link.
+- [x] Keep the client post contract compatible with `followers` visibility; create/update helpers can send the permission once the Community composer exposes the choice. (Vitest + production build passed)
 - [x] Anonymous users can read the feed and are prompted to sign in before interaction.
 - [x] Add member profile page and author-filtered post feed.
 - [x] Add profile follow/unfollow control backed by the API (production build passed).

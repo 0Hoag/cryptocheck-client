@@ -1,7 +1,8 @@
 import { apiClient } from "@/lib/api";
 
 export type CommunityAuthor = { id: string; username: string; avatar_url: string };
-export type CommunityPost = { id: string; content: string; author_id: string; author: CommunityAuthor; permission: "public" | "justme"; source_url?: string; created_at: string; reaction_count: number; comment_count: number };
+export type PostPermission = "public" | "justme" | "followers";
+export type CommunityPost = { id: string; content: string; author_id: string; author: CommunityAuthor; permission: PostPermission; source_url?: string; created_at: string; reaction_count: number; comment_count: number };
 export type Reaction = { id: string; post_id: string; author_id: string; type: string; created_at: string };
 export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
 export type Follow = { id: string; author_id: string; followee_id: string; created_at: string };
@@ -11,9 +12,9 @@ export async function getCommunityPosts(authorId?: string) {
   const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page: 1, limit: 50, sort: "-created_at", author_id: authorId } });
   return response.data.data.items.filter((post) => !post.source_url);
 }
-export async function createPost(content: string) { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission: "public", pin: false, file_ids: [], tagged_target: [] })).data.data; }
-export async function updateCommunityPost(id: string, content: string) {
-  await apiClient.put("/api/v1/news-feed/posts", { id, content, permission: "public", file_ids: [], tagged_target: [] });
+export async function createPost(content: string, permission: PostPermission = "public") { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] })).data.data; }
+export async function updateCommunityPost(id: string, content: string, permission: PostPermission = "public") {
+  await apiClient.put("/api/v1/news-feed/posts", { id, content, permission, file_ids: [], tagged_target: [] });
 }
 export async function deleteCommunityPost(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/${id}`); }
 export async function getReactions(postId: string) { return (await apiClient.get<{ data: ListResponse<Reaction> }>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } })).data.data.items; }

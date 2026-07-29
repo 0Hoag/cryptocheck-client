@@ -5,7 +5,7 @@ export interface Post {
     content: string;
     file_ids?: string[];
     tagged_target?: string[];
-    permission: 'public' | 'justme';
+    permission: 'public' | 'justme' | 'followers';
     author_id: string;
     source_url: string;
     created_at: string;
