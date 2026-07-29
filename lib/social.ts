@@ -6,11 +6,22 @@ export type CommunityPost = { id: string; content: string; author_id: string; au
 export type Reaction = { id: string; post_id: string; author_id: string; type: string; created_at: string };
 export type Comment = { id: string; post_id: string; author_id: string; content: string; created_at: string };
 export type Follow = { id: string; author_id: string; followee_id: string; created_at: string };
-type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number } };
+type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number; current_page?: number } };
+export type CommunityPostsPage = { posts: CommunityPost[]; page: number; hasMore: boolean };
 
 export async function getCommunityPosts(authorId?: string) {
-  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page: 1, limit: 50, sort: "-created_at", author_id: authorId } });
-  return response.data.data.items.filter((post) => !post.source_url);
+  return (await getCommunityPostsPage(authorId, 1, 50)).posts;
+}
+export async function getCommunityPostsPage(authorId?: string, page = 1, limit = 12): Promise<CommunityPostsPage> {
+  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page, limit, sort: "-created_at", author_id: authorId } });
+  const result = response.data.data;
+  const totalPages = result.meta?.total_pages;
+  const currentPage = result.meta?.current_page ?? page;
+  return {
+    posts: result.items.filter((post) => !post.source_url),
+    page: currentPage,
+    hasMore: typeof totalPages === "number" ? currentPage < totalPages : result.items.length === limit,
+  };
 }
 export async function createPost(content: string, permission: PostPermission = "public") { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] })).data.data; }
 export async function updateCommunityPost(id: string, content: string, permission: PostPermission = "public") {
