@@ -72,6 +72,7 @@ npm run build
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
 	- [x] Add a visible, retryable post-detail loading failure state that preserves API request IDs, rather than logging a failed post fetch and rendering an unexplained missing post. (Vitest + production build passed)
+	- [x] Preserve API request IDs and offer an in-place retry when profile posts, follow state or aggregate counts fail to load. (targeted lint + Vitest + production build passed)
 	- [x] Show a distinct retryable error when authenticated group-member data fails to load, rather than presenting an unavailable list as empty. (production build passed)
   - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.

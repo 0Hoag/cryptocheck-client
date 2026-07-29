@@ -15,6 +15,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [viewer, setViewer] = useState<AuthUser | null>(null);
   const [follow, setFollow] = useState<Follow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
   const [error, setError] = useState("");
   const [followError, setFollowError] = useState("");
@@ -43,15 +44,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         setFollow(follows[0] || null);
         setCounts(followCounts);
       })
-      .catch(() => {
-        if (!cancelled) setError(translate(language, "Không tải được hồ sơ hoặc bài viết của thành viên này.", "Unable to load this member profile or posts."));
+      .catch((requestError) => {
+        if (!cancelled) setError(getErrorMessage(requestError, translate(language, "Không tải được hồ sơ hoặc bài viết của thành viên này.", "Unable to load this member profile or posts.")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [id, language]);
+  }, [id, language, reloadKey]);
 
   const own = viewer?.id === id;
   const name = own ? viewer.username : `${translate(language, "Nhà đầu tư", "Investor")} ${id.slice(-4)}`;
@@ -134,7 +135,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </div>
           {followError && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{followError}</p>}
         </section>
-        {error && <p role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>}
+        {error && <div role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200"><p>{error}</p><button type="button" onClick={() => setReloadKey((current) => current + 1)} className="mt-3 rounded-lg border border-red-300/30 px-3 py-1.5 text-xs font-semibold text-red-100 hover:bg-red-400/10">{translate(language, "Thử lại", "Retry")}</button></div>}
         {loading ? <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div> : <section className="mt-6"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">{translate(language, "Bài viết", "Posts")}</h2>{own && <span className="text-xs text-slate-500">{translate(language, "Bạn có thể sửa hoặc xoá bài viết của mình.", "You can edit or delete your own posts.")}</span>}</div>{postError && <p role="alert" className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{postError}</p>}<div className="mt-3 space-y-3">{posts.length ? posts.map((post) => { const editing = editingPostId === post.id; const saving = postMutationId === post.id; return <article key={post.id} className="surface p-5"><div className="flex items-start justify-between gap-3">{editing ? <textarea value={draftContent} onChange={(event) => setDraftContent(event.target.value)} rows={4} className="min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm leading-6 text-slate-200 outline-none ring-sky-400/40 focus:ring-2" /> : <div className="min-w-0"><p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p><Link href={`/posts/${post.id}`} className="mt-3 inline-flex text-xs text-sky-300 hover:text-sky-200">{translate(language, "Xem thảo luận", "View discussion")} →</Link></div>}{own && <div className="flex shrink-0 gap-1">{editing ? <><button type="button" aria-label={translate(language, "Lưu bài viết", "Save post")} title={translate(language, "Lưu bài viết", "Save post")} onClick={() => savePost(post)} disabled={saving} className="rounded-lg p-2 text-emerald-300 hover:bg-emerald-400/10 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}</button><button type="button" aria-label={translate(language, "Huỷ chỉnh sửa", "Cancel editing")} title={translate(language, "Huỷ chỉnh sửa", "Cancel editing")} onClick={() => { setEditingPostId(null); setDraftContent(""); }} disabled={saving} className="rounded-lg p-2 text-slate-400 hover:bg-slate-700/60"><X className="h-4 w-4" /></button></> : <><button type="button" aria-label={translate(language, "Sửa bài viết", "Edit post")} title={translate(language, "Sửa bài viết", "Edit post")} onClick={() => startEditing(post)} disabled={saving} className="rounded-lg p-2 text-sky-300 hover:bg-sky-400/10 disabled:opacity-50"><Pencil className="h-4 w-4" /></button><button type="button" aria-label={translate(language, "Xoá bài viết", "Delete post")} title={translate(language, "Xoá bài viết", "Delete post")} onClick={() => removePost(post)} disabled={saving} className="rounded-lg p-2 text-red-300 hover:bg-red-400/10 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</button></>}</div>}</div></article>; }) : <div className="surface p-8 text-center text-sm text-slate-400">{translate(language, "Chưa có bài viết công khai.", "No public posts yet.")}</div>}</div></section>}
       </div>
     </main>
