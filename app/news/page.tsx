@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getPosts } from "@/lib/api";
 import { Post } from "@/lib/types";
 import HeroPost from "@/components/HeroPost";
@@ -15,25 +15,34 @@ export default function Home() {
   const { language } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const pageSize = 12;
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await getPosts();
-        const fetchedPosts = response.posts;
-
-        setPosts(fetchedPosts);
-      } catch (err) {
-        console.error("Failed to fetch posts:", err);
-        setError(translate(language, "Không tải được bài viết. Vui lòng thử lại sau.", "Failed to load posts. Please try again later."));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
+  const loadPage = useCallback(async (nextPage: number, replace = false) => {
+    if (replace) setLoading(true); else setLoadingMore(true);
+    setError("");
+    try {
+      const response = await getPosts({ page: nextPage, limit: pageSize, sort: "-created_at" });
+      setPosts((current) => {
+        if (replace) return response.posts;
+        const known = new Set(current.map((post) => post.id));
+        return [...current, ...response.posts.filter((post) => !known.has(post.id))];
+      });
+      setPage(response.pagination?.current_page ?? nextPage);
+      setHasMore(response.pagination ? response.pagination.current_page < response.pagination.total_pages : response.posts.length === pageSize);
+    } catch (requestError) {
+      console.error("Failed to fetch posts:", requestError);
+      setError(translate(language, "Không tải được bài viết. Vui lòng thử lại sau.", "Failed to load posts. Please try again later."));
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, [language]);
+
+  useEffect(() => { void loadPage(1, true); }, [loadPage]);
 
   if (loading) {
     return (
@@ -65,7 +74,7 @@ export default function Home() {
           </Link>
         </section>
 
-        {error && <div role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
+        {error && <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"><span>{error}</span><button type="button" onClick={() => void loadPage(posts.length ? page + 1 : 1, posts.length === 0)} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Thử lại", "Retry")}</button></div>}
 
         {/* 3-Column Layout */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -107,6 +116,8 @@ export default function Home() {
                 </div>
               </div>
             )}
+            {!error && posts.length === 0 && <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-400">{translate(language, "Chưa có bài viết nào để hiển thị. Hãy quay lại sau.", "There are no posts to show yet. Please check back later.")}</div>}
+            {hasMore && <div className="flex justify-center border-t border-slate-800 pt-6"><button type="button" disabled={loadingMore} onClick={() => void loadPage(page + 1)} className="inline-flex items-center gap-2 rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-2.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60">{loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}{loadingMore ? translate(language, "Đang tải thêm", "Loading more") : translate(language, "Tải thêm tin", "Load more news")}</button></div>}
           </div>
 
           {/* RIGHT COLUMN: Widgets (3/12) - Sticky Sidebar */}

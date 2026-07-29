@@ -72,6 +72,7 @@ npm run build
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
   - [x] Show a distinct retryable error when authenticated group-member data fails to load, rather than presenting an unavailable list as empty. (production build passed)
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
+  - [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
 - [ ] Add reporting, moderation state and content-safe rendering.
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
   - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)
