@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useCallback, useEffect, useState, use } from "react";
 import { getPostById, getPosts } from "@/lib/api";
 import { Post } from "@/lib/types";
 import { formatDate, extractImageUrl, getErrorMessage, getSourceName } from "@/lib/utils";
@@ -24,6 +24,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const [post, setPost] = useState<Post | null>(null);
     const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
     const [reportOpen, setReportOpen] = useState(false);
     const [reportReason, setReportReason] = useState("");
     const [reportDetails, setReportDetails] = useState("");
@@ -32,33 +33,28 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const [reportSuccess, setReportSuccess] = useState(false);
     const [shareStatus, setShareStatus] = useState<"" | "success" | "error">("");
 
+    const loadPost = useCallback(async () => {
+        setLoading(true);
+        setLoadError("");
+        try {
+            const [postData, allPostsResponse] = await Promise.all([
+                getPostById(id),
+                getPosts({ limit: 10 })
+            ]);
+            setPost(postData);
+            setRelatedPosts(allPostsResponse.posts.filter((item) => item.id !== id));
+        } catch (error) {
+            setPost(null);
+            setRelatedPosts([]);
+            setLoadError(getErrorMessage(error, translate(language, "Không thể tải bài viết lúc này. Hãy thử lại.", "Unable to load this post right now. Please try again.")));
+        } finally {
+            setLoading(false);
+        }
+    }, [id, language]);
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [postData, allPostsResponse] = await Promise.all([
-                    getPostById(id),
-                    getPosts({ limit: 10 })
-                ]);
-
-                setPost(postData);
-
-                // Filter out current post from related list
-                const related = allPostsResponse.posts.filter(p => p.id !== id);
-
-                // DEMO Logic: Fake ID generation removed to prevent 404s
-                // If we need more posts, we should handle that in the UI or fetch more from API
-
-                setRelatedPosts(related);
-
-            } catch (err) {
-                console.error("Failed to load post data", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [id]);
+        void loadPost();
+    }, [loadPost]);
 
     if (loading) {
         return (
@@ -68,7 +64,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         );
     }
 
-    if (!post) return <div className="text-white text-center py-20 min-h-screen bg-[#050505]">{translate(language, "Không tìm thấy bài viết", "Post not found")}</div>;
+    if (!post) return <main className="min-h-screen bg-[#050505] px-4 py-20 text-center text-white"><p role={loadError ? "alert" : undefined}>{loadError || translate(language, "Không tìm thấy bài viết", "Post not found")}</p>{loadError && <button type="button" onClick={() => void loadPost()} className="mt-5 rounded-lg border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/10">{translate(language, "Thử lại", "Retry")}</button>}</main>;
 
     async function submitReport() {
         if (!post) return;
