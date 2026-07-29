@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 import { isEvmAddress, isSolanaMintAddress, validateScanInput } from "@/lib/scanner-input";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
+import ExternalImage from "@/components/ExternalImage";
 
 type ScanIssue = { type: string; name: string; description: string; impact: number };
 type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset" | "solana_mint"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; price_usd?: number; image_url?: string; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; issues: ScanIssue[]; safe_features: string[] };
@@ -93,7 +94,7 @@ function TokenAvatarImage({ name, symbol, imageURL }: { name: string; symbol?: s
   if (!imageSource) {
     return <span aria-label={`${name} token icon`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>;
   }
-  return <img src={imageSource} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageIndex((index) => index + 1)} />;
+  return <ExternalImage src={imageSource} alt={`${name} token icon`} className="h-10 w-10 shrink-0 rounded-full border border-slate-700 bg-slate-950 object-cover" onError={() => setImageIndex((index) => index + 1)} fallback={<span aria-label={`${name} token icon`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-400/20 bg-sky-500/10 text-sm font-bold text-sky-200">{name.slice(0, 1).toUpperCase()}</span>} />;
 }
 
 function TokenAvatar({ name, symbol, imageURL }: { name: string; symbol?: string; imageURL?: string }) {

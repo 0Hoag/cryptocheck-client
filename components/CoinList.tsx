@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
+import ExternalImage from "@/components/ExternalImage";
 
 interface CoinListProps {
     onCoinSelect: (symbol: string, name: string) => void;
@@ -183,15 +184,7 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                                        <img
-                                            src={coin.icon}
-                                            alt={coin.name}
-                                            className="w-6 h-6 rounded-full flex-shrink-0 object-cover"
-                                            onError={(e) => {
-                                                e.currentTarget.onerror = null; // Prevent infinite loop if fallback fails
-                                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${coin.symbol}&background=random&color=fff&size=32`;
-                                            }}
-                                        />
+                                        <ExternalImage src={coin.icon} alt={coin.name} className="w-6 h-6 rounded-full flex-shrink-0 object-cover" fallback={<span aria-label={`${coin.name} icon`} className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sky-500/15 text-[9px] font-bold text-sky-100">{coin.symbol.replace("USDT", "").slice(0, 1)}</span>} />
                                         <div className="flex-1 min-w-0">
                                             <div className="text-xs font-semibold text-white truncate">{coin.name}</div>
                                             <div className="text-[10px] text-gray-500">{coin.symbol.replace('USDT', '')}</div>

@@ -6,6 +6,7 @@ import { formatDate, getSourceName, extractImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
+import ExternalImage from "@/components/ExternalImage";
 
 interface ArticleCardProps {
     post: Post;
@@ -31,13 +32,7 @@ export default function ArticleCard({ post, variant = "default", className }: Ar
             <div className={cn("relative w-full overflow-hidden border-b border-slate-800 bg-slate-900/70",
                 variant === "compact" ? "aspect-[16/9]" : "aspect-[16/9]"
             )}>
-                {imageUrl ? (
-                    <img src={imageUrl} alt="" className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-                ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#172554,#0f172a_55%,#020617)] p-4">
-                        <span className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/40">CryptoCheck</span>
-                    </div>
-                )}
+                <ExternalImage src={imageUrl} alt="" className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" fallback={<div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#172554,#0f172a_55%,#020617)] p-4"><span className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/40">CryptoCheck</span></div>} />
             </div>
 
             {/* Content Section */}

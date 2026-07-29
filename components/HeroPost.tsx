@@ -5,6 +5,7 @@ import { Post } from "@/lib/types";
 import { formatDate, getSourceName, extractImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { translate, useLanguage } from "@/context/LanguageContext";
+import ExternalImage from "@/components/ExternalImage";
 
 interface HeroPostProps {
     post: Post;
@@ -19,11 +20,7 @@ export default function HeroPost({ post }: HeroPostProps) {
         <Link href={`/posts/${post.id}`} className="group surface surface-hover relative block min-h-[340px] overflow-hidden sm:min-h-[390px]">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
-                {imageUrl ? (
-                    <img src={imageUrl} alt="" className="h-full w-full object-cover opacity-60 transition duration-500 group-hover:scale-[1.02] group-hover:opacity-70" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-                ) : (
-                    <div className="h-full w-full bg-[radial-gradient(circle_at_80%_15%,rgba(14,165,233,0.26),transparent_30%),linear-gradient(135deg,#172554,#020617_65%)]" />
-                )}
+                <ExternalImage src={imageUrl} alt="" className="h-full w-full object-cover opacity-60 transition duration-500 group-hover:scale-[1.02] group-hover:opacity-70" fallback={<div className="h-full w-full bg-[radial-gradient(circle_at_80%_15%,rgba(14,165,233,0.26),transparent_30%),linear-gradient(135deg,#172554,#020617_65%)]" />} />
                 {/* Gradient Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#000] via-[#000]/60 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#000] via-[#000]/40 to-transparent" />
