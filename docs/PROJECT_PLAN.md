@@ -24,6 +24,7 @@
   - [x] Synchronize the document language with the persisted VN/EN choice so browser and assistive-technology language handling matches visible UI. (production build passed)
   - [x] Translate remaining MarketWidgets labels, Fear/Greed classifications and demo-calendar copy; translate the professional-chart 24h volume label and avoid presenting static demo data as a working “View all” action. (targeted lint + 14 Vitest tests + production build passed)
   - [x] Load persisted language through a subscription-safe external store, so switching language updates the full app without an effect-driven state cascade. (targeted lint + production build passed)
+  - [x] Translate the remaining Login/Register section labels and verify the forms in both VN and EN modes. (targeted lint + Vitest + production build passed)
 - [x] Login and registration forms call the API and persist the session locally.
 - [x] Google sign-in affordance is visible as “coming soon”; no fake OAuth flow is enabled.
 - [x] Clear expired/401 local sessions so stale authentication is not reused (production build passed).
