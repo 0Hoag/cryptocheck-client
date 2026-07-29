@@ -4,6 +4,21 @@ import { clearAuth, getAuthToken } from "./auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+type PostFeedPayload = { data?: { items?: unknown; meta?: unknown } };
+
+function isPagination(value: unknown): value is NonNullable<PostsResponse["pagination"]> {
+    if (!value || typeof value !== "object") return false;
+    const candidate = value as Record<string, unknown>;
+    return ["total", "count", "per_page", "current_page", "total_pages"].every((key) => typeof candidate[key] === "number");
+}
+
+export function parsePostsResponse(payload: unknown): PostsResponse {
+    const response = payload as PostFeedPayload;
+    if (!Array.isArray(response?.data?.items)) throw new Error("Invalid post-feed response");
+    if (response.data.meta !== undefined && !isPagination(response.data.meta)) throw new Error("Invalid post-feed pagination");
+    return { posts: response.data.items as Post[], pagination: response.data.meta };
+}
+
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -37,10 +52,7 @@ export async function getPosts(params?: PaginationParams): Promise<PostsResponse
             },
         });
         // Backend returns {data: {items: [], meta: {}}}
-        return {
-            posts: response.data.data.items,
-            pagination: response.data.data.meta
-        };
+        return parsePostsResponse(response.data);
     } catch (error) {
         console.error("Failed to fetch posts:", error);
         throw error;
