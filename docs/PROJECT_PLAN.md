@@ -37,6 +37,7 @@ npm run build
 ## 2. Scanner experience
 
 - [x] Scanner route exists with clear input guidance and friendly native-coin errors.
+  - [x] Link scanner input help text semantically and return keyboard focus to the input when a user chooses “Edit input” from an error state. (targeted lint + 14 Vitest tests + production build passed)
 - [x] Make landing and scanner copy explicit about public-source/data scope and the fact that automated results are not an audit or safety guarantee. (production build passed)
 - [x] ENA smoke test succeeds against the fixed API.
 - [x] Render `market_asset` results without showing a false security score; show DexScreener liquidity and 24h volume instead. (production build passed)

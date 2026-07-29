@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
@@ -122,6 +122,7 @@ export default function ScannerPage() {
   const [quotaLoading, setQuotaLoading] = useState(false);
   const [quotaError, setQuotaError] = useState("");
   const [lastAttempt, setLastAttempt] = useState("");
+  const tokenInputRef = useRef<HTMLInputElement>(null);
 
   const loadHistory = useCallback(async () => {
     if (!getAuthToken()) {
@@ -221,6 +222,12 @@ export default function ScannerPage() {
     await startScan(token);
   }
 
+  function editScanInput() {
+    setError("");
+    setResult(null);
+    tokenInputRef.current?.focus();
+  }
+
   return <main className="min-h-screen px-4 py-8 sm:px-6 lg:py-12">
     <div className="mx-auto max-w-5xl">
       <section className="surface relative overflow-hidden px-6 py-10 sm:px-10 sm:py-14">
@@ -231,12 +238,12 @@ export default function ScannerPage() {
           <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">{translate(language, "CryptoCheck phân tích tín hiệu từ source contract công khai đã được xác minh và dữ liệu thị trường để hỗ trợ quyết định.", "CryptoCheck analyzes signals from publicly verified contract source and market data to support your decision.")}</p>
           <form onSubmit={handleScan} className="mt-7 flex flex-col gap-3 sm:flex-row">
             <label className="sr-only" htmlFor="token">{translate(language, "Symbol hoặc địa chỉ contract", "Symbol or contract address")}</label>
-            <input id="token" value={token} onChange={(event) => setToken(event.target.value)} placeholder={translate(language, "Symbol, EVM 0x... hoặc Solana mint", "Symbol, EVM 0x... or Solana mint")} className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-950/80 px-4 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-slate-500 focus:border-sky-400" />
+            <input ref={tokenInputRef} id="token" value={token} onChange={(event) => setToken(event.target.value)} placeholder={translate(language, "Symbol, EVM 0x... hoặc Solana mint", "Symbol, EVM 0x... or Solana mint")} aria-describedby="scanner-input-help" className="h-12 flex-1 rounded-xl border border-slate-700 bg-slate-950/80 px-4 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-slate-500 focus:border-sky-400" />
             <button disabled={loading || !token.trim()} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {loading ? translate(language, "Đang quét", "Scanning") : translate(language, "Quét token", "Scan token")}
             </button>
           </form>
-          <p className="mt-3 text-xs text-slate-500">{translate(language, "Quét trực tiếp hỗ trợ địa chỉ EVM và Solana SPL mint. Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có hồ sơ thị trường từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.", "Direct scanning supports EVM addresses and Solana SPL mints. Verified contracts on ETH, BSC, Base, Arbitrum and Polygon receive a security scan; tokens on other chains can still receive a DexScreener market profile without a security score. Automated results are not an audit or safety guarantee.")}</p>
+          <p id="scanner-input-help" className="mt-3 text-xs text-slate-500">{translate(language, "Quét trực tiếp hỗ trợ địa chỉ EVM và Solana SPL mint. Contract đã xác minh trên ETH, BSC, Base, Arbitrum và Polygon nhận security scan; token ở chain khác vẫn có hồ sơ thị trường từ DexScreener, không gắn điểm bảo mật khi chưa đủ dữ liệu. Kết quả tự động không phải audit hoặc cam kết tài sản an toàn.", "Direct scanning supports EVM addresses and Solana SPL mints. Verified contracts on ETH, BSC, Base, Arbitrum and Polygon receive a security scan; tokens on other chains can still receive a DexScreener market profile without a security score. Automated results are not an audit or safety guarantee.")}</p>
           <div aria-live="polite" className="mt-5 inline-flex max-w-full items-center gap-2 rounded-lg border border-sky-400/20 bg-sky-500/5 px-3 py-2 text-xs text-sky-100">
             <Sparkles className="h-4 w-4 shrink-0 text-sky-300" />
             {!getAuthToken()
@@ -256,7 +263,7 @@ export default function ScannerPage() {
         </div>
       </section>
 
-      {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => { setError(""); setResult(null); }} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Nhập lại", "Edit input")}</button>{lastAttempt && <button type="button" onClick={() => void startScan(lastAttempt)} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Thử lại", "Retry")}</button>}</div></div>}
+      {error && <div role="alert" className="mt-6 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 sm:flex-row sm:items-center"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{error}</div><div className="flex shrink-0 gap-2"><button type="button" onClick={editScanInput} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Nhập lại", "Edit input")}</button>{lastAttempt && <button type="button" onClick={() => void startScan(lastAttempt)} className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10">{translate(language, "Thử lại", "Retry")}</button>}</div></div>}
 
       {getAuthToken() && <section className="surface mt-6 p-5"><div className="flex items-center justify-between gap-3"><div><div className="eyebrow">{translate(language, "Tài khoản của bạn", "Your account")}</div><h2 className="mt-1 text-base font-semibold text-white">{translate(language, "Lịch sử quét gần đây", "Recent scan history")}</h2></div>{historyLoading && <Loader2 className="h-4 w-4 animate-spin text-sky-300" />}</div>{historyError ? <div role="alert" className="mt-4 rounded-lg border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-100"><p>{historyError}</p><button type="button" onClick={() => void loadHistory()} className="mt-2 font-semibold text-sky-300 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button></div> : history.length > 0 ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={item.id} type="button" onClick={() => { setToken(item.input); void runScan(item.input); }} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/55 px-3 py-2.5 text-left transition hover:border-sky-400/45 hover:bg-sky-500/5"><div className="min-w-0"><div className="truncate font-mono text-sm font-semibold text-slate-100">{item.input}</div><div className="mt-1 text-xs text-slate-500">{item.network} · {dateTime(language, item.created_at)}</div></div>{item.score_available ? <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold ${scoreTone(item.trust_score)}`}>{item.trust_score}/100</span> : <span className="shrink-0 rounded-md bg-sky-500/10 px-2 py-1 text-xs font-medium text-sky-200">{translate(language, "Thị trường", "Market")}</span>}</button>)}</div> : !historyLoading && <p className="mt-3 text-sm text-slate-400">{translate(language, "Chưa có lượt quét nào được lưu trong tài khoản này.", "No scans have been saved to this account yet.")}</p>}</section>}
 
