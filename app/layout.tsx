@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import CryptoTicker from "@/components/CryptoTicker";
 import NewsTicker from "@/components/NewsTicker";
 import Footer from "@/components/Footer";
+import SkipLink from "@/components/SkipLink";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({
@@ -35,7 +36,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <LanguageProvider>
         <div className="min-h-screen bg-transparent">
-          <a href="#main-content" className="skip-link">Skip to main content</a>
+          <SkipLink />
           <Header />
           <CryptoTicker />
           <NewsTicker />

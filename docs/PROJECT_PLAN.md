@@ -121,6 +121,7 @@ npm run build
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
   - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
+  - [x] Localize the shared keyboard skip-link using the active VN/EN language setting. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
