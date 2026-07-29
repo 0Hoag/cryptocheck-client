@@ -11,6 +11,28 @@ interface FNGData {
     time_until_update: string;
 }
 
+type CalendarEvent = {
+    titleVi: string;
+    titleEn: string;
+    timeVi: string;
+    timeEn: string;
+    importance: "high" | "medium";
+    forecast: string;
+    previous: string;
+};
+
+function fearGreedLabel(value: string, language: "vi" | "en") {
+    const labels: Record<string, [string, string]> = {
+        "Extreme Fear": ["Cực kỳ sợ hãi", "Extreme fear"],
+        Fear: ["Sợ hãi", "Fear"],
+        Neutral: ["Trung lập", "Neutral"],
+        Greed: ["Tham lam", "Greed"],
+        "Extreme Greed": ["Cực kỳ tham lam", "Extreme greed"],
+    };
+    const label = labels[value];
+    return label ? label[language === "vi" ? 0 : 1] : value;
+}
+
 export default function MarketWidgets() {
     const { language } = useLanguage();
     const [fng, setFng] = useState<FNGData | null>(null);
@@ -35,10 +57,10 @@ export default function MarketWidgets() {
     }, []);
 
     // Simulated Calendar Events (Static for demo purposes but formatted to look live)
-    const events = [
-        { title: "US Core Inflation Rate YoY", time: "1h 15m", importance: "high", forecast: "3.2%", previous: "3.1%" },
-        { title: "Fed Interest Rate Decision", time: "Tomorrow", importance: "high", forecast: "5.50%", previous: "5.50%" },
-        { title: "Initial Jobless Claims", time: "2h 30m", importance: "medium", forecast: "215K", previous: "212K" },
+    const events: CalendarEvent[] = [
+        { titleVi: "Lạm phát cơ bản Mỹ theo năm", titleEn: "US Core Inflation Rate YoY", timeVi: "1 giờ 15 phút", timeEn: "1h 15m", importance: "high", forecast: "3.2%", previous: "3.1%" },
+        { titleVi: "Quyết định lãi suất Fed", titleEn: "Fed Interest Rate Decision", timeVi: "Ngày mai", timeEn: "Tomorrow", importance: "high", forecast: "5.50%", previous: "5.50%" },
+        { titleVi: "Đơn xin trợ cấp thất nghiệp lần đầu", titleEn: "Initial Jobless Claims", timeVi: "2 giờ 30 phút", timeEn: "2h 30m", importance: "medium", forecast: "215K", previous: "212K" },
     ];
 
     const getFngColor = (value: number) => {
@@ -78,7 +100,7 @@ export default function MarketWidgets() {
                                 </div>
                             </div>
                             <div className={`text-xs font-bold px-2 py-1 rounded bg-white/5 ${getFngColor(parseInt(fng.value))}`}>
-                                {fng.value_classification}
+                                {fearGreedLabel(fng.value_classification, language)}
                             </div>
                         </div>
 
@@ -110,7 +132,7 @@ export default function MarketWidgets() {
                     <h3 className="text-gray-400 text-xs font-bold tracking-wider uppercase flex items-center gap-2">
                         <Calendar className="w-3 h-3" /> {translate(language, "Lịch kinh tế", "Economic calendar")}
                     </h3>
-                    <span className="text-[10px] text-blue-400 cursor-pointer hover:underline">{translate(language, "XEM TẤT CẢ", "VIEW ALL")}</span>
+                    <span className="text-[10px] text-slate-500">{translate(language, "Dữ liệu minh hoạ", "Demo data")}</span>
                 </div>
 
                 <div className="space-y-4">
@@ -122,15 +144,15 @@ export default function MarketWidgets() {
                             <div className="flex-1">
                                 <div className="flex justify-between items-start">
                                     <h4 className="text-gray-200 text-xs font-medium leading-tight group-hover:text-white transition-colors">
-                                        {event.title}
+                                        {language === "vi" ? event.titleVi : event.titleEn}
                                     </h4>
                                     <span className="text-gray-500 text-[10px] whitespace-nowrap ml-2 bg-gray-800/50 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                        <Clock className="w-2.5 h-2.5" /> {event.time}
+                                        <Clock className="w-2.5 h-2.5" /> {language === "vi" ? event.timeVi : event.timeEn}
                                     </span>
                                 </div>
                                 <div className="flex gap-3 mt-1.5 text-[10px] text-gray-500">
-                                    <span className="text-gray-400">Fcst: {event.forecast}</span>
-                                    <span>Prev: {event.previous}</span>
+                                    <span className="text-gray-400">{translate(language, "Dự báo", "Forecast")}: {event.forecast}</span>
+                                    <span>{translate(language, "Trước đó", "Previous")}: {event.previous}</span>
                                 </div>
                             </div>
                         </div>

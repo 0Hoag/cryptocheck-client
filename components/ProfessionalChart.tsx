@@ -515,7 +515,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                             <span className="text-gray-200 font-medium">{formatPrice(stats.low)}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs mb-1">Khối lượng 24h</span>
+                            <span className="text-gray-500 text-xs mb-1">{translate(language, "Khối lượng 24h", "24h volume")}</span>
                             <span className="text-gray-200 font-medium">{formatPrice(stats.vol)}</span>
                         </div>
                     </div>
