@@ -111,6 +111,7 @@ npm run build
 
 ## 5. Quality and release
 
+- [x] Default local development to Next webpack and keep Turbopack as an explicit opt-in command after observing excessive Turbopack memory usage on macOS. (Next CLI flag verified + production build passed)
 - [x] Add standalone Docker production configuration for the split client repository. (Next production build passed)
 - [x] Reduce global market-ticker polling from the full Binance ticker payload every 10s to the eight displayed symbols every 60s. (production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
