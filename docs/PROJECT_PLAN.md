@@ -12,6 +12,7 @@
 ## 1. Current shell and identity
 
 - [x] Landing page, news dashboard, scanner and shared Header/Footer are restored.
+- [x] Replace shared Footer placeholder links with real bilingual information/legal/FAQ routes; resource links now navigate to the available Analysis route and unconfigured social channels are no longer fake clickable destinations. (targeted lint + Vitest + production build passed)
 - [x] Vietnamese/English switcher is restored and persisted locally.
 - [ ] Complete Vietnamese/English coverage across every shared widget, route and async/error state; verify both languages manually on the running app.
   - [x] Translate the news dashboard, article cards, article detail and shared market/news widgets; make relative timestamps locale-aware. (production build passed)

@@ -20,16 +20,16 @@ export default function Footer() {
                         <p className="text-gray-400 leading-relaxed text-xs">
                             {translate(language, "Nền tảng cung cấp dữ liệu và phân tích thị trường tiền điện tử, giúp bạn theo dõi tín hiệu rõ ràng hơn.", "A market-data and analysis platform that helps you follow crypto signals with clearer context.")}
                         </p>
-                        <div className="flex items-center gap-4">
-                            <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <div className="flex items-center gap-4" aria-label={translate(language, "Kênh cộng đồng đang hoàn thiện", "Community channels are being configured")}>
+                            <span title={translate(language, "Telegram đang được cấu hình", "Telegram is being configured")} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-500" aria-hidden="true">
                                 <Send className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                            </span>
+                            <span title={translate(language, "X đang được cấu hình", "X is being configured")} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-500" aria-hidden="true">
                                 <Twitter className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                            </span>
+                            <span title={translate(language, "Facebook đang được cấu hình", "Facebook is being configured")} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-500" aria-hidden="true">
                                 <Facebook className="w-4 h-4" />
-                            </a>
+                            </span>
                         </div>
                     </div>
 
@@ -40,9 +40,9 @@ export default function Footer() {
                     <div className="lg:col-span-2 space-y-4">
                         <h4 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">{translate(language, "Thông tin", "Company")}</h4>
                         <ul className="space-y-3">
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Về chúng tôi", "About")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Lộ trình phát triển", "Roadmap")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Liên hệ quảng cáo", "Advertising")}</Link></li>
+                            <li><Link href="/info/about" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Về chúng tôi", "About")}</Link></li>
+                            <li><Link href="/info/roadmap" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Lộ trình phát triển", "Roadmap")}</Link></li>
+                            <li><Link href="/info/contact" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Liên hệ quảng cáo", "Advertising")}</Link></li>
                         </ul>
                     </div>
 
@@ -50,9 +50,9 @@ export default function Footer() {
                     <div className="lg:col-span-2 space-y-4">
                         <h4 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">{translate(language, "Tài nguyên", "Resources")}</h4>
                         <ul className="space-y-3">
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Lịch kinh tế", "Economic calendar")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Quyền chọn Deribit", "Deribit options")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Phân tích kỹ thuật", "Technical analysis")}</Link></li>
+                            <li><Link href="/analysis" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Lịch kinh tế", "Economic calendar")}</Link></li>
+                            <li><Link href="/analysis" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Quyền chọn Deribit", "Deribit options")}</Link></li>
+                            <li><Link href="/analysis" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Phân tích kỹ thuật", "Technical analysis")}</Link></li>
                         </ul>
                     </div>
 
@@ -60,9 +60,9 @@ export default function Footer() {
                     <div className="lg:col-span-2 space-y-4">
                         <h4 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">{translate(language, "Pháp lý & Hỗ trợ", "Legal & support")}</h4>
                         <ul className="space-y-3">
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Điều khoản sử dụng", "Terms of use")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Chính sách bảo mật", "Privacy policy")}</Link></li>
-                            <li><Link href="#" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Câu hỏi thường gặp", "FAQ")}</Link></li>
+                            <li><Link href="/info/terms" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Điều khoản sử dụng", "Terms of use")}</Link></li>
+                            <li><Link href="/info/privacy" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Chính sách bảo mật", "Privacy policy")}</Link></li>
+                            <li><Link href="/info/faq" className="text-gray-400 hover:text-white transition-colors text-xs">{translate(language, "Câu hỏi thường gặp", "FAQ")}</Link></li>
                         </ul>
                     </div>
                 </div>
