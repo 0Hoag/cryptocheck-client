@@ -34,10 +34,17 @@ export default function CryptoRanking() {
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        let controller: AbortController | undefined;
+        let active = true;
+
         const fetchPrices = async () => {
+            controller?.abort();
+            controller = new AbortController();
+
             try {
                 const symbols = trackedSymbols.map((symbol) => `${symbol}USDT`);
-                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`);
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`, { signal: controller.signal });
                 if (!res.ok) throw new Error(`Binance returned ${res.status}`);
                 const payload: unknown = await res.json();
                 const data = Array.isArray(payload) ? payload.filter(isBinanceTicker24h) : [];
@@ -52,19 +59,39 @@ export default function CryptoRanking() {
                     };
                 });
 
+                if (!active) return;
                 setCoins(updatedCoins);
                 setError(false);
                 setLoading(false);
             } catch (error) {
+                if ((error as DOMException).name === "AbortError" || !active) return;
                 console.error("Failed to fetch crypto ranking:", error);
                 setError(true);
                 setLoading(false);
             }
         };
 
-        fetchPrices();
-        const interval = setInterval(fetchPrices, 60000);
-        return () => clearInterval(interval);
+        const startPolling = () => {
+            if (document.visibilityState !== "visible") return;
+            void fetchPrices();
+            intervalId = setInterval(fetchPrices, 60000);
+        };
+
+        const handleVisibilityChange = () => {
+            if (intervalId) clearInterval(intervalId);
+            intervalId = undefined;
+            if (document.visibilityState === "visible") startPolling();
+            else controller?.abort();
+        };
+
+        startPolling();
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            active = false;
+            if (intervalId) clearInterval(intervalId);
+            controller?.abort();
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [refreshKey]);
 
     if (loading) {

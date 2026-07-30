@@ -30,13 +30,20 @@ export default function CryptoTicker() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        let controller: AbortController | undefined;
+        let active = true;
+
         const fetchPrices = async () => {
+            controller?.abort();
+            controller = new AbortController();
+
             try {
                 // Request only the symbols rendered in this global component.
                 // The unfiltered endpoint returns every Binance ticker (~hundreds of KB)
                 // and was being downloaded every 10 seconds on every route.
                 const requestedSymbols = encodeURIComponent(JSON.stringify(trackedSymbols));
-                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${requestedSymbols}`);
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${requestedSymbols}`, { signal: controller.signal });
                 if (!res.ok) throw new Error(`Binance returned ${res.status}`);
                 const payload: unknown = await res.json();
                 const data = Array.isArray(payload) ? payload.filter(isBinanceTicker24h) : [];
@@ -54,18 +61,38 @@ export default function CryptoTicker() {
                     trackedSymbols.indexOf(a.symbol + "USDT") - trackedSymbols.indexOf(b.symbol + "USDT")
                 );
 
+                if (!active) return;
                 setPrices(sorted);
                 setLoading(false);
             } catch (error) {
+                if ((error as DOMException).name === "AbortError" || !active) return;
                 console.error("Failed to fetch crypto prices:", error);
                 setLoading(false);
             }
         };
 
-        fetchPrices();
-        const interval = setInterval(fetchPrices, 60000);
+        const startPolling = () => {
+            if (document.visibilityState !== "visible") return;
+            void fetchPrices();
+            intervalId = setInterval(fetchPrices, 60000);
+        };
 
-        return () => clearInterval(interval);
+        const handleVisibilityChange = () => {
+            if (intervalId) clearInterval(intervalId);
+            intervalId = undefined;
+            if (document.visibilityState === "visible") startPolling();
+            else controller?.abort();
+        };
+
+        startPolling();
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            active = false;
+            if (intervalId) clearInterval(intervalId);
+            controller?.abort();
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [language]);
 
     if (loading) return null;
