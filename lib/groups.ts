@@ -38,8 +38,18 @@ export type CreateGroupInput = {
   join_policy: CommunityGroup["join_policy"];
 };
 
+type ListPayload = { data?: unknown };
+
+export function parseGroupListResponse<T>(payload: unknown, resource: string): T[] {
+  const data = (payload as ListPayload | undefined)?.data;
+  if (data == null) return [];
+  if (!Array.isArray(data)) throw new Error(`Invalid ${resource} response`);
+  return data as T[];
+}
+
 export async function getGroups() {
-  return (await apiClient.get<{ data: CommunityGroup[] }>("/api/v1/news-feed/groups")).data.data;
+  const response = await apiClient.get<unknown>("/api/v1/news-feed/groups");
+  return parseGroupListResponse<CommunityGroup>(response.data, "groups");
 }
 
 export async function getGroup(id: string) {
@@ -47,7 +57,8 @@ export async function getGroup(id: string) {
 }
 
 export async function getGroupPosts(id: string) {
-  return (await apiClient.get<{ data: GroupPost[] }>(`/api/v1/news-feed/groups/${id}/posts`)).data.data;
+  const response = await apiClient.get<unknown>(`/api/v1/news-feed/groups/${id}/posts`);
+  return parseGroupListResponse<GroupPost>(response.data, "group posts");
 }
 
 export async function createGroup(input: CreateGroupInput) {
@@ -71,7 +82,8 @@ export async function deleteGroup(id: string) {
 }
 
 export async function getGroupMembers(id: string) {
-  return (await apiClient.get<{ data: GroupMembership[] }>(`/api/v1/news-feed/groups/${id}/members`)).data.data;
+  const response = await apiClient.get<unknown>(`/api/v1/news-feed/groups/${id}/members`);
+  return parseGroupListResponse<GroupMembership>(response.data, "group members");
 }
 
 export async function updateGroupMember(groupID: string, userID: string, update: Partial<Pick<GroupMembership, "role" | "status">>) {
