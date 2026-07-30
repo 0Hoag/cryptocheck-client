@@ -4,17 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import RequireAuth from "@/components/RequireAuth";
 import { apiClient } from "@/lib/api";
+import { AppNotification, parseNotificationsResponse } from "@/lib/notifications";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
-
-type AppNotification = {
-  id: string;
-  type: string;
-  message: string;
-  resource_id?: string;
-  read_at?: string;
-  created_at: string;
-};
 
 function notificationCopy(type: string, fallback: string, language: "vi" | "en") {
   const copy: Record<string, [string, string]> = {
@@ -46,8 +38,8 @@ function NotificationsContent() {
     setLoading(true);
     setError("");
     try {
-      const response = await apiClient.get<{ data: AppNotification[] }>("/api/v1/news-feed/notifications");
-      setNotifications(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/notifications");
+      setNotifications(parseNotificationsResponse(response.data));
     } catch (requestError) {
       setError(getErrorMessage(requestError, translate(language, "Không tải được thông báo.", "Unable to load notifications.")));
     } finally {

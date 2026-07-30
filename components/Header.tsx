@@ -6,10 +6,9 @@ import { Activity, Bell, CheckCheck, ChevronDown, Globe2, Loader2, LogIn, LogOut
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clearAuth, getAuthUser, AuthUser } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
+import { AppNotification, parseNotificationsResponse } from "@/lib/notifications";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
-
-type AppNotification = { id: string; type: string; message: string; resource_id?: string; read_at?: string; created_at: string };
 
 function notificationCopy(type: string, fallback: string, language: "vi" | "en") {
     const copy: Record<string, [string, string]> = {
@@ -61,7 +60,10 @@ export default function Header() {
     const loadNotifications = useCallback(async () => {
         if (!getAuthUser()) return;
         setNotificationsLoading(true); setNotificationError("");
-        try { setNotifications((await apiClient.get<{ data: AppNotification[] }>("/api/v1/news-feed/notifications")).data.data); }
+        try {
+            const response = await apiClient.get<unknown>("/api/v1/news-feed/notifications");
+            setNotifications(parseNotificationsResponse(response.data));
+        }
         catch (error) { setNotificationError(getErrorMessage(error, translate(language, "Không tải được thông báo.", "Unable to load notifications."))); }
         finally { setNotificationsLoading(false); }
     }, [language]);

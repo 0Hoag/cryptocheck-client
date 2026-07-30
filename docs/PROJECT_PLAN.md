@@ -70,6 +70,7 @@ npm run build
 - [x] Add profile follow/unfollow control backed by the API (production build passed).
 - [x] Add API-backed follower/following counts to member profiles using the public aggregate-count endpoint. (production build passed)
 - [x] Add authenticated Header notification inbox backed by the API, including unread state, bilingual event copy, read/read-all actions, loading and retry states. (production build passed)
+  - [x] Normalize the legacy empty notification response (`data: null`) before shared navigation renders it, and reject malformed notification payloads with a visible retry state rather than crashing Header on `.some()`. (Vitest + production build passed)
   - [x] Open the linked group or post directly after marking its notification read; unsupported resource types remain safely non-navigating. (production build passed)
   - [x] Add a responsive notifications page with read-all, retry and resource navigation, linked from both the desktop inbox and mobile menu. (production build passed)
 - [x] Make the post-detail route community-aware, with author profile link and API reaction/comment counts. (production build passed)
