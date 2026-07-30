@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+const apiRewriteBaseURL =
+  process.env.API_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production" ? "http://backend-api:8080" : "http://localhost:8080");
+
 const nextConfig: NextConfig = {
 	output: "standalone",
   images: {
@@ -31,7 +36,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/:path*`,
+        destination: `${apiRewriteBaseURL}/api/:path*`,
       },
     ];
   },

@@ -2,7 +2,10 @@ import axios from "axios";
 import { Post, PaginationParams, PostsResponse } from "./types";
 import { clearAuth, getAuthToken } from "./auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// Production traffic should stay on the current origin. This lets the edge
+// proxy (or Next's server rewrite) forward `/api` to the API container instead
+// of trying to reach `localhost` on each visitor's device.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 type PostFeedPayload = { data?: { items?: unknown; meta?: unknown } };
 
