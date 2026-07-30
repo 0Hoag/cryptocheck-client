@@ -112,6 +112,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
     const [stats, setStats] = useState({ high: '0.00', low: '0.00', vol: '0.00' });
     const [cursorData, setCursorData] = useState<{ visible: boolean; x: number; y: number; price: string; percentDiff: string } | null>(null);
+    const [chartLoadError, setChartLoadError] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -297,6 +299,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     useEffect(() => {
         let active = true;
         const controller = new AbortController();
+        setChartLoadError(false);
 
         const fetchData = async () => {
             // ... existing kline fetch logic ...
@@ -412,6 +415,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             } catch (error) {
                 if ((error as DOMException).name === 'AbortError' || !active) return;
                 console.error('Error fetching data:', error);
+                setChartLoadError(true);
             }
         };
 
@@ -485,7 +489,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             ws.close();
             tickerWs.close();
         };
-    }, [symbol, interval]);
+    }, [symbol, interval, retryKey]);
 
     const isPositive = priceChange >= 0;
 
@@ -585,6 +589,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     display: none !important;
                 }
             `}</style>
+            {chartLoadError && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100"><span>{translate(language, "Không tải được dữ liệu biểu đồ mới nhất. Dữ liệu cũ (nếu có) vẫn có thể được hiển thị.", "The latest chart data could not be loaded. Older data, if available, may still be shown.")}</span><button type="button" onClick={() => setRetryKey((value) => value + 1)} className="rounded-md border border-amber-200/25 px-2.5 py-1 text-xs font-semibold hover:bg-amber-500/15">{translate(language, "Thử lại", "Retry")}</button></div>}
             <div ref={chartContainerRef} className="w-full" />
 
             {/* Legend removed - MA lines disabled */}
