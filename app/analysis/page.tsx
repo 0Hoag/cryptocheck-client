@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ProfessionalChart from "@/components/ProfessionalChart";
+import dynamic from "next/dynamic";
 import CoinList from "@/components/CoinList";
 import axios from "axios";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
+
+const ProfessionalChart = dynamic(() => import("@/components/ProfessionalChart"), {
+    ssr: false,
+    loading: () => <div className="h-[540px] animate-pulse rounded-2xl border border-slate-800 bg-slate-950/60" aria-label="Loading market chart" />,
+});
 
 type OrderBookRow = { price: string; amount: string; total: string; fill: number };
 type DepthMessage = { asks: [string, string][]; bids: [string, string][] };

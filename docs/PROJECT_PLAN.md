@@ -124,6 +124,7 @@ npm run build
 - [x] Pause ticker/ranking polling and abort in-flight market requests whenever the browser tab is hidden, avoiding background work on persistent layout widgets. (targeted lint + Vitest + production build passed)
 - [x] Skip realtime market/chart/order-book message parsing and React updates while the Analysis tab is hidden. (targeted lint + Vitest + production build passed)
 - [x] Pause persistent market/news marquee animations when they scroll outside the viewport, reducing visual-only GPU work while reading long pages. (targeted lint + Vitest + production build passed)
+- [x] Load the heavyweight professional-chart bundle after the Analysis shell is visible, so route navigation can render controls and market state without waiting for chart initialization. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
