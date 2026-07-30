@@ -70,6 +70,8 @@ export default function CryptoTicker() {
 
     if (loading) return null;
 
+    const marqueePrices = [...prices, ...prices];
+
     return (
         <div className="w-full bg-[#0a0a0a] border-b border-white/5 overflow-hidden py-2 flex items-center relative z-40">
             <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0 bg-[#0a0a0a] z-10 text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -80,8 +82,7 @@ export default function CryptoTicker() {
             {/* Ticker Container */}
             <div className="overflow-hidden whitespace-nowrap mask-linear-gradient w-full flex">
                 <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8">
-                    {/* Duplicate list to ensure it covers screen width */}
-                    {[...prices, ...prices, ...prices, ...prices].map((coin, index) => (
+                    {marqueePrices.map((coin, index) => (
                         <div key={`orig-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
                             <span className="text-gray-400">${coin.price}</span>
@@ -94,7 +95,7 @@ export default function CryptoTicker() {
                 </div>
                 {/* Second duplicated container for seamless loop */}
                 <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8" aria-hidden="true">
-                    {[...prices, ...prices, ...prices, ...prices].map((coin, index) => (
+                    {marqueePrices.map((coin, index) => (
                         <div key={`copy-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
                             <span className="text-gray-400">${coin.price}</span>

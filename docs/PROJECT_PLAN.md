@@ -120,6 +120,7 @@ npm run build
 - [x] Add standalone Docker production configuration for the split client repository. (Next production build passed)
 - [x] Default browser API calls to same-origin `/api` and make Next's production rewrite target the Docker `backend-api` service, preventing an unset public API variable from compiling `localhost:8080` into visitor browsers. (targeted lint + Vitest + production build passed)
 - [x] Reduce global market-ticker polling from the full Binance ticker payload every 10s to the eight displayed symbols every 60s. (production build passed)
+- [x] Reduce Analysis market-list streaming from Binance's all-market feed to only the displayed symbols, ignore updates while the tab is hidden, and cut duplicate animated ticker nodes across the persistent shell. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)

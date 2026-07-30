@@ -90,20 +90,24 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
     const pendingTickersRef = useRef<Map<string, BinanceMiniTicker>>(new Map());
 
     useEffect(() => {
-        const trackedSymbols = new Set(coinMapping.map((coin) => coin.symbol));
+        const trackedSymbols = new Set(coinMapping.map((coin) => coin.symbol).filter((symbol) => symbol !== "XAUUSD"));
+        const streams = [...trackedSymbols].map((symbol) => `${symbol.toLowerCase()}@miniTicker`).join("/");
 
-        // Binance sends every listed market through this stream. Buffer the
-        // small subset shown here, then commit React state once per second.
-        // This avoids a full CoinList render for every socket message.
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+        // Subscribe only to the markets displayed here. The previous all-market
+        // stream delivered every Binance mini ticker to the browser and then
+        // discarded almost all of it on the client.
+        const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
 
         ws.onmessage = (event) => {
-            const payload: unknown = JSON.parse(event.data);
-            if (!Array.isArray(payload)) return;
-
-            payload.filter(isBinanceMiniTicker).forEach((ticker) => {
-                if (trackedSymbols.has(ticker.s)) pendingTickersRef.current.set(ticker.s, ticker);
-            });
+            try {
+                const payload: unknown = JSON.parse(event.data);
+                const ticker = (payload as { data?: unknown } | null)?.data;
+                if (isBinanceMiniTicker(ticker) && trackedSymbols.has(ticker.s) && document.visibilityState === "visible") {
+                    pendingTickersRef.current.set(ticker.s, ticker);
+                }
+            } catch {
+                // Ignore one malformed provider message and keep the socket alive.
+            }
         };
 
         const flushTickers = () => {
