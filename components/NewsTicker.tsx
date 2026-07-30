@@ -7,10 +7,12 @@ import { truncateText } from "@/lib/utils";
 import { Zap } from "lucide-react";
 import Link from "next/link";
 import { translate, useLanguage } from "@/context/LanguageContext";
+import { useElementVisibility } from "@/lib/useElementVisibility";
 
 export default function NewsTicker() {
     const { language } = useLanguage();
     const [headlines, setHeadlines] = useState<Post[]>([]);
+    const { ref: tickerRef, isVisible } = useElementVisibility<HTMLDivElement>();
 
     useEffect(() => {
         const fetchHeadlines = async () => {
@@ -30,7 +32,7 @@ export default function NewsTicker() {
     const marqueeHeadlines = [...headlines, ...headlines];
 
     return (
-        <div className="w-full bg-cyan-950/20 border-b border-cyan-900/30 overflow-hidden py-2 flex items-center relative z-30">
+        <div ref={tickerRef} className="w-full bg-cyan-950/20 border-b border-cyan-900/30 overflow-hidden py-2 flex items-center relative z-30">
             <div className="flex items-center gap-2 px-4 border-r border-cyan-500/20 shrink-0 bg-[#050510] z-10 text-xs font-bold text-cyan-500 uppercase tracking-wider">
                 <Zap className="w-3 h-3 text-cyan-400 fill-cyan-400 animate-pulse" />
                 {translate(language, "Tin nóng", "Breaking news")}
@@ -38,7 +40,7 @@ export default function NewsTicker() {
 
             {/* Ticker Container */}
             <div className="overflow-hidden whitespace-nowrap mask-linear-gradient w-full flex hover:pause-animation group">
-                <div className="flex items-center gap-12 animate-marquee-slow shrink-0 pr-12 group-hover:[animation-play-state:paused]">
+                <div className="flex items-center gap-12 animate-marquee-slow shrink-0 pr-12 group-hover:[animation-play-state:paused]" style={isVisible ? undefined : { animationPlayState: "paused" }}>
                     {marqueeHeadlines.map((post, index) => (
                         <Link
                             key={`orig-${post.id}-${index}`}
@@ -51,7 +53,7 @@ export default function NewsTicker() {
                     ))}
                 </div>
                 {/* Second duplicated container for seamless loop */}
-                <div className="flex items-center gap-12 animate-marquee-slow shrink-0 pr-12 group-hover:[animation-play-state:paused]" aria-hidden="true">
+                <div className="flex items-center gap-12 animate-marquee-slow shrink-0 pr-12 group-hover:[animation-play-state:paused]" style={isVisible ? undefined : { animationPlayState: "paused" }} aria-hidden="true">
                     {marqueeHeadlines.map((post, index) => (
                         <Link
                             key={`copy-${post.id}-${index}`}

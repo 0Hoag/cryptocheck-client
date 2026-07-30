@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowUp, ArrowDown, Activity } from "lucide-react";
 import { useLanguage, languageLocale, translate } from "@/context/LanguageContext";
+import { useElementVisibility } from "@/lib/useElementVisibility";
 
 interface CryptoPrice {
     symbol: string;
@@ -28,6 +29,7 @@ export default function CryptoTicker() {
     const { language } = useLanguage();
     const [prices, setPrices] = useState<CryptoPrice[]>([]);
     const [loading, setLoading] = useState(true);
+    const { ref: tickerRef, isVisible } = useElementVisibility<HTMLDivElement>();
 
     useEffect(() => {
         let intervalId: ReturnType<typeof setInterval> | undefined;
@@ -100,7 +102,7 @@ export default function CryptoTicker() {
     const marqueePrices = [...prices, ...prices];
 
     return (
-        <div className="w-full bg-[#0a0a0a] border-b border-white/5 overflow-hidden py-2 flex items-center relative z-40">
+        <div ref={tickerRef} className="w-full bg-[#0a0a0a] border-b border-white/5 overflow-hidden py-2 flex items-center relative z-40">
             <div className="flex items-center gap-2 px-4 border-r border-white/10 shrink-0 bg-[#0a0a0a] z-10 text-xs font-bold text-gray-400 uppercase tracking-wider">
                 <Activity className="w-3 h-3 text-cyan-500" />
                 {translate(language, "Thị trường trực tiếp", "Live market")}
@@ -108,7 +110,7 @@ export default function CryptoTicker() {
 
             {/* Ticker Container */}
             <div className="overflow-hidden whitespace-nowrap mask-linear-gradient w-full flex">
-                <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8">
+                <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8" style={{ animationPlayState: isVisible ? "running" : "paused" }}>
                     {marqueePrices.map((coin, index) => (
                         <div key={`orig-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
@@ -121,7 +123,7 @@ export default function CryptoTicker() {
                     ))}
                 </div>
                 {/* Second duplicated container for seamless loop */}
-                <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8" aria-hidden="true">
+                <div className="flex items-center gap-8 animate-marquee shrink-0 pr-8" style={{ animationPlayState: isVisible ? "running" : "paused" }} aria-hidden="true">
                     {marqueePrices.map((coin, index) => (
                         <div key={`copy-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
