@@ -416,6 +416,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         const ws = new WebSocket(wsUrl);
 
         ws.onmessage = (event) => {
+            if (document.visibilityState !== "visible") return;
             const message: unknown = JSON.parse(event.data);
             if (!isBinanceKlineEvent(message)) return;
             const candle = message.k;
@@ -461,6 +462,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         const tickerWs = new WebSocket(tickerWsUrl);
 
         tickerWs.onmessage = (event) => {
+            if (document.visibilityState !== "visible") return;
             const ticker: unknown = JSON.parse(event.data);
             if (isBinanceTickerEvent(ticker)) {
                 setStats({

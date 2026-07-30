@@ -99,10 +99,11 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
         const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
 
         ws.onmessage = (event) => {
+            if (document.visibilityState !== "visible") return;
             try {
                 const payload: unknown = JSON.parse(event.data);
                 const ticker = (payload as { data?: unknown } | null)?.data;
-                if (isBinanceMiniTicker(ticker) && trackedSymbols.has(ticker.s) && document.visibilityState === "visible") {
+                if (isBinanceMiniTicker(ticker) && trackedSymbols.has(ticker.s)) {
                     pendingTickersRef.current.set(ticker.s, ticker);
                 }
             } catch {

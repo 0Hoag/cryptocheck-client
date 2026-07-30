@@ -180,6 +180,7 @@ export default function CustomChart({ symbol = "BTCUSDT" }: CustomChartProps) {
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${wsSymbol}@kline_${interval}`);
 
         ws.onmessage = (event) => {
+            if (document.visibilityState !== "visible") return;
             const message: unknown = JSON.parse(event.data);
             if (!isBinanceKlineEvent(message)) return;
             const kline = message.k;

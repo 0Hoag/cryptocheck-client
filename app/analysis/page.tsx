@@ -51,6 +51,7 @@ export default function AnalysisPage() {
             const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${selectedSymbol.toLowerCase()}@depth20@1000ms`);
 
             ws.onmessage = (event) => {
+                if (document.visibilityState !== "visible") return;
                 const data = JSON.parse(event.data) as DepthMessage;
                 const asks = data.asks.map((ask) => ({
                     price: parseFloat(ask[0]).toFixed(2),
