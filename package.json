@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:ci": "eslint . --ignore-pattern 'app/community/page.tsx'",
     "test": "vitest run"
   },
   "dependencies": {

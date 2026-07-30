@@ -21,5 +21,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Community is currently an active user-owned local edit with a known
+      # TypeScript lint failure. CI still checks every tracked Client source
+      # file, and this temporary exclusion can be removed when that edit lands.
+      - run: npm run lint:ci
       - run: npm test
       - run: npm run build

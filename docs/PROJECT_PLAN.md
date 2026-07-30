@@ -154,4 +154,4 @@ npm run build
   - [x] Stabilize notification and scanner data loaders with dependency-safe callbacks, so language changes do not retain stale async closures. (targeted lint + production build passed)
   - [x] Stabilize Group-list and Prelaunch watchlist loaders so translated API errors and refreshes use the active language. (targeted lint + production build passed; remote group-avatar warning remains)
   - [x] Stabilize Group-detail and member-list loading dependencies without changing group CRUD behavior. (targeted lint + production build passed; remote group-avatar warning remains)
-  - [ ] Add lint and test jobs after their baseline failures and test suites are addressed.
+  - [x] Run lint (excluding the explicitly user-owned, currently dirty Community edit), Vitest and production build on every pull request and push to `main`; remove that temporary exclusion once the Community edit is finalized. (lint:ci + Vitest + production build passed)
