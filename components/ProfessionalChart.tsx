@@ -295,14 +295,18 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
     // Data Fetching
     useEffect(() => {
+        let active = true;
+        const controller = new AbortController();
+
         const fetchData = async () => {
             // ... existing kline fetch logic ...
             try {
                 // Fetch 24h stats
-                const statsRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                const statsRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`, { signal: controller.signal });
                 if (!statsRes.ok) throw new Error(`Binance returned ${statsRes.status}`);
                 const statsData: unknown = await statsRes.json();
                 if (!isBinanceTickerStats(statsData)) throw new Error('Invalid Binance ticker payload');
+                if (!active) return;
                 setStats({
                     high: parseFloat(statsData.highPrice).toFixed(2),
                     low: parseFloat(statsData.lowPrice).toFixed(2),
@@ -323,10 +327,11 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 // ? `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}&endTime=${endTime}`
                 // : `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
-                const response: Response = await fetch(url);
+                const response: Response = await fetch(url, { signal: controller.signal });
                 if (!response.ok) throw new Error(`Binance returned ${response.status}`);
                 const payload: unknown = await response.json();
                 const data = Array.isArray(payload) ? payload.filter(isBinanceKline) : [];
+                if (!active) return;
 
                 // if (data.length === 0) break;
 
@@ -405,6 +410,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     chartRef.current.timeScale().scrollToPosition(50, false);
                 }
             } catch (error) {
+                if ((error as DOMException).name === 'AbortError' || !active) return;
                 console.error('Error fetching data:', error);
             }
         };
@@ -474,6 +480,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         };
 
         return () => {
+            active = false;
+            controller.abort();
             ws.close();
             tickerWs.close();
         };

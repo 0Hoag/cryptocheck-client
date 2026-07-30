@@ -126,6 +126,7 @@ npm run build
 - [x] Pause persistent market/news marquee animations when they scroll outside the viewport, reducing visual-only GPU work while reading long pages. (targeted lint + Vitest + production build passed)
 - [x] Load the heavyweight professional-chart bundle after the Analysis shell is visible, so route navigation can render controls and market state without waiting for chart initialization. (targeted lint + Vitest + production build passed)
 - [x] Add a lightweight app-level route loading shell, so navigation gives immediate visual feedback while a route chunk or server segment is loading. (targeted lint + Vitest + production build passed)
+- [x] Abort obsolete Analysis chart REST requests when changing a market or timeframe, preventing stale candles and unnecessary client work. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
