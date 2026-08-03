@@ -64,6 +64,7 @@ npm run build
 ## 3. Community social experience
 
 - [x] `/community` feed is restored and excludes crawler news posts.
+- [x] Identify source-crawled news detail as an automated public-content summary/translation and direct readers to the original article for the complete context. (targeted lint + Vitest + production build passed)
 - [x] Authenticated users can create a public post, like/unlike, comment and share a link.
 - [x] Keep the client post contract compatible with `followers` visibility; create/update helpers can send the permission once the Community composer exposes the choice. (Vitest + production build passed)
 - [x] Anonymous users can read the feed and are prompted to sign in before interaction.

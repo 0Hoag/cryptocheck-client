@@ -164,6 +164,16 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                 </div>
                             )}
 
+                            {!isCommunityPost && (
+                                <aside role="note" className="mb-6 rounded-xl border border-sky-400/20 bg-sky-400/5 px-4 py-3 text-sm leading-6 text-slate-300">
+                                    {translate(
+                                        language,
+                                        "CryptoCheck hiển thị bản tóm tắt/dịch tự động từ nội dung công khai mà nguồn cung cấp. Đây không phải bản sao toàn văn; hãy mở bài gốc để đọc đầy đủ và kiểm tra ngữ cảnh.",
+                                        "CryptoCheck shows an automated translated summary from public content supplied by the source. It is not a full-text copy; open the original article for the complete context."
+                                    )}
+                                </aside>
+                            )}
+
                             {/* Main Content */}
                             <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed prose-headings:text-white prose-a:text-cyan-400 hover:prose-a:text-cyan-300 prose-img:rounded-xl">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
