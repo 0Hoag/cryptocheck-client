@@ -110,6 +110,7 @@ npm run build
   - [x] Preserve API request IDs for failed entitlement checks and provide an explicit in-place retry from Account. (targeted lint + 14 Vitest tests + production build passed)
 - [x] Add group directory, group detail, member roles and group post composer.
   - [x] Normalize legacy `null` group, member and post lists before rendering, so an empty collection cannot crash a route through `.length` or `.map`. (Vitest + production build passed)
+  - [x] Validate the required identity fields of a group-detail payload before render, so null/malformed detail responses enter the existing retry state instead of producing a blank or crashing route. (lint:ci + Vitest + production build passed)
   - [x] Add API-backed public group directory and detail views, including authentication-aware join/request states and an active-member post composer. (production build passed)
   - [x] Show member roles/status from the authenticated group-members API in group detail. (production build passed)
   - [x] Let group owner/admin approve pending join requests; owner can update member/admin/moderator roles through API-enforced permissions. (production build passed)

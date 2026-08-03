@@ -40,11 +40,23 @@ export type CreateGroupInput = {
 
 type ListPayload = { data?: unknown };
 
+function isGroup(value: unknown): value is CommunityGroup {
+  if (!value || typeof value !== "object") return false;
+  const group = value as Partial<CommunityGroup>;
+  return typeof group.id === "string" && typeof group.name === "string" && typeof group.slug === "string";
+}
+
 export function parseGroupListResponse<T>(payload: unknown, resource: string): T[] {
   const data = (payload as ListPayload | undefined)?.data;
   if (data == null) return [];
   if (!Array.isArray(data)) throw new Error(`Invalid ${resource} response`);
   return data as T[];
+}
+
+export function parseGroupResponse(payload: unknown, resource: string): CommunityGroup {
+  const data = (payload as ListPayload | undefined)?.data;
+  if (!isGroup(data)) throw new Error(`Invalid ${resource} response`);
+  return data;
 }
 
 export async function getGroups() {
@@ -53,7 +65,8 @@ export async function getGroups() {
 }
 
 export async function getGroup(id: string) {
-  return (await apiClient.get<{ data: CommunityGroup }>(`/api/v1/news-feed/groups/${id}`)).data.data;
+  const response = await apiClient.get<unknown>(`/api/v1/news-feed/groups/${id}`);
+  return parseGroupResponse(response.data, "group");
 }
 
 export async function getGroupPosts(id: string) {
