@@ -138,6 +138,7 @@ npm run build
   - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
   - [x] Localize the shared keyboard skip-link using the active VN/EN language setting. (targeted lint + Vitest + production build passed)
   - [x] Make Header account, notification and mobile menus dismissible with Escape, return focus to their trigger, and expose matching ARIA controls. (targeted lint + Vitest + production build passed)
+  - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)

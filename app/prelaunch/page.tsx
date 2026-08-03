@@ -127,6 +127,14 @@ export default function PrelaunchPage() {
     }
   }
 
+  const fieldLabels: Record<keyof Pick<ProjectForm, "name" | "symbol" | "website_url" | "claimed_chain" | "launch_at">, string> = {
+    name: translate(language, "Tên dự án", "Project name"),
+    symbol: translate(language, "Mã token", "Token symbol"),
+    website_url: translate(language, "Website chính thức", "Official website"),
+    claimed_chain: translate(language, "Chain dự kiến", "Claimed chain"),
+    launch_at: translate(language, "Ngày launch", "Launch date"),
+  };
+
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 lg:py-12">
       <div className="mx-auto max-w-5xl">
@@ -136,11 +144,11 @@ export default function PrelaunchPage() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{translate(language, "Đây là đánh giá sơ bộ dựa trên website, social, chain công bố và bằng chứng. Dự án chưa deploy contract sẽ không có điểm bảo mật.", "This is preliminary due diligence based on a website, socials, claimed chain and evidence. A project without a deployed contract cannot have a security score.")}</p>
           <form onSubmit={submit} className="mt-7 grid gap-3 sm:grid-cols-2">
             {(["name", "symbol", "website_url", "claimed_chain", "launch_at"] as const).map((field) => (
-              <input key={field} required={field === "name" || field === "website_url"} type={field === "launch_at" ? "date" : "text"} value={form[field]} onChange={(event) => setForm({ ...form, [field]: event.target.value })} placeholder={{ name: translate(language, "Tên dự án *", "Project name *"), symbol: "Symbol", website_url: translate(language, "Website chính thức *", "Official website *"), claimed_chain: translate(language, "Chain dự kiến", "Claimed chain"), launch_at: translate(language, "Ngày launch", "Launch date") }[field]} className="h-11 rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+              <label key={field} className="block"><span className="sr-only">{fieldLabels[field]}{field === "name" || field === "website_url" ? " *" : ""}</span><input required={field === "name" || field === "website_url"} type={field === "launch_at" ? "date" : "text"} value={form[field]} onChange={(event) => setForm({ ...form, [field]: event.target.value })} placeholder={`${fieldLabels[field]}${field === "name" || field === "website_url" ? " *" : ""}`} className="h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>
             ))}
-            <textarea value={form.social_urls} onChange={(event) => setForm({ ...form, social_urls: event.target.value })} placeholder={translate(language, "Social URLs, mỗi dòng một link", "Social URLs, one link per line")} className="min-h-20 rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white" />
-            <textarea value={form.evidence} onChange={(event) => setForm({ ...form, evidence: event.target.value })} placeholder={translate(language, "Evidence links, mỗi dòng một link", "Evidence links, one link per line")} className="min-h-20 rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white" />
-            <div className="flex gap-2"><button disabled={submitting} className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{submitting ? translate(language, "Đang lưu", "Saving") : editingID ? translate(language, "Lưu thay đổi", "Save changes") : translate(language, "Thêm vào watchlist", "Add to watchlist")}</button>{editingID && <button type="button" onClick={cancelEditing} disabled={submitting} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800"><X className="h-4 w-4" />{translate(language, "Huỷ", "Cancel")}</button>}</div>
+            <label className="block"><span className="sr-only">{translate(language, "Social URLs", "Social URLs")}</span><textarea value={form.social_urls} onChange={(event) => setForm({ ...form, social_urls: event.target.value })} placeholder={translate(language, "Social URLs, mỗi dòng một link", "Social URLs, one link per line")} className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white" /></label>
+            <label className="block"><span className="sr-only">{translate(language, "Liên kết bằng chứng", "Evidence links")}</span><textarea value={form.evidence} onChange={(event) => setForm({ ...form, evidence: event.target.value })} placeholder={translate(language, "Evidence links, mỗi dòng một link", "Evidence links, one link per line")} className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white" /></label>
+            <div className="flex gap-2"><button type="submit" disabled={submitting} className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{submitting ? translate(language, "Đang lưu", "Saving") : editingID ? translate(language, "Lưu thay đổi", "Save changes") : translate(language, "Thêm vào watchlist", "Add to watchlist")}</button>{editingID && <button type="button" onClick={cancelEditing} disabled={submitting} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800"><X className="h-4 w-4" />{translate(language, "Huỷ", "Cancel")}</button>}</div>
           </form>
         </section>
         {loading && <div className="mt-6 flex items-center gap-2 text-slate-400"><Loader2 className="h-4 w-4 animate-spin" />{translate(language, "Đang tải watchlist", "Loading watchlist")}</div>}
