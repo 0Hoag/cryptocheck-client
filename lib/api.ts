@@ -6,6 +6,10 @@ import { clearAuth, getAuthToken } from "./auth";
 // proxy (or Next's server rewrite) forward `/api` to the API container instead
 // of trying to reach `localhost` on each visitor's device.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// Routine UI reads should fail visibly instead of keeping a page in a loading
+// state indefinitely when an origin/proxy is unavailable. Scanner requests
+// deliberately override this with their longer provider-aware timeout.
+export const DEFAULT_API_TIMEOUT_MS = 15_000;
 
 type PostFeedPayload = { data?: { items?: unknown; meta?: unknown } };
 
@@ -24,6 +28,7 @@ export function parsePostsResponse(payload: unknown): PostsResponse {
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
+    timeout: DEFAULT_API_TIMEOUT_MS,
     headers: {
         "Content-Type": "application/json",
     },

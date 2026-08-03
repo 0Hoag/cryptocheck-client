@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePostsResponse } from "./api";
+import { apiClient, DEFAULT_API_TIMEOUT_MS, parsePostsResponse } from "./api";
 
 const post = {
   id: "post-1", pin: false, title: "Market update", content: "Body", permission: "public",
@@ -7,6 +7,11 @@ const post = {
 };
 
 describe("post-feed API contract", () => {
+  it("bounds ordinary UI requests while allowing individual endpoints to override it", () => {
+    expect(apiClient.defaults.timeout).toBe(DEFAULT_API_TIMEOUT_MS);
+    expect(DEFAULT_API_TIMEOUT_MS).toBe(15_000);
+  });
+
   it("returns posts and valid pagination metadata", () => {
     expect(parsePostsResponse({ data: { items: [post], meta: { total: 13, count: 12, per_page: 12, current_page: 1, total_pages: 2 } } })).toEqual({
       posts: [post], pagination: { total: 13, count: 12, per_page: 12, current_page: 1, total_pages: 2 },
