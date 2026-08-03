@@ -49,6 +49,7 @@ export default function GroupsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [creating, setCreating] = useState(false);
+  const [failedCreateForm, setFailedCreateForm] = useState<CreateGroupInput | null>(null);
   const [entitlement, setEntitlement] = useState<
     "loading" | "premium" | "free" | "unknown"
   >("unknown");
@@ -100,12 +101,12 @@ export default function GroupsPage() {
     void loadEntitlement();
   }, [loadEntitlement]);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function createFromForm(formToCreate = form) {
     setCreating(true);
     setError("");
+    setFailedCreateForm(null);
     try {
-      const group = await createGroup(form);
+      const group = await createGroup(formToCreate);
       setGroups((current) => [group, ...current]);
       setForm(initialForm);
       setShowCreate(false);
@@ -120,9 +121,25 @@ export default function GroupsPage() {
           ),
         ),
       );
+      setFailedCreateForm(formToCreate);
     } finally {
       setCreating(false);
     }
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await createFromForm();
+  }
+
+  async function retryFailedAction() {
+    if (failedCreateForm) {
+      setForm(failedCreateForm);
+      setShowCreate(true);
+      await createFromForm(failedCreateForm);
+      return;
+    }
+    await load();
   }
 
   const signedIn = Boolean(getAuthToken());
@@ -279,6 +296,7 @@ export default function GroupsPage() {
                 onChange={(event) => {
                   const visibility = event.target.value as "public" | "private";
                   if (visibility === "private" && entitlement === "free") {
+                    setFailedCreateForm(null);
                     setError(
                       translate(
                         language,
@@ -400,7 +418,8 @@ export default function GroupsPage() {
             <span>{error}</span>
             <button
               type="button"
-              onClick={() => void load()}
+              onClick={() => void retryFailedAction()}
+              disabled={creating}
               className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10"
             >
               {translate(language, "Thử lại", "Retry")}
