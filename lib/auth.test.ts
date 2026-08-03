@@ -63,4 +63,14 @@ describe("browser auth storage", () => {
 
     window.removeEventListener("cryptocheck-auth-change", onAuthChange);
   });
+
+  it("clears an incomplete stored user instead of exposing a malformed session to the UI", () => {
+    const token = jwtWithExpiry(Math.floor(Date.now() / 1000) + 60);
+    window.localStorage.setItem(tokenKey, token);
+    window.localStorage.setItem(userKey, JSON.stringify({ id: "user-1" }));
+
+    expect(getAuthUser()).toBeNull();
+    expect(window.localStorage.getItem(tokenKey)).toBeNull();
+    expect(window.localStorage.getItem(userKey)).toBeNull();
+  });
 });

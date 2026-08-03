@@ -5,6 +5,12 @@ const USER_KEY = "cryptocheck-user";
 
 type JwtPayload = { exp?: number };
 
+function isAuthUser(value: unknown): value is AuthUser {
+  if (!value || typeof value !== "object") return false;
+  const user = value as Record<string, unknown>;
+  return typeof user.id === "string" && user.id.length > 0 && typeof user.username === "string" && user.username.length > 0;
+}
+
 function readJwtPayload(token: string): JwtPayload | null {
   try {
     const payload = token.split(".")[1];
@@ -34,7 +40,14 @@ export function getAuthToken() {
 export function getAuthUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
   if (!getAuthToken()) return null;
-  try { return JSON.parse(window.localStorage.getItem(USER_KEY) || "null"); } catch { return null; }
+  try {
+    const user: unknown = JSON.parse(window.localStorage.getItem(USER_KEY) || "null");
+    if (isAuthUser(user)) return user;
+  } catch {
+    // Fall through and clear the incomplete client-side session below.
+  }
+  clearAuth();
+  return null;
 }
 export function saveAuth(token: string, user: AuthUser) {
   window.localStorage.setItem(TOKEN_KEY, token);
