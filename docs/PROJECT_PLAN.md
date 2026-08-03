@@ -133,6 +133,7 @@ npm run build
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
+  - [x] Manually verify Home, Scanner, Groups and Analysis at a 390px viewport: no horizontal overflow; mobile navigation and the VN/EN switch work. API-unavailable states on Scanner/Groups remain visible with retry controls. (local browser audit)
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
   - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
   - [x] Localize the shared keyboard skip-link using the active VN/EN language setting. (targeted lint + Vitest + production build passed)
