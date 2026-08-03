@@ -12,6 +12,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 export const DEFAULT_API_TIMEOUT_MS = 15_000;
 
 type PostFeedPayload = { data?: { items?: unknown; meta?: unknown } };
+type ListDataPayload = { data?: unknown };
 
 function isPagination(value: unknown): value is NonNullable<PostsResponse["pagination"]> {
     if (!value || typeof value !== "object") return false;
@@ -24,6 +25,16 @@ export function parsePostsResponse(payload: unknown): PostsResponse {
     if (!Array.isArray(response?.data?.items)) throw new Error("Invalid post-feed response");
     if (response.data.meta !== undefined && !isPagination(response.data.meta)) throw new Error("Invalid post-feed pagination");
     return { posts: response.data.items as Post[], pagination: response.data.meta };
+}
+
+// Several legacy list endpoints respond with `data: null` for an empty list.
+// Normalize that transport quirk at the boundary so screens never render
+// `.length`/`.map` against null.
+export function parseListData<T>(payload: unknown, resource: string): T[] {
+    const data = (payload as ListDataPayload | undefined)?.data;
+    if (data == null) return [];
+    if (!Array.isArray(data)) throw new Error(`Invalid ${resource} response`);
+    return data as T[];
 }
 
 const apiClient = axios.create({

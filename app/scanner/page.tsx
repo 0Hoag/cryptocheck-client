@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
-import { apiClient } from "@/lib/api";
+import { apiClient, parseListData } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 import { isEvmAddress, isSolanaMintAddress, validateScanInput } from "@/lib/scanner-input";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
@@ -134,8 +134,8 @@ export default function ScannerPage() {
     setHistoryLoading(true);
     setHistoryError("");
     try {
-      const response = await apiClient.get<{ data: ScanHistoryItem[] }>("/api/v1/news-feed/scanner/history", { params: { limit: 8 } });
-      setHistory(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner/history", { params: { limit: 8 } });
+      setHistory(parseListData<ScanHistoryItem>(response.data, "scan history"));
     } catch (requestError) {
       setHistory([]);
       setHistoryError(getErrorMessage(requestError, translate(language, "Không tải được lịch sử quét.", "Unable to load scan history.")));
@@ -211,8 +211,8 @@ export default function ScannerPage() {
     }
     setLoading(true); setError(""); setResult(null); setCandidates([]);
     try {
-      const response = await apiClient.get<{ data: TokenCandidate[] }>("/api/v1/news-feed/scanner/candidates", { params: { token: query }, timeout: 15000 });
-      setCandidates(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner/candidates", { params: { token: query }, timeout: 15000 });
+      setCandidates(parseListData<TokenCandidate>(response.data, "scanner candidates"));
     } catch (error) {
       setError(scannerErrorMessage(error, language));
     } finally { setLoading(false); }

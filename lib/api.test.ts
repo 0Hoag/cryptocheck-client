@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiClient, DEFAULT_API_TIMEOUT_MS, parsePostsResponse } from "./api";
+import { apiClient, DEFAULT_API_TIMEOUT_MS, parseListData, parsePostsResponse } from "./api";
 
 const post = {
   id: "post-1", pin: false, title: "Market update", content: "Body", permission: "public",
@@ -20,6 +20,12 @@ describe("post-feed API contract", () => {
 
   it("allows an older response without pagination", () => {
     expect(parsePostsResponse({ data: { items: [] } })).toEqual({ posts: [], pagination: undefined });
+  });
+
+  it("normalizes legacy nullable list data and rejects malformed lists", () => {
+    expect(parseListData<string>({ data: null }, "history")).toEqual([]);
+    expect(parseListData<string>({ data: ["ENA"] }, "history")).toEqual(["ENA"]);
+    expect(() => parseListData({ data: {} }, "history")).toThrow("Invalid history response");
   });
 
   it("rejects malformed feed and pagination payloads instead of rendering an empty page", () => {
