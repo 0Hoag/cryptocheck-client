@@ -6,19 +6,7 @@ import { apiClient } from "@/lib/api";
 import { getAuthToken } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/utils";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
-
-type Project = {
-  id: string;
-  name: string;
-  symbol?: string;
-  website_url: string;
-  social_urls: string[];
-  claimed_chain?: string;
-  launch_at?: string;
-  evidence: string[];
-  risk_flags: string[];
-  is_owner?: boolean;
-};
+import { parsePrelaunchProject, parsePrelaunchProjectsResponse, type PrelaunchProject } from "@/lib/prelaunch";
 
 type ProjectForm = {
   name: string;
@@ -32,7 +20,7 @@ type ProjectForm = {
 
 const blankForm: ProjectForm = { name: "", symbol: "", website_url: "", claimed_chain: "", social_urls: "", evidence: "", launch_at: "" };
 
-function toForm(project: Project): ProjectForm {
+function toForm(project: PrelaunchProject): ProjectForm {
   return {
     name: project.name,
     symbol: project.symbol || "",
@@ -55,7 +43,7 @@ function toPayload(form: ProjectForm) {
 
 export default function PrelaunchPage() {
   const { language } = useLanguage();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<PrelaunchProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [error, setError] = useState("");
@@ -68,8 +56,8 @@ export default function PrelaunchPage() {
     setLoading(true);
     setListError("");
     try {
-      const response = await apiClient.get<{ data: Project[] }>("/api/v1/news-feed/prelaunch-projects");
-      setProjects(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/prelaunch-projects");
+      setProjects(parsePrelaunchProjectsResponse(response.data));
     } catch (requestError) {
       setProjects([]);
       setListError(getErrorMessage(requestError, translate(language, "Không tải được watchlist lúc này.", "Unable to load the watchlist right now.")));
@@ -98,11 +86,13 @@ export default function PrelaunchPage() {
     try {
       const payload = toPayload(form);
       if (editingID) {
-        const response = await apiClient.patch<{ data: Project }>(`/api/v1/news-feed/prelaunch-projects/${editingID}`, payload);
-        setProjects((items) => items.map((item) => item.id === editingID ? response.data.data : item));
+        const response = await apiClient.patch<unknown>(`/api/v1/news-feed/prelaunch-projects/${editingID}`, payload);
+        const project = parsePrelaunchProject((response.data as { data?: unknown }).data);
+        setProjects((items) => items.map((item) => item.id === editingID ? project : item));
       } else {
-        const response = await apiClient.post<{ data: Project }>("/api/v1/news-feed/prelaunch-projects", payload);
-        setProjects((items) => [response.data.data, ...items]);
+        const response = await apiClient.post<unknown>("/api/v1/news-feed/prelaunch-projects", payload);
+        const project = parsePrelaunchProject((response.data as { data?: unknown }).data);
+        setProjects((items) => [project, ...items]);
       }
       cancelEditing();
     } catch (requestError) {
@@ -112,7 +102,7 @@ export default function PrelaunchPage() {
     }
   }
 
-  async function removeProject(project: Project) {
+  async function removeProject(project: PrelaunchProject) {
     if (!window.confirm(translate(language, `Xoá ${project.name} khỏi watchlist?`, `Remove ${project.name} from the watchlist?`))) return;
     setDeletingID(project.id);
     setError("");
