@@ -33,6 +33,10 @@ import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
 import ExternalImage from "@/components/ExternalImage";
 
+type FailedGroupPostMutation =
+  | { kind: "create"; content: string }
+  | { kind: "delete"; postId: string };
+
 export default function GroupDetailPage({
   params,
 }: {
@@ -58,6 +62,7 @@ export default function GroupDetailPage({
   const [posting, setPosting] = useState(false);
   const [postDeletingID, setPostDeletingID] = useState("");
   const [content, setContent] = useState("");
+  const [failedPostMutation, setFailedPostMutation] = useState<FailedGroupPostMutation | null>(null);
 
   useEffect(() => {
     void params.then(({ id }) => setGroupID(id));
@@ -269,13 +274,14 @@ export default function GroupDetailPage({
     }
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!group || !content.trim()) return;
+  async function publishPost(contentToPublish = content) {
+    const trimmedContent = contentToPublish.trim();
+    if (!group || !trimmedContent) return;
     setPosting(true);
     setError("");
+    setFailedPostMutation(null);
     try {
-      const post = await createGroupPost(group.id, content.trim());
+      const post = await createGroupPost(group.id, trimmedContent);
       setPosts((current) => [post, ...current]);
       setContent("");
     } catch (requestError) {
@@ -289,9 +295,15 @@ export default function GroupDetailPage({
           ),
         ),
       );
+      setFailedPostMutation({ kind: "create", content: trimmedContent });
     } finally {
       setPosting(false);
     }
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await publishPost();
   }
 
   async function updateMember(
@@ -322,20 +334,21 @@ export default function GroupDetailPage({
     }
   }
 
-  async function removePost(post: GroupPost) {
+  async function removePost(post: GroupPost, confirmDeletion = true) {
     if (
       !group ||
-      !window.confirm(
+      (confirmDeletion && !window.confirm(
         translate(
           language,
           "Xóa bài viết này? Hành động này không thể hoàn tác.",
           "Delete this post? This action cannot be undone.",
         ),
-      )
+      ))
     )
       return;
     setPostDeletingID(post.id);
     setError("");
+    setFailedPostMutation(null);
     try {
       await deleteGroupPost(group.id, post.id);
       setPosts((current) => current.filter((item) => item.id !== post.id));
@@ -350,9 +363,24 @@ export default function GroupDetailPage({
           ),
         ),
       );
+      setFailedPostMutation({ kind: "delete", postId: post.id });
     } finally {
       setPostDeletingID("");
     }
+  }
+
+  async function retryFailedPostMutation() {
+    if (!failedPostMutation) {
+      await load();
+      return;
+    }
+    if (failedPostMutation.kind === "create") {
+      setContent(failedPostMutation.content);
+      await publishPost(failedPostMutation.content);
+      return;
+    }
+    const post = posts.find((item) => item.id === failedPostMutation.postId);
+    if (post) await removePost(post, false);
   }
 
   const signedIn = Boolean(getAuthToken());
@@ -383,7 +411,7 @@ export default function GroupDetailPage({
             {groupID && (
               <button
                 type="button"
-                onClick={() => void load()}
+                onClick={() => void retryFailedPostMutation()}
                 className="rounded-lg border border-red-200/20 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/10"
               >
                 {translate(language, "Thử lại", "Retry")}
