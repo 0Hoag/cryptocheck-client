@@ -128,6 +128,7 @@ npm run build
 - [x] Add a lightweight app-level route loading shell, so navigation gives immediate visual feedback while a route chunk or server segment is loading. (targeted lint + Vitest + production build passed)
 - [x] Abort obsolete Analysis chart REST requests when changing a market or timeframe, preventing stale candles and unnecessary client work. (targeted lint + Vitest + production build passed)
 - [x] Show an in-context Analysis chart loading failure with a retry action instead of leaving Binance provider errors only in the browser console. (targeted lint + Vitest + production build passed)
+- [x] Add validated, retryable provider-error states for the persistent Fear/Greed and breaking-news widgets; abort stale sentiment requests on unmount. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)

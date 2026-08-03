@@ -37,24 +37,41 @@ export default function MarketWidgets() {
     const { language } = useLanguage();
     const [fng, setFng] = useState<FNGData | null>(null);
     const [loadingFng, setLoadingFng] = useState(true);
+    const [fngError, setFngError] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
 
     useEffect(() => {
+        let active = true;
+        const controller = new AbortController();
         const fetchFNG = async () => {
+            setLoadingFng(true);
+            setFngError(false);
             try {
-                const res = await fetch("https://api.alternative.me/fng/");
-                const data = await res.json();
-                if (data.data && data.data.length > 0) {
-                    setFng(data.data[0]);
+                const res = await fetch("https://api.alternative.me/fng/", { signal: controller.signal });
+                if (!res.ok) throw new Error(`Fear & Greed provider returned ${res.status}`);
+                const data: unknown = await res.json();
+                const payload = data as { data?: unknown };
+                if (Array.isArray(payload.data) && payload.data.length > 0 && typeof payload.data[0] === "object" && payload.data[0] !== null) {
+                    if (!active) return;
+                    setFng(payload.data[0] as FNGData);
+                } else {
+                    throw new Error("Invalid Fear & Greed provider response");
                 }
-                setLoadingFng(false);
             } catch (error) {
+                if ((error as DOMException).name === "AbortError" || !active) return;
                 console.error("Failed to fetch Fear & Greed Index:", error);
-                setLoadingFng(false);
+                setFngError(true);
+            } finally {
+                if (active) setLoadingFng(false);
             }
         };
 
-        fetchFNG();
-    }, []);
+        void fetchFNG();
+        return () => {
+            active = false;
+            controller.abort();
+        };
+    }, [retryKey]);
 
     // Simulated Calendar Events (Static for demo purposes but formatted to look live)
     const events: CalendarEvent[] = [
@@ -122,7 +139,7 @@ export default function MarketWidgets() {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-gray-500 text-xs">{translate(language, "Không tải được dữ liệu", "Failed to load data")}</div>
+                    <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400"><span>{translate(language, "Không tải được dữ liệu tâm lý thị trường.", "Market sentiment data could not be loaded.")}</span>{fngError && <button type="button" onClick={() => setRetryKey((value) => value + 1)} className="rounded-md border border-slate-700 px-2 py-1 font-semibold text-sky-300 hover:bg-slate-900">{translate(language, "Thử lại", "Retry")}</button>}</div>
                 )}
             </div>
 

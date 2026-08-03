@@ -12,22 +12,32 @@ import { useElementVisibility } from "@/lib/useElementVisibility";
 export default function NewsTicker() {
     const { language } = useLanguage();
     const [headlines, setHeadlines] = useState<Post[]>([]);
+    const [headlinesError, setHeadlinesError] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
     const { ref: tickerRef, isVisible } = useElementVisibility<HTMLDivElement>();
 
     useEffect(() => {
+        let active = true;
         const fetchHeadlines = async () => {
+            setHeadlinesError(false);
             try {
                 const res = await getPosts({ limit: 10 });
-                setHeadlines(res.posts);
+                if (active) setHeadlines(res.posts);
             } catch (error) {
+                if (!active) return;
                 console.error("Failed to fetch headlines:", error);
+                setHeadlinesError(true);
             }
         };
 
-        fetchHeadlines();
-    }, []);
+        void fetchHeadlines();
+        return () => { active = false; };
+    }, [retryKey]);
 
-    if (headlines.length === 0) return null;
+    if (headlines.length === 0) {
+        if (!headlinesError) return null;
+        return <div role="alert" className="flex items-center justify-center gap-3 border-b border-amber-500/20 bg-amber-500/5 px-4 py-2 text-xs text-amber-100"><span>{translate(language, "Không tải được tin nóng.", "Unable to load breaking news.")}</span><button type="button" onClick={() => setRetryKey((value) => value + 1)} className="font-semibold text-sky-300 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button></div>;
+    }
 
     const marqueeHeadlines = [...headlines, ...headlines];
 
