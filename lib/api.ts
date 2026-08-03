@@ -67,7 +67,7 @@ export async function getPosts(params?: PaginationParams): Promise<PostsResponse
             params: {
                 page: params?.page || 1,
                 limit: params?.limit || 30,
-                sort: params?.sort || "-created_at",
+                sort: params?.sort || "newest",
             },
         });
         // Backend returns {data: {items: [], meta: {}}}

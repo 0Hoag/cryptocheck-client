@@ -28,7 +28,7 @@ export async function getCommunityPosts(authorId?: string) {
   return (await getCommunityPostsPage(authorId, 1, 50)).posts;
 }
 export async function getCommunityPostsPage(authorId?: string, page = 1, limit = 12): Promise<CommunityPostsPage> {
-  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page, limit, sort: "-created_at", author_id: authorId } });
+  const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page, limit, sort: "newest", author_id: authorId } });
   return parseCommunityPostsPage(response.data, page, limit);
 }
 export async function createPost(content: string, permission: PostPermission = "public") { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] })).data.data; }

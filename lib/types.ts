@@ -20,10 +20,12 @@ export interface Post {
     };
 }
 
+export type FeedSort = "newest" | "oldest";
+
 export interface PaginationParams {
-    page?: number;
-    limit?: number;
-    sort?: string;
+	page?: number;
+	limit?: number;
+	sort?: FeedSort;
 }
 
 export interface ApiResponse<T> {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getPosts } from "@/lib/api";
-import { Post } from "@/lib/types";
+import { FeedSort, Post } from "@/lib/types";
 import HeroPost from "@/components/HeroPost";
 import QuickHeadlines from "@/components/QuickHeadlines";
 import MarketWidgets from "@/components/MarketWidgets";
@@ -19,13 +19,14 @@ export default function Home() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [sort, setSort] = useState<FeedSort>("newest");
   const pageSize = 12;
 
   const loadPage = useCallback(async (nextPage: number, replace = false) => {
     if (replace) setLoading(true); else setLoadingMore(true);
     setError("");
     try {
-      const response = await getPosts({ page: nextPage, limit: pageSize, sort: "-created_at" });
+      const response = await getPosts({ page: nextPage, limit: pageSize, sort });
       setPosts((current) => {
         if (replace) return response.posts;
         const known = new Set(current.map((post) => post.id));
@@ -40,7 +41,7 @@ export default function Home() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [language]);
+  }, [language, sort]);
 
   useEffect(() => { void loadPage(1, true); }, [loadPage]);
 
@@ -86,6 +87,20 @@ export default function Home() {
 
           {/* CENTER COLUMN: Main Content (7/12) */}
           <div className="col-span-1 space-y-8 lg:col-span-8 xl:col-span-7">
+            <div className="flex justify-end">
+              <label className="flex items-center gap-2 text-xs font-medium text-slate-400" htmlFor="news-sort">
+                {translate(language, "Sắp xếp", "Sort")}
+                <select
+                  id="news-sort"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value as FeedSort)}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-200 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30"
+                >
+                  <option value="newest">{translate(language, "Mới nhất", "Newest")}</option>
+                  <option value="oldest">{translate(language, "Cũ nhất", "Oldest")}</option>
+                </select>
+              </label>
+            </div>
             {/* Top Story Hero */}
             {topStory && <HeroPost post={topStory} />}
 
