@@ -85,6 +85,7 @@ npm run build
 	- [x] Add a visible, retryable post-detail loading failure state that preserves API request IDs, rather than logging a failed post fetch and rendering an unexplained missing post. (Vitest + production build passed)
 	- [x] Preserve API request IDs and offer an in-place retry when profile posts, follow state or aggregate counts fail to load. (targeted lint + Vitest + production build passed)
 	- [x] Show a distinct retryable error when authenticated group-member data fails to load, rather than presenting an unavailable list as empty. (production build passed)
+  - [x] Add in-place retry controls for failed profile follow, post edit and post deletion mutations, retaining the attempted post content and avoiding a second destructive-confirmation prompt on a confirmed delete retry. (lint:ci + Vitest + production build passed)
   - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
 - [ ] Add pagination/infinite loading and optimistic updates with rollback.
 	- [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
