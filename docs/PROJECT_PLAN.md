@@ -115,6 +115,7 @@ npm run build
   - [x] Make group privacy selection entitlement-aware using the authenticated server quota; Free users get a clear private-group upgrade explanation while the API remains the enforcement point. (production build passed)
   - [x] Restrict the group-creation entry point to active Premium users and show Free users an Account/Premium CTA; the API enforces the same rule. (production build passed)
   - [x] Show authenticated Free scanner users an Account/Premium CTA alongside the server-sourced quota, without exposing a fake checkout flow. (targeted lint + production build passed)
+	- [x] Distinguish a failed group-entitlement check from a confirmed Free plan; the group directory now offers an explicit retry instead of showing an incorrect upgrade CTA. (targeted lint + Vitest + production build passed)
 - [ ] Add checkout UI only after payment provider/API webhook work is complete.
 
 ## 5. Quality and release

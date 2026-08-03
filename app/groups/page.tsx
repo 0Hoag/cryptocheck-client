@@ -52,6 +52,7 @@ export default function GroupsPage() {
   const [entitlement, setEntitlement] = useState<
     "loading" | "premium" | "free" | "unknown"
   >("unknown");
+  const [entitlementError, setEntitlementError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,26 +79,26 @@ export default function GroupsPage() {
     void load();
   }, [load]);
 
-  useEffect(() => {
+  const loadEntitlement = useCallback(async () => {
     if (!getAuthToken()) {
       setEntitlement("unknown");
+      setEntitlementError("");
       return;
     }
-    let active = true;
     setEntitlement("loading");
-    void apiClient
-      .get<{ data: ScannerQuota }>("/api/v1/news-feed/scanner/quota")
-      .then((response) => {
-        if (active)
-          setEntitlement(response.data.data.unlimited ? "premium" : "free");
-      })
-      .catch(() => {
-        if (active) setEntitlement("unknown");
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    setEntitlementError("");
+    try {
+      const response = await apiClient.get<{ data: ScannerQuota }>("/api/v1/news-feed/scanner/quota");
+      setEntitlement(response.data.data.unlimited ? "premium" : "free");
+    } catch (requestError) {
+      setEntitlement("unknown");
+      setEntitlementError(getErrorMessage(requestError, translate(language, "Chưa kiểm tra được quyền tạo group. Hãy thử lại.", "Unable to verify group-creation access. Please retry.")));
+    }
+  }, [language]);
+
+  useEffect(() => {
+    void loadEntitlement();
+  }, [loadEntitlement]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -178,6 +179,14 @@ export default function GroupsPage() {
                 "Checking Premium…",
               )}
             </span>
+          ) : entitlementError ? (
+            <button
+              type="button"
+              onClick={() => void loadEntitlement()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-100 hover:bg-red-500/15"
+            >
+              {translate(language, "Thử lại kiểm tra Premium", "Retry Premium check")}
+            </button>
           ) : (
             <Link
               href="/account#premium"
