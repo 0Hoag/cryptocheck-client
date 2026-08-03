@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCommunityPostsPage, parseFollowCounts, parseSocialList, type CommunityPost, type PostPermission } from "./social";
+import { parseCommentResponse, parseCommunityPostResponse, parseCommunityPostsPage, parseFollowCounts, parseFollowResponse, parseReactionResponse, parseSocialList, type CommunityPost, type PostPermission } from "./social";
 
 describe("community post permissions", () => {
   it("accepts the follower-only API permission", () => {
@@ -26,5 +26,21 @@ describe("social response contracts", () => {
     expect(() => parseSocialList({ data: { items: {} } }, "follows")).toThrow("Invalid follows response");
     expect(parseFollowCounts({ data: { followers: 4, following: 2 } })).toEqual({ followers: 4, following: 2 });
     expect(() => parseFollowCounts({ data: null })).toThrow("Invalid follow counts response");
+  });
+});
+
+describe("social mutation response contracts", () => {
+  it("accepts the minimum fields needed by each mutation caller", () => {
+    expect(parseCommunityPostResponse({ data: { id: "p1", content: "Hello", author_id: "u1" } })).toMatchObject({ id: "p1" });
+    expect(parseReactionResponse({ data: { id: "r1", post_id: "p1" } })).toMatchObject({ id: "r1" });
+    expect(parseCommentResponse({ data: { id: "c1", post_id: "p1", content: "Nice" } })).toMatchObject({ id: "c1" });
+    expect(parseFollowResponse({ data: { id: "f1", author_id: "u1", followee_id: "u2" } })).toMatchObject({ id: "f1" });
+  });
+
+  it("rejects malformed mutation objects before UI state changes", () => {
+    expect(() => parseCommunityPostResponse({ data: null })).toThrow("Invalid post response");
+    expect(() => parseReactionResponse({ data: { id: "r1" } })).toThrow("Invalid reaction response");
+    expect(() => parseCommentResponse({ data: { id: "c1", post_id: "p1" } })).toThrow("Invalid comment response");
+    expect(() => parseFollowResponse({ data: { id: "f1", author_id: "u1" } })).toThrow("Invalid follow response");
   });
 });

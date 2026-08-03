@@ -28,6 +28,52 @@ export function parseFollowCounts(payload: unknown): { followers: number; follow
   return { followers: counts.followers, following: counts.following };
 }
 
+function parseSocialMutation<T>(payload: unknown, resource: string, valid: (value: unknown) => value is T): T {
+  const data = (payload as { data?: unknown } | undefined)?.data;
+  if (!valid(data)) throw new Error(`Invalid ${resource} response`);
+  return data;
+}
+
+function isCommunityPost(value: unknown): value is CommunityPost {
+  if (!value || typeof value !== "object") return false;
+  const post = value as Partial<CommunityPost>;
+  return typeof post.id === "string" && typeof post.content === "string" && typeof post.author_id === "string";
+}
+
+function isReaction(value: unknown): value is Reaction {
+  if (!value || typeof value !== "object") return false;
+  const reaction = value as Partial<Reaction>;
+  return typeof reaction.id === "string" && typeof reaction.post_id === "string";
+}
+
+function isComment(value: unknown): value is Comment {
+  if (!value || typeof value !== "object") return false;
+  const comment = value as Partial<Comment>;
+  return typeof comment.id === "string" && typeof comment.post_id === "string" && typeof comment.content === "string";
+}
+
+function isFollow(value: unknown): value is Follow {
+  if (!value || typeof value !== "object") return false;
+  const follow = value as Partial<Follow>;
+  return typeof follow.id === "string" && typeof follow.author_id === "string" && typeof follow.followee_id === "string";
+}
+
+export function parseCommunityPostResponse(payload: unknown, resource = "post") {
+  return parseSocialMutation(payload, resource, isCommunityPost);
+}
+
+export function parseReactionResponse(payload: unknown, resource = "reaction") {
+  return parseSocialMutation(payload, resource, isReaction);
+}
+
+export function parseCommentResponse(payload: unknown, resource = "comment") {
+  return parseSocialMutation(payload, resource, isComment);
+}
+
+export function parseFollowResponse(payload: unknown, resource = "follow") {
+  return parseSocialMutation(payload, resource, isFollow);
+}
+
 export function parseCommunityPostsPage(payload: unknown, page = 1, limit = 12): CommunityPostsPage {
   const response = payload as { data?: { items?: unknown; meta?: unknown } };
   if (!Array.isArray(response?.data?.items)) throw new Error("Invalid community-post response");
@@ -50,7 +96,10 @@ export async function getCommunityPostsPage(authorId?: string, page = 1, limit =
   const response = await apiClient.get<{ data: ListResponse<CommunityPost> }>("/api/v1/news-feed/posts", { params: { page, limit, sort: "newest", author_id: authorId } });
   return parseCommunityPostsPage(response.data, page, limit);
 }
-export async function createPost(content: string, permission: PostPermission = "public") { return (await apiClient.post<{ data: CommunityPost }>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] })).data.data; }
+export async function createPost(content: string, permission: PostPermission = "public") {
+  const response = await apiClient.post<unknown>("/api/v1/news-feed/posts", { content, permission, pin: false, file_ids: [], tagged_target: [] });
+  return parseCommunityPostResponse(response.data, "created post");
+}
 export async function updateCommunityPost(id: string, content: string, permission: PostPermission = "public") {
   await apiClient.put("/api/v1/news-feed/posts", { id, content, permission, file_ids: [], tagged_target: [] });
 }
@@ -59,13 +108,19 @@ export async function getReactions(postId: string) {
   const response = await apiClient.get<unknown>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } });
   return parseSocialList<Reaction>(response.data, "reactions");
 }
-export async function createReaction(postId: string) { return (await apiClient.post<{ data: Reaction }>("/api/v1/news-feed/posts/reaction", { post_id: postId, type: "like" })).data.data; }
+export async function createReaction(postId: string) {
+  const response = await apiClient.post<unknown>("/api/v1/news-feed/posts/reaction", { post_id: postId, type: "like" });
+  return parseReactionResponse(response.data);
+}
 export async function deleteReaction(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/reaction/${id}`); }
 export async function getComments(postId: string) {
   const response = await apiClient.get<unknown>("/api/v1/news-feed/comment", { params: { post_id: postId, page: 1, limit: 50 } });
   return parseSocialList<Comment>(response.data, "comments");
 }
-export async function createComment(postId: string, content: string) { return (await apiClient.post<{ data: Comment }>("/api/v1/news-feed/comment", { post_id: postId, content })).data.data; }
+export async function createComment(postId: string, content: string) {
+  const response = await apiClient.post<unknown>("/api/v1/news-feed/comment", { post_id: postId, content });
+  return parseCommentResponse(response.data);
+}
 export async function getFollows(authorId: string, followeeId?: string) {
   const response = await apiClient.get<unknown>("/api/v1/news-feed/follow", { params: { author_id: authorId, followee_id: followeeId, page: 1, limit: 1 } });
   return parseSocialList<Follow>(response.data, "follows");
@@ -74,5 +129,8 @@ export async function getFollowCounts(userId: string) {
   const response = await apiClient.get<unknown>(`/api/v1/news-feed/follow/counts/${userId}`);
   return parseFollowCounts(response.data);
 }
-export async function createFollow(followeeId: string) { return (await apiClient.post<{ data: Follow }>("/api/v1/news-feed/follow", { followee_id: followeeId })).data.data; }
+export async function createFollow(followeeId: string) {
+  const response = await apiClient.post<unknown>("/api/v1/news-feed/follow", { followee_id: followeeId });
+  return parseFollowResponse(response.data);
+}
 export async function deleteFollow(id: string) { await apiClient.delete(`/api/v1/news-feed/follow/${id}`); }

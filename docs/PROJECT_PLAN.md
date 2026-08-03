@@ -113,6 +113,7 @@ npm run build
   - [x] Validate the required identity fields of a group-detail payload before render, so null/malformed detail responses enter the existing retry state instead of producing a blank or crashing route. (lint:ci + Vitest + production build passed)
   - [x] Validate created/updated group, membership and group-post responses before committing them to client state, so malformed mutation payloads use the existing error/retry path. (lint:ci + Vitest + production build passed)
   - [x] Normalize legacy null reactions/comments/follows and validate follow-count payloads at the shared social client boundary, so Profile/Post-detail failures remain retryable instead of dereferencing malformed API data. (lint:ci + Vitest + production build passed)
+  - [x] Validate created post/reaction/comment/follow responses before mutation callers update UI state, routing malformed responses through their existing error/retry handling. (lint:ci + Vitest + production build passed)
   - [x] Add API-backed public group directory and detail views, including authentication-aware join/request states and an active-member post composer. (production build passed)
   - [x] Show member roles/status from the authenticated group-members API in group detail. (production build passed)
   - [x] Let group owner/admin approve pending join requests; owner can update member/admin/moderator roles through API-enforced permissions. (production build passed)
