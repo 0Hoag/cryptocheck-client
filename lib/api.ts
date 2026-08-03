@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Post, PaginationParams, PostsResponse } from "./types";
+import { FeedSort, Post, PaginationParams, PostsResponse } from "./types";
 import { clearAuth, getAuthToken } from "./auth";
 
 // Production traffic should stay on the current origin. This lets the edge
@@ -25,6 +25,18 @@ export function parsePostsResponse(payload: unknown): PostsResponse {
     if (!Array.isArray(response?.data?.items)) throw new Error("Invalid post-feed response");
     if (response.data.meta !== undefined && !isPagination(response.data.meta)) throw new Error("Invalid post-feed pagination");
     return { posts: response.data.items as Post[], pagination: response.data.meta };
+}
+
+export type PostFeedQuery = { page: number; limit: number; sort: FeedSort };
+
+// Keep the browser contract aligned with the API's validated sort values.
+// This also prevents legacy Mongo-style sort strings from returning later.
+export function buildPostFeedQuery(params?: PaginationParams): PostFeedQuery {
+    return {
+        page: params?.page || 1,
+        limit: params?.limit || 30,
+        sort: params?.sort || "newest",
+    };
 }
 
 // Several legacy list endpoints respond with `data: null` for an empty list.
@@ -64,11 +76,7 @@ apiClient.interceptors.response.use(
 export async function getPosts(params?: PaginationParams): Promise<PostsResponse> {
     try {
         const response = await apiClient.get<{ data: { items: Post[]; meta: NonNullable<PostsResponse["pagination"]> } }>("/api/v1/news-feed/posts", {
-            params: {
-                page: params?.page || 1,
-                limit: params?.limit || 30,
-                sort: params?.sort || "newest",
-            },
+            params: buildPostFeedQuery(params),
         });
         // Backend returns {data: {items: [], meta: {}}}
         return parsePostsResponse(response.data);
