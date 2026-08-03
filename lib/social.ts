@@ -9,6 +9,25 @@ export type Follow = { id: string; author_id: string; followee_id: string; creat
 type ListResponse<T> = { items: T[]; meta: { total?: number; total_pages?: number; current_page?: number } };
 export type CommunityPostsPage = { posts: CommunityPost[]; page: number; hasMore: boolean };
 
+type UnknownListPayload = { data?: { items?: unknown } | null };
+
+export function parseSocialList<T>(payload: unknown, resource: string): T[] {
+  const data = (payload as UnknownListPayload | undefined)?.data;
+  if (data == null) return [];
+  if (!Array.isArray(data.items)) throw new Error(`Invalid ${resource} response`);
+  return data.items.filter((item): item is T => typeof item === "object" && item !== null);
+}
+
+export function parseFollowCounts(payload: unknown): { followers: number; following: number } {
+  const data = (payload as { data?: unknown } | undefined)?.data;
+  if (!data || typeof data !== "object") throw new Error("Invalid follow counts response");
+  const counts = data as Record<string, unknown>;
+  if (typeof counts.followers !== "number" || typeof counts.following !== "number") {
+    throw new Error("Invalid follow counts response");
+  }
+  return { followers: counts.followers, following: counts.following };
+}
+
 export function parseCommunityPostsPage(payload: unknown, page = 1, limit = 12): CommunityPostsPage {
   const response = payload as { data?: { items?: unknown; meta?: unknown } };
   if (!Array.isArray(response?.data?.items)) throw new Error("Invalid community-post response");
@@ -36,16 +55,24 @@ export async function updateCommunityPost(id: string, content: string, permissio
   await apiClient.put("/api/v1/news-feed/posts", { id, content, permission, file_ids: [], tagged_target: [] });
 }
 export async function deleteCommunityPost(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/${id}`); }
-export async function getReactions(postId: string) { return (await apiClient.get<{ data: ListResponse<Reaction> }>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } })).data.data.items; }
+export async function getReactions(postId: string) {
+  const response = await apiClient.get<unknown>("/api/v1/news-feed/posts/reaction", { params: { post_id: postId, page: 1, limit: 100 } });
+  return parseSocialList<Reaction>(response.data, "reactions");
+}
 export async function createReaction(postId: string) { return (await apiClient.post<{ data: Reaction }>("/api/v1/news-feed/posts/reaction", { post_id: postId, type: "like" })).data.data; }
 export async function deleteReaction(id: string) { await apiClient.delete(`/api/v1/news-feed/posts/reaction/${id}`); }
-export async function getComments(postId: string) { return (await apiClient.get<{ data: ListResponse<Comment> }>("/api/v1/news-feed/comment", { params: { post_id: postId, page: 1, limit: 50 } })).data.data.items; }
+export async function getComments(postId: string) {
+  const response = await apiClient.get<unknown>("/api/v1/news-feed/comment", { params: { post_id: postId, page: 1, limit: 50 } });
+  return parseSocialList<Comment>(response.data, "comments");
+}
 export async function createComment(postId: string, content: string) { return (await apiClient.post<{ data: Comment }>("/api/v1/news-feed/comment", { post_id: postId, content })).data.data; }
 export async function getFollows(authorId: string, followeeId?: string) {
-  return (await apiClient.get<{ data: ListResponse<Follow> }>("/api/v1/news-feed/follow", { params: { author_id: authorId, followee_id: followeeId, page: 1, limit: 1 } })).data.data.items;
+  const response = await apiClient.get<unknown>("/api/v1/news-feed/follow", { params: { author_id: authorId, followee_id: followeeId, page: 1, limit: 1 } });
+  return parseSocialList<Follow>(response.data, "follows");
 }
 export async function getFollowCounts(userId: string) {
-  return (await apiClient.get<{ data: { followers: number; following: number } }>(`/api/v1/news-feed/follow/counts/${userId}`)).data.data;
+  const response = await apiClient.get<unknown>(`/api/v1/news-feed/follow/counts/${userId}`);
+  return parseFollowCounts(response.data);
 }
 export async function createFollow(followeeId: string) { return (await apiClient.post<{ data: Follow }>("/api/v1/news-feed/follow", { followee_id: followeeId })).data.data; }
 export async function deleteFollow(id: string) { await apiClient.delete(`/api/v1/news-feed/follow/${id}`); }

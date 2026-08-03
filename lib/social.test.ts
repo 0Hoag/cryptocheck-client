@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCommunityPostsPage, type CommunityPost, type PostPermission } from "./social";
+import { parseCommunityPostsPage, parseFollowCounts, parseSocialList, type CommunityPost, type PostPermission } from "./social";
 
 describe("community post permissions", () => {
   it("accepts the follower-only API permission", () => {
@@ -13,5 +13,18 @@ describe("community post permissions", () => {
     expect(parseCommunityPostsPage(payload)).toEqual({ posts: [{ id: "community", source_url: "" }], page: 1, hasMore: true });
     expect(() => parseCommunityPostsPage({ data: { items: "bad" } })).toThrow("Invalid community-post response");
     expect(() => parseCommunityPostsPage({ data: { items: [], meta: "bad" } })).toThrow("Invalid community-post pagination");
+  });
+});
+
+describe("social response contracts", () => {
+  it("normalizes legacy null reaction/comment/follow lists", () => {
+    expect(parseSocialList({ data: null }, "comments")).toEqual([]);
+    expect(parseSocialList({ data: { items: [{ id: "safe" }, null] } }, "comments")).toEqual([{ id: "safe" }]);
+  });
+
+  it("rejects malformed lists and follow counts before social screens render", () => {
+    expect(() => parseSocialList({ data: { items: {} } }, "follows")).toThrow("Invalid follows response");
+    expect(parseFollowCounts({ data: { followers: 4, following: 2 } })).toEqual({ followers: 4, following: 2 });
+    expect(() => parseFollowCounts({ data: null })).toThrow("Invalid follow counts response");
   });
 });
