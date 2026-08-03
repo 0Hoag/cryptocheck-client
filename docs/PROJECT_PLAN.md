@@ -81,6 +81,7 @@ npm run build
 - [x] Make post-detail sharing functional with native sharing, clipboard fallback and visible completion/error feedback. (production build passed)
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
+	- [x] Add a localized global route-error fallback with retry, home navigation and a safe production support ID, so unexpected rendering failures never leave a blank screen. (targeted lint + Vitest + production build passed)
 	- [x] Add a visible, retryable post-detail loading failure state that preserves API request IDs, rather than logging a failed post fetch and rendering an unexplained missing post. (Vitest + production build passed)
 	- [x] Preserve API request IDs and offer an in-place retry when profile posts, follow state or aggregate counts fail to load. (targeted lint + Vitest + production build passed)
 	- [x] Show a distinct retryable error when authenticated group-member data fails to load, rather than presenting an unavailable list as empty. (production build passed)
