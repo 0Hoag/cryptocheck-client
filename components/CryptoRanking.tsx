@@ -124,6 +124,7 @@ export default function CryptoRanking() {
                                     src={`https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`}
                                     alt={coin.symbol}
                                     fill
+                                    sizes="24px"
                                     className="object-cover"
                                     unoptimized
                                 />

@@ -39,6 +39,7 @@ export default function RelatedNews({ posts }: RelatedNewsProps) {
                                     src={imageUrl}
                                     alt={post.title}
                                     fill
+                                    sizes="64px"
                                     className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                 />
                             </div>

@@ -156,6 +156,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                         src={imageUrl}
                                         alt={post.title}
                                         fill
+                                        sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 66vw, 50vw"
                                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                                         priority
                                     />
