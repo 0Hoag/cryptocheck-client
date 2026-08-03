@@ -46,6 +46,10 @@ export default function Header() {
     const accountButtonRef = useRef<HTMLButtonElement>(null);
     const notificationButtonRef = useRef<HTMLButtonElement>(null);
     const mobileButtonRef = useRef<HTMLButtonElement>(null);
+    const languageRef = useRef(language);
+    useEffect(() => {
+        languageRef.current = language;
+    }, [language]);
     useEffect(() => {
         const sync = () => setUser(getAuthUser());
         sync();
@@ -88,20 +92,20 @@ export default function Header() {
             const response = await apiClient.get<unknown>("/api/v1/news-feed/notifications");
             setNotifications(parseNotificationsResponse(response.data));
         }
-        catch (error) { setNotificationError(getErrorMessage(error, translate(language, "Không tải được thông báo.", "Unable to load notifications."))); }
+        catch (error) { setNotificationError(getErrorMessage(error, translate(languageRef.current, "Không tải được thông báo.", "Unable to load notifications."))); }
         finally { setNotificationsLoading(false); }
-    }, [language]);
+    }, []);
     async function markNotificationRead(id: string) {
         try {
             await apiClient.post(`/api/v1/news-feed/notifications/${id}/read`);
             setNotifications((current) => current.map((item) => item.id === id ? { ...item, read_at: new Date().toISOString() } : item));
-        } catch (error) { setNotificationError(getErrorMessage(error, translate(language, "Không thể cập nhật thông báo.", "Unable to update notification."))); }
+        } catch (error) { setNotificationError(getErrorMessage(error, translate(languageRef.current, "Không thể cập nhật thông báo.", "Unable to update notification."))); }
     }
     async function markAllNotificationsRead() {
         try {
             await apiClient.post("/api/v1/news-feed/notifications/read-all");
             setNotifications((current) => current.map((item) => ({ ...item, read_at: item.read_at || new Date().toISOString() })));
-        } catch (error) { setNotificationError(getErrorMessage(error, translate(language, "Không thể cập nhật thông báo.", "Unable to update notifications."))); }
+        } catch (error) { setNotificationError(getErrorMessage(error, translate(languageRef.current, "Không thể cập nhật thông báo.", "Unable to update notifications."))); }
     }
     useEffect(() => {
         if (!user) { setNotifications([]); setNotificationError(""); return; }
