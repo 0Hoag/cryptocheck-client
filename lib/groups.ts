@@ -46,6 +46,18 @@ function isGroup(value: unknown): value is CommunityGroup {
   return typeof group.id === "string" && typeof group.name === "string" && typeof group.slug === "string";
 }
 
+function isGroupMembership(value: unknown): value is GroupMembership {
+  if (!value || typeof value !== "object") return false;
+  const membership = value as Partial<GroupMembership>;
+  return typeof membership.id === "string" && typeof membership.group_id === "string" && typeof membership.user_id === "string";
+}
+
+function isGroupPost(value: unknown): value is GroupPost {
+  if (!value || typeof value !== "object") return false;
+  const post = value as Partial<GroupPost>;
+  return typeof post.id === "string" && typeof post.content === "string" && typeof post.author_id === "string";
+}
+
 export function parseGroupListResponse<T>(payload: unknown, resource: string): T[] {
   const data = (payload as ListPayload | undefined)?.data;
   if (data == null) return [];
@@ -56,6 +68,18 @@ export function parseGroupListResponse<T>(payload: unknown, resource: string): T
 export function parseGroupResponse(payload: unknown, resource: string): CommunityGroup {
   const data = (payload as ListPayload | undefined)?.data;
   if (!isGroup(data)) throw new Error(`Invalid ${resource} response`);
+  return data;
+}
+
+export function parseGroupMembershipResponse(payload: unknown, resource: string): GroupMembership {
+  const data = (payload as ListPayload | undefined)?.data;
+  if (!isGroupMembership(data)) throw new Error(`Invalid ${resource} response`);
+  return data;
+}
+
+export function parseGroupPostResponse(payload: unknown, resource: string): GroupPost {
+  const data = (payload as ListPayload | undefined)?.data;
+  if (!isGroupPost(data)) throw new Error(`Invalid ${resource} response`);
   return data;
 }
 
@@ -75,15 +99,18 @@ export async function getGroupPosts(id: string) {
 }
 
 export async function createGroup(input: CreateGroupInput) {
-  return (await apiClient.post<{ data: CommunityGroup }>("/api/v1/news-feed/groups", input)).data.data;
+  const response = await apiClient.post<unknown>("/api/v1/news-feed/groups", input);
+  return parseGroupResponse(response.data, "created group");
 }
 
 export async function updateGroup(id: string, input: CreateGroupInput) {
-  return (await apiClient.patch<{ data: CommunityGroup }>(`/api/v1/news-feed/groups/${id}`, input)).data.data;
+  const response = await apiClient.patch<unknown>(`/api/v1/news-feed/groups/${id}`, input);
+  return parseGroupResponse(response.data, "updated group");
 }
 
 export async function joinGroup(id: string) {
-  return (await apiClient.post<{ data: GroupMembership }>(`/api/v1/news-feed/groups/${id}/join`)).data.data;
+  const response = await apiClient.post<unknown>(`/api/v1/news-feed/groups/${id}/join`);
+  return parseGroupMembershipResponse(response.data, "group membership");
 }
 
 export async function leaveGroup(id: string) {
@@ -100,11 +127,13 @@ export async function getGroupMembers(id: string) {
 }
 
 export async function updateGroupMember(groupID: string, userID: string, update: Partial<Pick<GroupMembership, "role" | "status">>) {
-  return (await apiClient.patch<{ data: GroupMembership }>(`/api/v1/news-feed/groups/${groupID}/members/${userID}`, update)).data.data;
+  const response = await apiClient.patch<unknown>(`/api/v1/news-feed/groups/${groupID}/members/${userID}`, update);
+  return parseGroupMembershipResponse(response.data, "updated group membership");
 }
 
 export async function createGroupPost(id: string, content: string, title = "") {
-  return (await apiClient.post<{ data: GroupPost }>(`/api/v1/news-feed/groups/${id}/posts`, { content, title, source_url: "" })).data.data;
+  const response = await apiClient.post<unknown>(`/api/v1/news-feed/groups/${id}/posts`, { content, title, source_url: "" });
+  return parseGroupPostResponse(response.data, "group post");
 }
 
 export async function deleteGroupPost(groupID: string, postID: string) {
