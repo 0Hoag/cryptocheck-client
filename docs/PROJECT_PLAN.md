@@ -122,6 +122,7 @@ npm run build
 - [x] Reduce global market-ticker polling from the full Binance ticker payload every 10s to the eight displayed symbols every 60s. (production build passed)
 - [x] Reduce Analysis market-list streaming from Binance's all-market feed to only the displayed symbols, ignore updates while the tab is hidden, and cut duplicate animated ticker nodes across the persistent shell. (targeted lint + Vitest + production build passed)
 - [x] Pause ticker/ranking polling and abort in-flight market requests whenever the browser tab is hidden, avoiding background work on persistent layout widgets. (targeted lint + Vitest + production build passed)
+- [x] Pause the top-ranking market widget and abort its in-flight provider request while the widget itself is off-screen, not only when the browser tab is hidden. (targeted lint + Vitest + production build passed)
 - [x] Skip realtime market/chart/order-book message parsing and React updates while the Analysis tab is hidden. (targeted lint + Vitest + production build passed)
 - [x] Pause persistent market/news marquee animations when they scroll outside the viewport, reducing visual-only GPU work while reading long pages. (targeted lint + Vitest + production build passed)
 - [x] Load the heavyweight professional-chart bundle after the Analysis shell is visible, so route navigation can render controls and market state without waiting for chart initialization. (targeted lint + Vitest + production build passed)
