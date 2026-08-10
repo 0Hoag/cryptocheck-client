@@ -94,6 +94,7 @@ npm run build
 	- [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
 	- [x] Let readers choose newest-first or oldest-first order on the News dashboard; use the validated server feed-sort contract instead of an untyped Mongo-style sort string. (feed-query Vitest coverage + lint:ci + production build passed)
 	- [x] Add metadata-backed profile-feed pagination with deduplicated “load more” results, a separate retryable failure state, and malformed-response contract coverage. (targeted lint + 14 Vitest tests + production build passed)
+  - [x] Add metadata-backed Community pagination: load 12 posts at a time, deduplicate appended posts, stop at the server-reported last page, and expose a separate retryable load-more failure. (global lint + Vitest + production build passed)
 - [ ] Add reporting, moderation state and content-safe rendering.
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
   - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)

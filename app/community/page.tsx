@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Heart, Loader2, MessageCircle, Send, Share2, Sparkles, UsersRound } from "lucide-react";
 import { AuthUser, getAuthUser } from "@/lib/auth";
-import { Comment, CommunityPost, Reaction, createComment, createPost, createReaction, deleteReaction, getComments, getCommunityPosts, getReactions } from "@/lib/social";
+import { Comment, CommunityPost, Reaction, createComment, createPost, createReaction, deleteReaction, getComments, getCommunityPostsPage, getReactions } from "@/lib/social";
 import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
 
@@ -21,6 +21,10 @@ function timeAgo(value: string, language: "vi" | "en") {
 export default function CommunityPage() {
   const { language } = useLanguage();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [postPage, setPostPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,14 +32,36 @@ export default function CommunityPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    setLoadMoreError("");
     try {
-      setPosts(await getCommunityPosts());
+      const result = await getCommunityPostsPage(undefined, 1, 12);
+      setPosts(result.posts);
+      setPostPage(result.page);
+      setHasMorePosts(result.hasMore);
     } catch (requestError) {
       setError(getErrorMessage(requestError, translate(language, "Không tải được bảng tin cộng đồng. Hãy kiểm tra kết nối rồi thử lại.", "Unable to load the community feed. Check your connection and try again.")));
     } finally {
       setLoading(false);
     }
   }, [language]);
+
+  const loadMore = async () => {
+    setLoadingMorePosts(true);
+    setLoadMoreError("");
+    try {
+      const result = await getCommunityPostsPage(undefined, postPage + 1, 12);
+      setPosts((current) => {
+        const known = new Set(current.map((post) => post.id));
+        return [...current, ...result.posts.filter((post) => !known.has(post.id))];
+      });
+      setPostPage(result.page);
+      setHasMorePosts(result.hasMore);
+    } catch (requestError) {
+      setLoadMoreError(getErrorMessage(requestError, translate(language, "Không thể tải thêm bài viết lúc này.", "Unable to load more posts right now.")));
+    } finally {
+      setLoadingMorePosts(false);
+    }
+  };
 
   useEffect(() => {
     setUser(getAuthUser());
@@ -49,7 +75,7 @@ export default function CommunityPage() {
           <div className="mb-6"><div className="eyebrow"><UsersRound className="h-3.5 w-3.5 text-sky-400" />{translate(language, "Cộng đồng", "Community")}</div><h1 className="mt-2 text-3xl font-semibold text-white">{translate(language, "Góc nhìn nhà đầu tư", "Investor perspectives")}</h1><p className="mt-2 text-sm text-slate-400">{translate(language, "Trao đổi về crypto, chứng khoán và các tín hiệu thị trường.", "Discuss crypto, equities and market signals.")}</p></div>
           {user ? <Composer language={language} onCreated={(post) => setPosts((current) => [post, ...current])} /> : <div className="surface mb-5 flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium text-slate-100">{translate(language, "Bạn có góc nhìn muốn chia sẻ?", "Have an insight to share?")}</p><p className="mt-1 text-sm text-slate-400">{translate(language, "Đăng nhập để đăng bài, thả tim và bình luận.", "Sign in to post, like and comment.")}</p></div><Link href="/login" className="rounded-xl bg-sky-500 px-4 py-2.5 text-center text-sm font-semibold text-slate-950 hover:bg-sky-400">{translate(language, "Đăng nhập", "Sign in")}</Link></div>}
           {error && <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200"><span>{error}</span><button type="button" onClick={() => void load()} disabled={loading} className="shrink-0 rounded-lg border border-red-300/20 px-3 py-1.5 font-medium hover:bg-red-500/10 disabled:opacity-60">{translate(language, "Thử lại", "Retry")}</button></div>}
-          {loading ? <div className="grid place-items-center py-20"><Loader2 className="h-7 w-7 animate-spin text-sky-400" /></div> : posts.length ? <div className="space-y-4">{posts.map((post) => <CommunityCard key={post.id} language={language} post={post} user={user} />)}</div> : <div className="surface p-10 text-center"><UsersRound className="mx-auto h-8 w-8 text-sky-400" /><p className="mt-4 font-medium text-white">{translate(language, "Chưa có thảo luận nào", "No discussions yet")}</p><p className="mt-2 text-sm text-slate-400">{translate(language, "Hãy mở đầu cuộc trò chuyện đầu tiên của cộng đồng.", "Start the community's first conversation.")}</p></div>}
+          {loading ? <div className="grid place-items-center py-20"><Loader2 className="h-7 w-7 animate-spin text-sky-400" /></div> : posts.length ? <><div className="space-y-4">{posts.map((post) => <CommunityCard key={post.id} language={language} post={post} user={user} />)}</div>{hasMorePosts && <div className="mt-5 text-center"><button type="button" onClick={() => void loadMore()} disabled={loadingMorePosts} className="inline-flex items-center gap-2 rounded-lg border border-sky-400/30 px-4 py-2 text-sm font-semibold text-sky-200 hover:bg-sky-400/10 disabled:opacity-60">{loadingMorePosts && <Loader2 className="h-4 w-4 animate-spin" />}{translate(language, "Xem thêm bài viết", "Load more posts")}</button></div>}{loadMoreError && <div role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200"><p>{loadMoreError}</p><button type="button" onClick={() => void loadMore()} disabled={loadingMorePosts} className="mt-2 text-xs font-semibold text-red-100 underline underline-offset-2 disabled:opacity-60">{translate(language, "Thử lại", "Retry")}</button></div>}</> : <div className="surface p-10 text-center"><UsersRound className="mx-auto h-8 w-8 text-sky-400" /><p className="mt-4 font-medium text-white">{translate(language, "Chưa có thảo luận nào", "No discussions yet")}</p><p className="mt-2 text-sm text-slate-400">{translate(language, "Hãy mở đầu cuộc trò chuyện đầu tiên của cộng đồng.", "Start the community's first conversation.")}</p></div>}
         </section>
         <aside className="space-y-4"><div className="surface p-5"><div className="eyebrow"><Sparkles className="h-3.5 w-3.5 text-amber-300" />{translate(language, "Quy tắc cộng đồng", "Community rules")}</div><ul className="mt-4 space-y-3 text-sm leading-5 text-slate-400"><li>{translate(language, "Chia sẻ luận điểm, không hô hào FOMO.", "Share a thesis; do not promote FOMO.")}</li><li>{translate(language, "Nêu rõ nguồn khi trích dẫn dữ liệu.", "Cite sources when referencing data.")}</li><li>{translate(language, "Tôn trọng thành viên và quản trị viên.", "Respect members and moderators.")}</li></ul></div><div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-5"><p className="text-sm font-semibold text-sky-100">{translate(language, "Cộng đồng Premium", "Premium communities")}</p><p className="mt-2 text-sm leading-6 text-slate-400">{translate(language, "Group riêng và phân tích nâng cao sẽ được mở khi hệ thống gói thành viên hoàn thiện.", "Private groups and enhanced analysis become available with Premium entitlement.")}</p></div></aside>
       </div>
