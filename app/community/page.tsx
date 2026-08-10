@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Heart, Loader2, MessageCircle, Send, Share2, Sparkles, UsersRound } from "lucide-react";
 import { AuthUser, getAuthUser } from "@/lib/auth";
-import { Comment, CommunityPost, Reaction, createComment, createPost, createReaction, deleteReaction, getComments, getCommunityPostsPage, getReactions } from "@/lib/social";
+import { Comment, CommunityPost, PostPermission, Reaction, createComment, createPost, createReaction, deleteReaction, getComments, getCommunityPostsPage, getReactions } from "@/lib/social";
 import { getErrorMessage } from "@/lib/utils";
 import { translate, useLanguage } from "@/context/LanguageContext";
 
@@ -85,17 +85,18 @@ export default function CommunityPage() {
 
 function Composer({ language, onCreated }: { language: "vi" | "en"; onCreated: (post: CommunityPost) => void }) {
   const [content, setContent] = useState("");
+  const [permission, setPermission] = useState<PostPermission>("public");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const publish = async (contentToPublish = content) => {
     const trimmed = contentToPublish.trim();
     if (!trimmed) return;
     setSaving(true); setError("");
-    try { onCreated(await createPost(trimmed)); setContent(""); }
+    try { onCreated(await createPost(trimmed, permission)); setContent(""); setPermission("public"); }
     catch (requestError) { setError(getErrorMessage(requestError, translate(language, "Không thể đăng bài lúc này.", "Unable to publish this post right now."))); }
     finally { setSaving(false); }
   };
-  return <form onSubmit={(event) => { event.preventDefault(); void publish(); }} className="surface mb-5 p-4"><label htmlFor="community-composer" className="sr-only">{translate(language, "Nội dung bài viết", "Post content")}</label><textarea id="community-composer" value={content} onChange={(event) => setContent(event.target.value)} rows={3} maxLength={3000} placeholder={translate(language, "Bạn đang theo dõi cơ hội hay rủi ro nào?", "What opportunity or risk are you tracking?")} className="w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" />{error && <div role="alert" className="mt-2 flex items-center justify-between gap-3 text-xs text-red-300"><span>{error}</span><button type="button" onClick={() => void publish()} disabled={saving || !content.trim()} className="font-semibold underline underline-offset-2 disabled:opacity-60">{translate(language, "Thử lại", "Retry")}</button></div>}<div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3"><span className="text-xs text-slate-500">{content.length}/3000</span><button disabled={saving || !content.trim()} className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{translate(language, "Đăng bài", "Publish")}</button></div></form>;
+  return <form onSubmit={(event) => { event.preventDefault(); void publish(); }} className="surface mb-5 p-4"><label htmlFor="community-composer" className="sr-only">{translate(language, "Nội dung bài viết", "Post content")}</label><textarea id="community-composer" value={content} onChange={(event) => setContent(event.target.value)} rows={3} maxLength={3000} placeholder={translate(language, "Bạn đang theo dõi cơ hội hay rủi ro nào?", "What opportunity or risk are you tracking?")} className="w-full resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-500" />{error && <div role="alert" className="mt-2 flex items-center justify-between gap-3 text-xs text-red-300"><span>{error}</span><button type="button" onClick={() => void publish()} disabled={saving || !content.trim()} className="font-semibold underline underline-offset-2 disabled:opacity-60">{translate(language, "Thử lại", "Retry")}</button></div>}<div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-3"><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{content.length}/3000</span><label className="flex items-center gap-2 text-xs text-slate-400"><span>{translate(language, "Hiển thị", "Visibility")}</span><select value={permission} onChange={(event) => setPermission(event.target.value as PostPermission)} disabled={saving} className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-slate-200 outline-none focus:border-sky-400"><option value="public">{translate(language, "Công khai", "Public")}</option><option value="followers">{translate(language, "Người theo dõi", "Followers")}</option></select></label></div><button disabled={saving || !content.trim()} className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{translate(language, "Đăng bài", "Publish")}</button></div></form>;
 }
 
 function CommunityCard({ post, user, language }: { post: CommunityPost; user: AuthUser | null; language: "vi" | "en" }) {
