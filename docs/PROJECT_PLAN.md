@@ -91,7 +91,7 @@ npm run build
 	- [x] Preserve the entered Premium group-creation form and retry the same creation request after a transient API failure, instead of reloading the directory and discarding the form. (lint:ci + Vitest + production build passed)
   - [x] Complete Community feed mutations: post publishing, interaction loading, like/unlike, comment, and share each present localized feedback plus an in-place retry where a request fails; share uses native sharing then clipboard fallback. (global lint + Vitest + production build passed)
   - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
-- [ ] Add pagination/infinite loading and optimistic updates with rollback.
+- [x] Add pagination/infinite loading and optimistic updates with rollback.
 	- [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
 	- [x] Let readers choose newest-first or oldest-first order on the News dashboard; use the validated server feed-sort contract instead of an untyped Mongo-style sort string. (feed-query Vitest coverage + lint:ci + production build passed)
 	- [x] Add metadata-backed profile-feed pagination with deduplicated “load more” results, a separate retryable failure state, and malformed-response contract coverage. (targeted lint + 14 Vitest tests + production build passed)
@@ -164,7 +164,7 @@ npm run build
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
   - [x] Extract Scanner direct-address classification and cover EVM, Solana Base58, malformed and oversized inputs. (9 tests passed; targeted lint + production build passed; dynamic token-image warning remains)
   - [x] Validate the post-feed response contract before rendering News pagination, including legacy no-meta responses and malformed payload failures. (12 tests passed; targeted lint + production build passed)
-- [ ] Add CI for build, lint and tests.
+- [x] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
   - [x] Run the Vitest suite before the production build on every pull request and push to `main`. (local 3-test suite + production build passed)
   - [x] Remove targeted lint errors from News, Login, Register and Profile by using the shared safe API-error reader and const-correct data handling. (targeted lint + production build passed)
