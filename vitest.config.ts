@@ -12,7 +12,7 @@ export default defineConfig({
     environmentOptions: {
       jsdom: { url: "http://localhost" },
     },
-    include: ["**/*.test.ts"],
+    include: ["**/*.test.{ts,tsx}"],
     clearMocks: true,
   },
 });

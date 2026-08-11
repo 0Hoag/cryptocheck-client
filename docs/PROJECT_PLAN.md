@@ -176,6 +176,7 @@ npm run build
   - [x] Announce Community feed loading and hide its decorative loading icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
+  - [x] Add a jsdom component-level regression test for safe remote-image rendering, failed-image fallback and unsafe URL rejection. (lint:ci + Vitest + production build passed)
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
   - [x] Extract Scanner direct-address classification and cover EVM, Solana Base58, malformed and oversized inputs. (9 tests passed; targeted lint + production build passed; dynamic token-image warning remains)
