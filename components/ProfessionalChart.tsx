@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createChart, LineStyle, type ISeriesApi, type IChartApi, type MouseEventParams, type UTCTimestamp } from 'lightweight-charts';
-import { Maximize2, Minimize2, Radio, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { BarChart3, Maximize2, Minimize2, Radio, RotateCcw, SlidersHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
 import { zoomLogicalRange } from '@/lib/chart-interactions';
 
@@ -117,6 +117,11 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     const [chartLoadError, setChartLoadError] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [indicatorMenuOpen, setIndicatorMenuOpen] = useState(false);
+    const [showVolume, setShowVolume] = useState(true);
+    const [showEMA7, setShowEMA7] = useState(true);
+    const [showEMA25, setShowEMA25] = useState(true);
+    const [showEMA99, setShowEMA99] = useState(true);
 
     const zoomChart = (multiplier: number) => {
         const timeScale = chartRef.current?.timeScale();
@@ -635,6 +640,26 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     >
                         {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
                     </button>
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setIndicatorMenuOpen((current) => !current)}
+                            className="rounded bg-[#1a1a1a] p-1.5 text-gray-300 transition-colors hover:bg-[#222] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                            aria-expanded={indicatorMenuOpen}
+                            aria-controls="chart-indicators"
+                            aria-label={translate(language, 'Tùy chỉnh chỉ báo biểu đồ', 'Customize chart indicators')}
+                            title={translate(language, 'Chỉ báo', 'Indicators')}
+                        >
+                            <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                        {indicatorMenuOpen && <div id="chart-indicators" className="absolute right-0 z-30 mt-2 w-44 rounded-lg border border-white/10 bg-[#101010] p-2 shadow-xl shadow-black/40">
+                            <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{translate(language, 'Chỉ báo', 'Indicators')}</p>
+                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded px-2 py-1.5 text-xs text-slate-200 hover:bg-white/5"><span className="inline-flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{translate(language, 'Khối lượng', 'Volume')}</span><input type="checkbox" checked={showVolume} onChange={(event) => { const visible = event.target.checked; setShowVolume(visible); volumeSeriesRef.current?.applyOptions({ visible }); }} /></label>
+                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded px-2 py-1.5 text-xs text-slate-200 hover:bg-white/5"><span className="text-orange-300">EMA 7</span><input type="checkbox" checked={showEMA7} onChange={(event) => { const visible = event.target.checked; setShowEMA7(visible); ema7SeriesRef.current?.applyOptions({ visible }); }} /></label>
+                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded px-2 py-1.5 text-xs text-slate-200 hover:bg-white/5"><span className="text-blue-300">EMA 25</span><input type="checkbox" checked={showEMA25} onChange={(event) => { const visible = event.target.checked; setShowEMA25(visible); ema25SeriesRef.current?.applyOptions({ visible }); }} /></label>
+                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded px-2 py-1.5 text-xs text-slate-200 hover:bg-white/5"><span className="text-fuchsia-300">EMA 99</span><input type="checkbox" checked={showEMA99} onChange={(event) => { const visible = event.target.checked; setShowEMA99(visible); ema99SeriesRef.current?.applyOptions({ visible }); }} /></label>
+                        </div>}
+                    </div>
                 </div>
             </div>
 
