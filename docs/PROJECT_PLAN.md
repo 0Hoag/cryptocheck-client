@@ -181,6 +181,7 @@ npm run build
   - [x] Make the reusable loading-spinner component expose a status label and hide its decorative icon, with jsdom regression coverage for default and localized labels. (lint:ci + Vitest + production build passed)
   - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
+	- [x] Add a jsdom CommunityCard regression test for follower-only visibility and block comment submission until lazy interaction loading completes, preventing a lost optimistic comment race. (targeted Vitest + lint + production build passed)
   - [x] Add a jsdom component-level regression test for safe remote-image rendering, failed-image fallback and unsafe URL rejection. (lint:ci + Vitest + production build passed)
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
