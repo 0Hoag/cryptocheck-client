@@ -209,7 +209,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                         )}
                                     </div>
                                 </div>
-                                {reportSuccess && <p role="status" className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">{translate(language, "Đã gửi báo cáo. Đội ngũ kiểm duyệt sẽ xem xét.", "Your report was submitted. The moderation team will review it.")}</p>}
+                                {reportSuccess && <p role="status" className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">{translate(language, "Đã gửi báo cáo. Đội ngũ kiểm duyệt sẽ xem xét.", "Your report was submitted. The moderation team will review it.")} <Link href="/reports" className="font-semibold text-sky-200 underline underline-offset-2 hover:text-sky-100">{translate(language, "Xem trạng thái", "View status")}</Link></p>}
                                 {shareStatus === "success" && <p role="status" className="mt-4 text-sm text-emerald-200">{translate(language, "Đã mở trình chia sẻ hoặc sao chép liên kết bài viết.", "The share sheet was opened or the article link was copied.")}</p>}
                                 {shareStatus === "error" && <p role="alert" className="mt-4 text-sm text-red-200">{translate(language, "Không thể chia sẻ liên kết lúc này. Hãy sao chép URL trên thanh địa chỉ.", "Unable to share the link right now. Please copy the URL from the address bar.")}</p>}
                                 {reportOpen && <section className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">

@@ -99,8 +99,9 @@ npm run build
 	- [x] Add metadata-backed profile-feed pagination with deduplicated “load more” results, a separate retryable failure state, and malformed-response contract coverage. (targeted lint + 14 Vitest tests + production build passed)
   - [x] Add metadata-backed Community pagination: load 12 posts at a time, deduplicate appended posts, stop at the server-reported last page, and expose a separate retryable load-more failure. (global lint + Vitest + production build passed)
   - [x] Use optimistic UI for Community likes and comments, replacing temporary data on API success and rolling it back while restoring the typed comment on failure. (global lint + Vitest + production build passed)
-- [ ] Add reporting, moderation state and content-safe rendering.
+- [x] Add reporting, moderation state and content-safe rendering. (authenticated submission, personal moderation-status history, and browser-side HTML sanitization verified by lint:ci, Vitest and production build)
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
+  - [x] Add an authenticated “My reports” route backed by the API’s own-report endpoint, with localized moderation states, empty/error/retry handling and a link after successful submission. (lint:ci + Vitest + production build passed)
   - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)
 
 Pass checks:
