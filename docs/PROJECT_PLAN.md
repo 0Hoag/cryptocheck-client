@@ -149,6 +149,7 @@ npm run build
 - [x] Defer Community reaction/comment requests until a member opens discussion or initiates a like, avoiding 24 background requests for an initial 12-post feed while retaining visible post counts. (global lint + Vitest + production build passed)
 - [x] Reduce Analysis market-list streaming from Binance's all-market feed to only the displayed symbols, ignore updates while the tab is hidden, and cut duplicate animated ticker nodes across the persistent shell. (targeted lint + Vitest + production build passed)
 - [x] Pause ticker/ranking polling and abort in-flight market requests whenever the browser tab is hidden, avoiding background work on persistent layout widgets. (targeted lint + Vitest + production build passed)
+  - [x] Pause the persistent live-price ticker while it is scrolled off-screen and refresh only after it becomes visible again, avoiding unnecessary Binance polling on long routes. (lint:ci + 40 Vitest tests + production build passed)
 - [x] Pause the top-ranking market widget and abort its in-flight provider request while the widget itself is off-screen, not only when the browser tab is hidden. (targeted lint + Vitest + production build passed)
 - [x] Skip realtime market/chart/order-book message parsing and React updates while the Analysis tab is hidden. (targeted lint + Vitest + production build passed)
 - [x] Pause persistent market/news marquee animations when they scroll outside the viewport, reducing visual-only GPU work while reading long pages. (targeted lint + Vitest + production build passed)

@@ -78,7 +78,7 @@ export default function CryptoTicker() {
         };
 
         const startPolling = () => {
-            if (document.visibilityState !== "visible") return;
+            if (document.visibilityState !== "visible" || !isVisible) return;
             void fetchPrices();
             intervalId = setInterval(fetchPrices, 60000);
         };
@@ -86,7 +86,7 @@ export default function CryptoTicker() {
         const handleVisibilityChange = () => {
             if (intervalId) clearInterval(intervalId);
             intervalId = undefined;
-            if (document.visibilityState === "visible") startPolling();
+            if (document.visibilityState === "visible" && isVisible) startPolling();
             else controller?.abort();
         };
 
@@ -99,7 +99,7 @@ export default function CryptoTicker() {
             controller?.abort();
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [refreshKey]);
+    }, [isVisible, refreshKey]);
 
     if (loading) return null;
 
