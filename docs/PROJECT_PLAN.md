@@ -25,6 +25,7 @@
   - [x] Translate remaining MarketWidgets labels, Fear/Greed classifications and demo-calendar copy; translate the professional-chart 24h volume label and avoid presenting static demo data as a working “View all” action. (targeted lint + 14 Vitest tests + production build passed)
   - [x] Load persisted language through a subscription-safe external store, so switching language updates the full app without an effect-driven state cascade. (targeted lint + production build passed)
   - [x] Translate the remaining Login/Register section labels and verify the forms in both VN and EN modes. (targeted lint + Vitest + production build passed)
+  - [x] Verify the Landing page and shared Header in both VN/EN through the production browser build, including the mobile language switch. (local production-browser audit)
 - [x] Login and registration forms call the API and persist the session locally.
 - [x] Google sign-in affordance is visible as “coming soon”; no fake OAuth flow is enabled.
 - [x] Clear expired/401 local sessions so stale authentication is not reused (production build passed).
@@ -163,6 +164,7 @@ npm run build
 - [ ] Responsive/mobile audit of all routes.
   - [x] Keep asset selection accessible on the Analysis route at mobile widths and wrap chart metrics/timeframe controls instead of clipping them. (production build passed)
   - [x] Manually verify Home, Scanner, Groups and Analysis at a 390px viewport: no horizontal overflow; mobile navigation and the VN/EN switch work. API-unavailable states on Scanner/Groups remain visible with retry controls. (local browser audit)
+  - [x] Verify the public Home, Scanner, News, Community, Groups and Analysis routes at 390px against the production local build: each rendered a main region with no horizontal overflow or browser runtime error. (local production-browser audit)
 - [ ] Accessibility audit: keyboard, focus, contrast and error announcements.
   - [x] Add a keyboard-visible skip link that moves focus past persistent navigation/tickers to page content. (production build passed)
   - [x] Localize the shared keyboard skip-link using the active VN/EN language setting. (targeted lint + Vitest + production build passed)
