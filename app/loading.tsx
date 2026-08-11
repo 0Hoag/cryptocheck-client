@@ -1,7 +1,12 @@
+"use client";
+
+import { translate, useLanguage } from "@/context/LanguageContext";
+
 export default function AppLoading() {
+    const { language } = useLanguage();
     return (
-        <main className="mx-auto min-h-[calc(100vh-12rem)] max-w-[1600px] px-4 py-8 sm:px-6" aria-busy="true" aria-live="polite">
-            <span className="sr-only">Loading page</span>
+        <main className="mx-auto min-h-[calc(100vh-12rem)] max-w-[1600px] px-4 py-8 sm:px-6" aria-busy="true" aria-live="polite" role="status">
+            <span className="sr-only">{translate(language, "Đang tải trang", "Loading page")}</span>
             <div className="animate-pulse space-y-6">
                 <div className="h-4 w-28 rounded bg-slate-800" />
                 <div className="h-10 max-w-lg rounded bg-slate-800" />
