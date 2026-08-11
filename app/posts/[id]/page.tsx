@@ -16,8 +16,9 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { translate, useLanguage } from "@/context/LanguageContext";
 import { apiClient } from "@/lib/api";
-import { getAuthToken } from "@/lib/auth";
+import { type AuthUser, getAuthToken, getAuthUser } from "@/lib/auth";
 import { shareLink } from "@/lib/share";
+import { type Comment, type Reaction, createComment, createReaction, deleteReaction, getComments, getReactions } from "@/lib/social";
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
     const { language } = useLanguage();
@@ -33,6 +34,25 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     const [reportError, setReportError] = useState("");
     const [reportSuccess, setReportSuccess] = useState(false);
     const [shareStatus, setShareStatus] = useState<"" | "success" | "error">("");
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [commentsOpen, setCommentsOpen] = useState(false);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [myReaction, setMyReaction] = useState<string | null>(null);
+    const [interactionsLoaded, setInteractionsLoaded] = useState(false);
+    const [interactionsLoading, setInteractionsLoading] = useState(false);
+    const [interactionError, setInteractionError] = useState("");
+    const [interactionRetry, setInteractionRetry] = useState<"load" | "like" | "comment" | null>(null);
+    const [liking, setLiking] = useState(false);
+    const [comment, setComment] = useState("");
+    const [commenting, setCommenting] = useState(false);
+    const isCommunityPost = Boolean(post && !post.source_url);
+
+    useEffect(() => {
+        const syncSession = () => setUser(getAuthUser());
+        syncSession();
+        window.addEventListener("cryptocheck-auth-change", syncSession);
+        return () => window.removeEventListener("cryptocheck-auth-change", syncSession);
+    }, []);
 
     const loadPost = useCallback(async () => {
         setLoading(true);
@@ -57,17 +77,6 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         void loadPost();
     }, [loadPost]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center" role="status">
-                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" aria-hidden="true" />
-                <span className="sr-only">{translate(language, "Đang tải bài viết", "Loading post")}</span>
-            </div>
-        );
-    }
-
-    if (!post) return <main className="min-h-screen bg-[#050505] px-4 py-20 text-center text-white"><p role={loadError ? "alert" : undefined}>{loadError || translate(language, "Không tìm thấy bài viết", "Post not found")}</p>{loadError && <button type="button" onClick={() => void loadPost()} className="mt-5 rounded-lg border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/10">{translate(language, "Thử lại", "Retry")}</button>}</main>;
-
     async function submitReport() {
         if (!post) return;
         if (reportReason.trim().length < 3) {
@@ -91,12 +100,88 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         else if (result === "unavailable") setShareStatus("error");
     }
 
-    const imageUrl = extractImageUrl(post.content);
-    // Remove image md syntax from content to avoid duplicate images
-    const cleanContent = post.content.replace(/!\[.*?\]\(.*?\)/g, "").trim();
-    const isCommunityPost = !post.source_url;
-    const sourceName = post.source_url ? getSourceName(post.source_url) : translate(language, "Cộng đồng", "Community");
+    const loadInteractions = useCallback(async (): Promise<string | null | undefined> => {
+        if (!post || !isCommunityPost) return null;
+        setInteractionsLoading(true); setInteractionError(""); setInteractionRetry(null);
+        try {
+            const [reactionData, commentData] = await Promise.all([getReactions(post.id), getComments(post.id)]);
+            setMyReaction(reactionData.find((item: Reaction) => item.author_id === user?.id)?.id || null);
+            setComments(commentData);
+            setInteractionsLoaded(true);
+            return reactionData.find((item: Reaction) => item.author_id === user?.id)?.id || null;
+        } catch (error) {
+            setInteractionError(getErrorMessage(error, translate(language, "Không thể tải tương tác của bài viết này.", "Unable to load this post's interactions.")));
+            setInteractionRetry("load");
+            return undefined;
+        } finally { setInteractionsLoading(false); }
+    }, [isCommunityPost, language, post, user?.id]);
+
+    const updatePostCount = (field: "reaction_count" | "comment_count", change: number) => {
+        setPost((current) => current ? { ...current, [field]: Math.max(0, (current[field] || 0) + change) } : current);
+    };
+
+    const toggleLike = async () => {
+        if (!post || !user) return;
+        setLiking(true); setInteractionError(""); setInteractionRetry(null);
+        let priorReaction = myReaction;
+        if (!interactionsLoaded) {
+            const loadedReaction = await loadInteractions();
+            if (loadedReaction === undefined) { setLiking(false); return; }
+            priorReaction = loadedReaction;
+        }
+        try {
+            if (priorReaction) {
+                setMyReaction(null); updatePostCount("reaction_count", -1);
+                await deleteReaction(priorReaction);
+            } else {
+                setMyReaction(`pending-like-${post.id}`); updatePostCount("reaction_count", 1);
+                const created = await createReaction(post.id); setMyReaction(created.id);
+            }
+        } catch (error) {
+            setMyReaction(priorReaction); updatePostCount("reaction_count", priorReaction ? 1 : -1);
+            setInteractionError(getErrorMessage(error, translate(language, "Không thể cập nhật lượt thích.", "Unable to update the like.")));
+            setInteractionRetry("like");
+        } finally { setLiking(false); }
+    };
+
+    const addComment = async (contentToSend = comment) => {
+        const trimmed = contentToSend.trim();
+        if (!post || !user || !trimmed || interactionsLoading) return;
+        setCommenting(true); setInteractionError(""); setInteractionRetry(null);
+        const optimisticId = `pending-comment-${Date.now()}`;
+        const optimisticComment: Comment = { id: optimisticId, post_id: post.id, author_id: user.id, content: trimmed, created_at: new Date().toISOString() };
+        setComments((current) => [...current, optimisticComment]); setComment(""); updatePostCount("comment_count", 1);
+        try {
+            const created = await createComment(post.id, trimmed);
+            setComments((current) => current.map((item) => item.id === optimisticId ? created : item));
+        } catch (error) {
+            setComments((current) => current.filter((item) => item.id !== optimisticId)); setComment(contentToSend); updatePostCount("comment_count", -1);
+            setInteractionError(getErrorMessage(error, translate(language, "Không thể gửi bình luận.", "Unable to send this comment.")));
+            setInteractionRetry("comment");
+        } finally { setCommenting(false); }
+    };
+
+    const retryInteraction = () => {
+        if (interactionRetry === "load") void loadInteractions();
+        else if (interactionRetry === "like") void toggleLike();
+        else if (interactionRetry === "comment") void addComment();
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center" role="status">
+                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" aria-hidden="true" />
+                <span className="sr-only">{translate(language, "Đang tải bài viết", "Loading post")}</span>
+            </div>
+        );
+    }
+
+    if (!post) return <main className="min-h-screen bg-[#050505] px-4 py-20 text-center text-white"><p role={loadError ? "alert" : undefined}>{loadError || translate(language, "Không tìm thấy bài viết", "Post not found")}</p>{loadError && <button type="button" onClick={() => void loadPost()} className="mt-5 rounded-lg border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/10">{translate(language, "Thử lại", "Retry")}</button>}</main>;
+
     const postTitle = post.title || translate(language, "Bài viết cộng đồng", "Community post");
+    const sourceName = post.source_url ? getSourceName(post.source_url) : translate(language, "Cộng đồng", "Community");
+    const imageUrl = extractImageUrl(post.content);
+    const cleanContent = post.content.replace(/!\[.*?\]\(.*?\)/g, "").trim();
 
     return (
         <main className="min-h-screen bg-[#050505] text-gray-200 font-sans selection:bg-cyan-500/20 selection:text-cyan-200 pb-20">
@@ -182,12 +267,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                         <Share2 className="w-4 h-4" /> {translate(language, "Chia sẻ bài viết", "Share this article")}
                                     </button>
 
-                                {isCommunityPost && (
-                                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                                        <span className="inline-flex items-center gap-1.5"><Heart className="w-4 h-4 text-rose-300" />{post.reaction_count || 0}</span>
-                                        <span className="inline-flex items-center gap-1.5"><MessageCircle className="w-4 h-4 text-cyan-300" />{post.comment_count || 0}</span>
-                                    </div>
-                                )}
+                                    {isCommunityPost && (
+                                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                                            {user ? <button type="button" onClick={() => void toggleLike()} disabled={interactionsLoading || liking} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 transition-colors disabled:opacity-50 ${myReaction ? "bg-rose-500/10 text-rose-200" : "bg-white/5 text-gray-300 hover:bg-rose-500/10 hover:text-rose-200"}`}><Heart className={`w-4 h-4 ${myReaction ? "fill-current" : ""}`} />{post.reaction_count || translate(language, "Thích", "Like")}</button> : <Link href="/login" className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-gray-300 hover:bg-white/10"><Heart className="w-4 h-4" />{post.reaction_count || translate(language, "Thích", "Like")}</Link>}
+                                            <button type="button" onClick={() => { const shouldOpen = !commentsOpen; setCommentsOpen(shouldOpen); if (shouldOpen && !interactionsLoaded) void loadInteractions(); }} className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-gray-300 hover:bg-white/10"><MessageCircle className="w-4 h-4 text-cyan-300" />{post.comment_count || translate(language, "Bình luận", "Comment")}</button>
+                                        </div>
+                                    )}
 
                                     <div className="flex flex-wrap items-center gap-3">
                                         {getAuthToken() ? <button type="button" onClick={() => { setReportOpen((current) => !current); setReportError(""); setReportSuccess(false); }} className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-400 transition-colors hover:border-amber-400/30 hover:bg-amber-400/5 hover:text-amber-200"><Flag className="w-4 h-4" />{translate(language, "Báo cáo", "Report")}</button> : <Link href="/login" className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-400 transition-colors hover:border-amber-400/30 hover:text-amber-200"><Flag className="w-4 h-4" />{translate(language, "Đăng nhập để báo cáo", "Sign in to report")}</Link>}
@@ -206,6 +291,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                 {reportSuccess && <p role="status" className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">{translate(language, "Đã gửi báo cáo. Đội ngũ kiểm duyệt sẽ xem xét.", "Your report was submitted. The moderation team will review it.")} <Link href="/reports" className="font-semibold text-sky-200 underline underline-offset-2 hover:text-sky-100">{translate(language, "Xem trạng thái", "View status")}</Link></p>}
                                 {shareStatus === "success" && <p role="status" className="mt-4 text-sm text-emerald-200">{translate(language, "Đã mở trình chia sẻ hoặc sao chép liên kết bài viết.", "The share sheet was opened or the article link was copied.")}</p>}
                                 {shareStatus === "error" && <p role="alert" className="mt-4 text-sm text-red-200">{translate(language, "Không thể chia sẻ liên kết lúc này. Hãy sao chép URL trên thanh địa chỉ.", "Unable to share the link right now. Please copy the URL from the address bar.")}</p>}
+                                {isCommunityPost && commentsOpen && <section className="mt-5 border-t border-white/10 pt-5">
+                                    <h2 className="text-base font-semibold text-white">{translate(language, "Thảo luận", "Discussion")}</h2>
+                                    {interactionError && <div role="alert" className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-100"><span>{interactionError}</span>{interactionRetry && <button type="button" onClick={retryInteraction} disabled={interactionsLoading || liking || commenting} className="font-semibold text-sky-200 underline underline-offset-2 disabled:opacity-50">{translate(language, "Thử lại", "Retry")}</button>}</div>}
+                                    <div className="mt-4 space-y-3">{interactionsLoading ? <div role="status" className="grid place-items-center py-4"><Loader2 className="h-5 w-5 animate-spin text-sky-300" aria-hidden="true" /><span className="sr-only">{translate(language, "Đang tải bình luận", "Loading comments")}</span></div> : comments.length ? comments.map((item) => <div key={item.id} className={`rounded-xl bg-white/5 p-3 text-sm ${item.id.startsWith("pending-comment-") ? "opacity-60" : ""}`}><p className="font-medium text-slate-200">{item.author_id === user?.id ? user.username : `${translate(language, "Nhà đầu tư", "Investor")} ${item.author_id.slice(-4)}`}</p><p className="mt-1 whitespace-pre-wrap leading-6 text-slate-400">{item.content}</p></div>) : <p className="py-3 text-sm text-slate-500">{translate(language, "Chưa có bình luận nào.", "No comments yet.")}</p>}</div>
+                                    {user ? <form onSubmit={(event) => { event.preventDefault(); void addComment(); }} className="mt-4 flex gap-2"><label htmlFor="post-detail-comment" className="sr-only">{translate(language, "Viết bình luận", "Write a comment")}</label><input id="post-detail-comment" value={comment} onChange={(event) => setComment(event.target.value)} maxLength={3000} placeholder={translate(language, "Viết bình luận...", "Write a comment...")} className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-400" /><button disabled={interactionsLoading || commenting || !comment.trim()} className="inline-flex items-center rounded-lg bg-sky-500 px-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{commenting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : translate(language, "Gửi", "Send")}</button></form> : <p className="mt-4 text-sm text-slate-500"><Link href="/login" className="font-medium text-sky-300 hover:text-sky-200">{translate(language, "Đăng nhập", "Sign in")}</Link>{translate(language, " để tham gia thảo luận.", " to join the discussion.")}</p>}
+                                </section>}
                                 {reportOpen && <section className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
                                     <h2 className="font-semibold text-amber-100">{translate(language, "Báo cáo nội dung", "Report content")}</h2>
                                     <p className="mt-1 text-sm text-slate-400">{translate(language, "Chỉ báo cáo nội dung vi phạm. Không dùng tính năng này cho tranh luận đầu tư thông thường.", "Only report content that violates the rules. Do not use this for ordinary investment disagreements.")}</p>

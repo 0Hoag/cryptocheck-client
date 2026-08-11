@@ -83,6 +83,7 @@ npm run build
   - [x] Share notification copy and resource-link routing between Header and the full notifications page, with contract tests so the two surfaces cannot drift. (lint:ci + 40 Vitest tests + production build passed)
 - [x] Make the post-detail route community-aware, with author profile link and API reaction/comment counts. (production build passed)
 - [x] Make post-detail sharing functional with native sharing, clipboard fallback and visible completion/error feedback. (production build passed)
+- [x] Bring Community post detail to feature parity with the feed: authenticated like/unlike, lazy discussion loading, optimistic comment publish/rollback, retryable interaction errors and sign-in prompts instead of read-only counters. (lint:ci + 52 Vitest tests + production build passed)
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
 - [ ] Add robust error/retry feedback for every social mutation; do not silently swallow errors.
 	- [x] Add a localized global route-error fallback with retry, home navigation and a safe production support ID, so unexpected rendering failures never leave a blank screen. (targeted lint + Vitest + production build passed)
