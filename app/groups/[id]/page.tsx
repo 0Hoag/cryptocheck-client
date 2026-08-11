@@ -420,8 +420,9 @@ export default function GroupDetailPage({
           </div>
         )}
         {loading ? (
-          <div className="grid place-items-center py-24">
-            <Loader2 className="h-7 w-7 animate-spin text-sky-400" />
+          <div className="grid place-items-center py-24" role="status">
+            <Loader2 className="h-7 w-7 animate-spin text-sky-400" aria-hidden="true" />
+            <span className="sr-only">{translate(language, "Đang tải group", "Loading group")}</span>
           </div>
         ) : (
           group && (

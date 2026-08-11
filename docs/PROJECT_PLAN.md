@@ -172,6 +172,7 @@ npm run build
   - [x] Announce global route loading and protected-session checks as localized screen-reader status messages, rather than exposing a hard-coded or unlabeled spinner. (lint:ci + Vitest + production build passed)
   - [x] Announce route and widget loading states for News, post detail, crypto ranking and market sentiment; decorative spinner icons are hidden from assistive technology. (lint:ci + 40 Vitest tests + production build passed)
   - [x] Announce the full notifications-page loading state with the active language instead of presenting a spinner alone. (lint:ci + 40 Vitest tests + production build passed)
+  - [x] Announce public group-directory and group-detail loading states in the active language, while hiding decorative spinner icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)

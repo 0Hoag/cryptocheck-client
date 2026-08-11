@@ -427,8 +427,9 @@ export default function GroupsPage() {
           </div>
         )}
         {loading ? (
-          <div className="grid place-items-center py-20">
-            <Loader2 className="h-7 w-7 animate-spin text-sky-400" />
+          <div className="grid place-items-center py-20" role="status">
+            <Loader2 className="h-7 w-7 animate-spin text-sky-400" aria-hidden="true" />
+            <span className="sr-only">{translate(language, "Đang tải danh sách group", "Loading groups")}</span>
           </div>
         ) : groups.length ? (
           <div className="mt-7 grid gap-4 sm:grid-cols-2">
