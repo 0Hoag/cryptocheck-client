@@ -20,9 +20,14 @@ import { CommunityCard } from "./page";
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const post = {
-  id: "post-1", content: "BTC is consolidating near resistance.", author_id: "author-1",
-  author: { id: "author-1", username: "Lan", avatar_url: "" }, permission: "followers" as const,
-  created_at: "2026-08-11T00:00:00Z", reaction_count: 4, comment_count: 2,
+  id: "post-1",
+  content: "BTC is consolidating near resistance.",
+  author_id: "author-1",
+  author: { id: "author-1", username: "Lan", avatar_url: "" },
+  permission: "followers" as const,
+  created_at: "2026-08-11T00:00:00Z",
+  reaction_count: 4,
+  comment_count: 2,
 };
 const user = { id: "user-1", username: "Hoag" };
 
@@ -43,27 +48,63 @@ describe("CommunityCard", () => {
   });
 
   it("renders the actual follower-only visibility instead of calling every post public", async () => {
-    await act(async () => { root.render(<CommunityCard post={post} user={user} language="en" />); });
+    await act(async () => {
+      root.render(<CommunityCard post={post} user={user} language="en" />);
+    });
     expect(container.textContent).toContain("Followers");
     expect(container.textContent).not.toContain("Public");
   });
 
+  it("exposes like and discussion state to assistive technology", async () => {
+    await act(async () => {
+      root.render(<CommunityCard post={post} user={user} language="en" />);
+    });
+
+    const buttons = [...container.querySelectorAll("button")];
+    const likeButton = buttons.find(
+      (button) => button.getAttribute("aria-label") === "Like post",
+    );
+    const discussionButton = buttons.find(
+      (button) => button.getAttribute("aria-label") === "Toggle comments",
+    );
+
+    expect(likeButton?.getAttribute("aria-pressed")).toBe("false");
+    expect(discussionButton?.getAttribute("aria-expanded")).toBe("false");
+    expect(discussionButton?.getAttribute("aria-controls")).toBe(
+      "discussion-post-1",
+    );
+  });
+
   it("keeps comment submission disabled while the interaction request is unresolved", async () => {
     let resolveReactions: (value: []) => void = () => undefined;
-    mocks.getReactions.mockReturnValue(new Promise<[]>(resolve => { resolveReactions = resolve; }));
+    mocks.getReactions.mockReturnValue(
+      new Promise<[]>((resolve) => {
+        resolveReactions = resolve;
+      }),
+    );
     mocks.getComments.mockResolvedValue([]);
 
-    await act(async () => { root.render(<CommunityCard post={post} user={user} language="en" />); });
-    const commentButton = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes("2"));
-    await act(async () => { commentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    await act(async () => {
+      root.render(<CommunityCard post={post} user={user} language="en" />);
+    });
+    const commentButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent?.includes("2"),
+    );
+    await act(async () => {
+      commentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
 
     const input = container.querySelector("input") as HTMLInputElement;
     await act(async () => {
       input.value = "This must wait for the loaded discussion";
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    expect((container.querySelector("form button") as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (container.querySelector("form button") as HTMLButtonElement).disabled,
+    ).toBe(true);
 
-    await act(async () => { resolveReactions([]); });
+    await act(async () => {
+      resolveReactions([]);
+    });
   });
 });

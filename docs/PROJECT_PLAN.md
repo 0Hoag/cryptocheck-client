@@ -180,6 +180,7 @@ npm run build
   - [x] Announce Community feed loading and hide its decorative loading icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Make the reusable loading-spinner component expose a status label and hide its decorative icon, with jsdom regression coverage for default and localized labels. (lint:ci + Vitest + production build passed)
   - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
+  - [x] Expose Community and post-detail like state with `aria-pressed`, connect comment toggles to their discussion regions with `aria-expanded`/`aria-controls`, and label asynchronous comment sending/loading states. (targeted Vitest + lint + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
 	- [x] Add a jsdom CommunityCard regression test for follower-only visibility and block comment submission until lazy interaction loading completes, preventing a lost optimistic comment race. (targeted Vitest + lint + production build passed)
 	- [x] Contract-test Community client mutations for post visibility, reaction/comment payloads, edit/delete and follow endpoints, catching FE endpoint/payload drift without needing a live Docker environment. (targeted Vitest + lint + production build passed)
