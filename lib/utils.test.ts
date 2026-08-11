@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractDomain, extractImageUrl, getErrorMessage, getSourceName, truncateText } from "./utils";
+import { extractDomain, extractImageUrl, formatDate, getErrorMessage, getSourceName, truncateText } from "./utils";
 
 describe("shared content and API helpers", () => {
   it("keeps only non-empty API error messages", () => {
@@ -20,5 +20,10 @@ describe("shared content and API helpers", () => {
     expect(extractImageUrl("![relative](/chart.png)")).toBeNull();
     expect(truncateText("  A short market update  ", 12)).toBe("A short ma...");
     expect(truncateText("Short", 12)).toBe("Short");
+  });
+
+  it("keeps malformed provider timestamps from crashing a route", () => {
+    expect(formatDate("not-a-date", "vi")).toBe("Không rõ thời điểm");
+    expect(formatDate("not-a-date", "en")).toBe("Time unavailable");
   });
 });

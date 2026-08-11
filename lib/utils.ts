@@ -9,6 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(dateString: string, language: "vi" | "en" = "vi"): string {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+        return language === "vi" ? "Không rõ thời điểm" : "Time unavailable";
+    }
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
