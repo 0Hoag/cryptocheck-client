@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createChart, LineStyle, type ISeriesApi, type IChartApi, type MouseEventParams, type UTCTimestamp } from 'lightweight-charts';
-import { Radio, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize2, Minimize2, Radio, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
 import { zoomLogicalRange } from '@/lib/chart-interactions';
 
@@ -116,6 +116,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     const [cursorData, setCursorData] = useState<{ visible: boolean; x: number; y: number; price: string; percentDiff: string } | null>(null);
     const [chartLoadError, setChartLoadError] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const zoomChart = (multiplier: number) => {
         const timeScale = chartRef.current?.timeScale();
@@ -128,6 +129,36 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         timeScale?.fitContent();
         timeScale?.scrollToRealTime();
     };
+
+    useEffect(() => {
+        const chart = chartRef.current;
+        const container = chartContainerRef.current;
+        if (!chart || !container) return;
+
+        const previousOverflow = document.body.style.overflow;
+        const resizeChart = () => {
+            chart.applyOptions({
+                width: container.clientWidth,
+                height: isFullscreen ? Math.max(window.innerHeight - 220, 360) : 500,
+            });
+        };
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setIsFullscreen(false);
+        };
+
+        if (isFullscreen) {
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', handleEscape);
+        }
+        const frame = window.requestAnimationFrame(resizeChart);
+        window.addEventListener('resize', resizeChart);
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.removeEventListener('resize', resizeChart);
+            window.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [isFullscreen]);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -515,7 +546,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     };
 
     return (
-        <div className="relative w-full h-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] p-6">
+        <div className={`relative w-full h-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] p-6 ${isFullscreen ? 'fixed inset-0 z-50 overflow-y-auto' : ''}`}>
             {/* Header */}
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
@@ -593,6 +624,16 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                         <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                         <Radio className="h-3 w-3 text-emerald-400" aria-hidden="true" />
                         <span>{translate(language, 'Mới nhất', 'Latest')}</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsFullscreen((current) => !current)}
+                        className="rounded bg-[#1a1a1a] p-1.5 text-gray-300 transition-colors hover:bg-[#222] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                        aria-pressed={isFullscreen}
+                        aria-label={translate(language, isFullscreen ? 'Thoát chế độ toàn màn hình biểu đồ' : 'Mở rộng biểu đồ toàn màn hình', isFullscreen ? 'Exit chart fullscreen' : 'Expand chart fullscreen')}
+                        title={translate(language, isFullscreen ? 'Thoát toàn màn hình (Esc)' : 'Mở rộng toàn màn hình', isFullscreen ? 'Exit fullscreen (Esc)' : 'Expand fullscreen')}
+                    >
+                        {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
                     </button>
                 </div>
             </div>
