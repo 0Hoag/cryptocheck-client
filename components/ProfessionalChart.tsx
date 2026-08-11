@@ -551,7 +551,29 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     };
 
     return (
-        <div className={`relative w-full h-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] p-6 ${isFullscreen ? 'fixed inset-0 z-50 overflow-y-auto' : ''}`}>
+        <div
+            className={`relative w-full h-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] p-6 ${isFullscreen ? 'fixed inset-0 z-50 overflow-y-auto' : ''}`}
+            role="region"
+            tabIndex={0}
+            aria-label={translate(language, 'Biểu đồ giá tương tác', 'Interactive price chart')}
+            aria-describedby="chart-keyboard-help"
+            onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === '+' || event.key === '=') {
+                    event.preventDefault();
+                    zoomChart(0.7);
+                } else if (event.key === '-') {
+                    event.preventDefault();
+                    zoomChart(1.45);
+                } else if (event.key === '0') {
+                    event.preventDefault();
+                    resetChartView();
+                }
+            }}
+        >
+            <span id="chart-keyboard-help" className="sr-only">
+                {translate(language, 'Dùng phím cộng hoặc trừ để phóng to, thu nhỏ; nhấn số 0 để về dữ liệu mới nhất.', 'Use plus or minus to zoom; press zero to return to the latest data.')}
+            </span>
             {/* Header */}
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
