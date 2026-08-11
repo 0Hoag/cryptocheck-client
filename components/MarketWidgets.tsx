@@ -104,8 +104,9 @@ export default function MarketWidgets() {
                 </div>
 
                 {loadingFng ? (
-                    <div className="h-32 flex items-center justify-center">
-                        <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+                    <div className="h-32 flex items-center justify-center" role="status">
+                        <Loader2 className="w-5 h-5 text-gray-600 animate-spin" aria-hidden="true" />
+                        <span className="sr-only">{translate(language, "Đang tải chỉ số tâm lý thị trường", "Loading market sentiment")}</span>
                     </div>
                 ) : fng ? (
                     <div className="space-y-4">

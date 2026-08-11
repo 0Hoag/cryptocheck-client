@@ -58,8 +58,9 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center" role="status">
+                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" aria-hidden="true" />
+                <span className="sr-only">{translate(language, "Đang tải bài viết", "Loading post")}</span>
             </div>
         );
     }

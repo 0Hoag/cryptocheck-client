@@ -98,8 +98,9 @@ export default function CryptoRanking() {
 
     if (loading) {
         return (
-            <div ref={rankingRef} className="bg-[#111] border border-white/5 rounded-2xl p-5 min-h-[400px] flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-gray-600 animate-spin" />
+            <div ref={rankingRef} className="bg-[#111] border border-white/5 rounded-2xl p-5 min-h-[400px] flex items-center justify-center" role="status">
+                <Loader2 className="w-6 h-6 text-gray-600 animate-spin" aria-hidden="true" />
+                <span className="sr-only">{translate(language, "Đang tải bảng giá crypto", "Loading crypto ranking")}</span>
             </div>
         );
     }
