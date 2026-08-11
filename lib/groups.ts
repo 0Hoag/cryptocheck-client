@@ -58,11 +58,12 @@ function isGroupPost(value: unknown): value is GroupPost {
   return typeof post.id === "string" && typeof post.content === "string" && typeof post.author_id === "string";
 }
 
-export function parseGroupListResponse<T>(payload: unknown, resource: string): T[] {
+export function parseGroupListResponse<T>(payload: unknown, resource: string, isValidItem?: (value: unknown) => value is T): T[] {
   const data = (payload as ListPayload | undefined)?.data;
   if (data == null) return [];
   if (!Array.isArray(data)) throw new Error(`Invalid ${resource} response`);
-  return data as T[];
+  if (isValidItem && !data.every(isValidItem)) throw new Error(`Invalid ${resource} response`);
+  return data;
 }
 
 export function parseGroupResponse(payload: unknown, resource: string): CommunityGroup {
@@ -85,7 +86,7 @@ export function parseGroupPostResponse(payload: unknown, resource: string): Grou
 
 export async function getGroups() {
   const response = await apiClient.get<unknown>("/api/v1/news-feed/groups");
-  return parseGroupListResponse<CommunityGroup>(response.data, "groups");
+  return parseGroupListResponse<CommunityGroup>(response.data, "groups", isGroup);
 }
 
 export async function getGroup(id: string) {
@@ -95,7 +96,7 @@ export async function getGroup(id: string) {
 
 export async function getGroupPosts(id: string) {
   const response = await apiClient.get<unknown>(`/api/v1/news-feed/groups/${id}/posts`);
-  return parseGroupListResponse<GroupPost>(response.data, "group posts");
+  return parseGroupListResponse<GroupPost>(response.data, "group posts", isGroupPost);
 }
 
 export async function createGroup(input: CreateGroupInput) {
@@ -123,7 +124,7 @@ export async function deleteGroup(id: string) {
 
 export async function getGroupMembers(id: string) {
   const response = await apiClient.get<unknown>(`/api/v1/news-feed/groups/${id}/members`);
-  return parseGroupListResponse<GroupMembership>(response.data, "group members");
+  return parseGroupListResponse<GroupMembership>(response.data, "group members", isGroupMembership);
 }
 
 export async function updateGroupMember(groupID: string, userID: string, update: Partial<Pick<GroupMembership, "role" | "status">>) {

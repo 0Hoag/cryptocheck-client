@@ -9,6 +9,17 @@ describe("parseGroupListResponse", () => {
   it("rejects a non-list payload", () => {
     expect(() => parseGroupListResponse({ data: {} }, "groups")).toThrow("Invalid groups response");
   });
+
+  it("rejects malformed list entries before a route tries to render them", () => {
+    expect(() => parseGroupListResponse(
+      { data: [{ id: "group-1" }] },
+      "groups",
+      (value): value is { id: string; name: string } => {
+        const group = value as { id?: unknown; name?: unknown };
+        return typeof group.id === "string" && typeof group.name === "string";
+      },
+    )).toThrow("Invalid groups response");
+  });
 });
 
 describe("group mutation response contracts", () => {
