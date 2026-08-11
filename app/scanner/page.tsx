@@ -4,17 +4,13 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, CircleDollarSign, Info, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
-import { apiClient, parseListData } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 import { isEvmAddress, isSolanaMintAddress, validateScanInput } from "@/lib/scanner-input";
+import { parseScanHistory, parseScanQuota, parseScanResultResponse, parseTokenCandidates, type ScanHistoryItem, type ScanQuota, type ScanResult, type TokenCandidate } from "@/lib/scanner-data";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
 import ExternalImage from "@/components/ExternalImage";
 
-type ScanIssue = { type: string; name: string; description: string; impact: number };
-type ScanResult = { network: string; name: string; address: string; analysis_type: "contract" | "native_asset" | "market_asset" | "solana_mint"; source_available: boolean; score_available: boolean; trust_score: number; liquidity_usd?: number; volume_h24?: number; price_usd?: number; image_url?: string; market_provider?: string; dex_id?: string; pair_url?: string; pair_created_at?: number; market_confidence?: "high" | "medium" | "low"; analyzed_at?: string; issues: ScanIssue[]; safe_features: string[] };
-type TokenCandidate = { address: string; network: string; name: string; symbol: string; liquidity_usd: number; volume_h24: number; price_usd: number; image_url?: string; dex_id?: string; pair_created_at?: number; contract_scan_supported: boolean };
-type ScanHistoryItem = { id: string; input: string; network: string; analysis_type: ScanResult["analysis_type"]; trust_score: number; score_available: boolean; engine_version: string; created_at: string };
-type ScanQuota = { plan: "free" | "premium"; limit: number; used: number; unlimited: boolean };
 
 function scoreTone(score: number) {
   if (score >= 75) return "text-emerald-300 border-emerald-400/30 bg-emerald-500/10";
@@ -135,7 +131,7 @@ export default function ScannerPage() {
     setHistoryError("");
     try {
       const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner/history", { params: { limit: 8 } });
-      setHistory(parseListData<ScanHistoryItem>(response.data, "scan history"));
+      setHistory(parseScanHistory(response.data));
     } catch (requestError) {
       setHistory([]);
       setHistoryError(getErrorMessage(requestError, translate(language, "Không tải được lịch sử quét.", "Unable to load scan history.")));
@@ -153,8 +149,8 @@ export default function ScannerPage() {
     setQuotaLoading(true);
     setQuotaError("");
     try {
-      const response = await apiClient.get<{ data: ScanQuota }>("/api/v1/news-feed/scanner/quota");
-      setQuota(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner/quota");
+      setQuota(parseScanQuota(response.data));
     } catch (requestError) {
       setQuota(null);
       setQuotaError(getErrorMessage(requestError, translate(language, "Không tải được quyền quét hiện tại.", "Unable to load your current scan access.")));
@@ -184,8 +180,8 @@ export default function ScannerPage() {
     setLastAttempt(query);
     setLoading(true); setError(""); setResult(null); setCandidates([]);
     try {
-      const response = await apiClient.get<{ data: ScanResult }>("/api/v1/news-feed/scanner", { params: { token: query, lang: language }, timeout: 45000 });
-      setResult(response.data.data);
+      const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner", { params: { token: query, lang: language }, timeout: 45000 });
+      setResult(parseScanResultResponse(response.data));
       void loadHistory();
       void loadQuota();
     } catch (error) {
@@ -212,7 +208,7 @@ export default function ScannerPage() {
     setLoading(true); setError(""); setResult(null); setCandidates([]);
     try {
       const response = await apiClient.get<unknown>("/api/v1/news-feed/scanner/candidates", { params: { token: query }, timeout: 15000 });
-      setCandidates(parseListData<TokenCandidate>(response.data, "scanner candidates"));
+      setCandidates(parseTokenCandidates(response.data));
     } catch (error) {
       setError(scannerErrorMessage(error, language));
     } finally { setLoading(false); }

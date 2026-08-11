@@ -192,7 +192,8 @@ npm run build
   - [x] Add a jsdom component-level regression test for safe remote-image rendering, failed-image fallback and unsafe URL rejection. (lint:ci + Vitest + production build passed)
   - [x] Add a Vitest/jsdom baseline and cover valid, expired and explicit sign-out browser sessions in the auth storage helper. (3 tests passed; targeted lint + production build passed)
   - [x] Reuse the shared safe API-error reader in Pre-launch and cover error, source/domain, markdown-image and truncation helper branches. (6 tests passed; targeted lint + production build passed)
-  - [x] Extract Scanner direct-address classification and cover EVM, Solana Base58, malformed and oversized inputs. (9 tests passed; targeted lint + production build passed; dynamic token-image warning remains)
+	- [x] Extract Scanner direct-address classification and cover EVM, Solana Base58, malformed and oversized inputs. (9 tests passed; targeted lint + production build passed; dynamic token-image warning remains)
+  - [x] Validate and normalize Scanner result, candidate, history and quota payloads before rendering; malformed API data now uses the existing retry state instead of crashing a route. (Vitest + lint + production build passed)
   - [x] Validate the post-feed response contract before rendering News pagination, including legacy no-meta responses and malformed payload failures. (12 tests passed; targeted lint + production build passed)
   - [x] Reject malformed group, member and post entries at the API parsing boundary, preventing runtime crashes from partial list payloads. (Vitest + lint + production build passed)
 - [x] Add CI for build, lint and tests.
