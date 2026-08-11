@@ -160,6 +160,7 @@ npm run build
 - [x] Abort obsolete Analysis chart REST requests when changing a market or timeframe, preventing stale candles and unnecessary client work. (targeted lint + Vitest + production build passed)
 - [x] Show an in-context Analysis chart loading failure with a retry action instead of leaving Binance provider errors only in the browser console. (targeted lint + Vitest + production build passed)
 - [x] Keep handled chart-provider fetch failures in the visible retry state without emitting duplicate recoverable errors to the browser console. (lint:ci + Vitest + production build passed)
+- [x] Make the professional chart genuinely interactive: mouse-wheel and pinch zoom, drag/touch panning, axis scaling, explicit zoom/reset-to-latest controls, and no forced re-centering after an initial load. (unit tests + lint + production build passed)
 - [x] Add validated, retryable provider-error states for the persistent Fear/Greed and breaking-news widgets; abort stale sentiment requests on unmount. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.

@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createChart, LineStyle, type ISeriesApi, type IChartApi, type MouseEventParams, type UTCTimestamp } from 'lightweight-charts';
+import { Radio, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
+import { zoomLogicalRange } from '@/lib/chart-interactions';
 
 interface ProfessionalChartProps {
     symbol?: string;
@@ -115,6 +117,18 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
     const [chartLoadError, setChartLoadError] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
 
+    const zoomChart = (multiplier: number) => {
+        const timeScale = chartRef.current?.timeScale();
+        const nextRange = zoomLogicalRange(timeScale?.getVisibleLogicalRange() ?? null, multiplier);
+        if (nextRange) timeScale?.setVisibleLogicalRange(nextRange);
+    };
+
+    const resetChartView = () => {
+        const timeScale = chartRef.current?.timeScale();
+        timeScale?.fitContent();
+        timeScale?.scrollToRealTime();
+    };
+
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
@@ -149,7 +163,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 timeVisible: true,
                 secondsVisible: false,
                 borderColor: '#333',
-                lockVisibleTimeRangeOnResize: true,  // Prevent auto-scale on resize
+                lockVisibleTimeRangeOnResize: false,
                 fixLeftEdge: false,                   // Allow scrolling left
                 fixRightEdge: false,                  // Allow scrolling right
                 rightOffset: 12, // Add 12 bars of empty space to the right
@@ -164,15 +178,18 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             watermark: {
                 visible: false,
             },
-            // Disable zoom on scroll, enable pan on scroll
+            // Match familiar trading-chart interactions: scroll/pinch zooms,
+            // while drag/touch pans the timeline.
             handleScale: {
-                mouseWheel: false,
+                mouseWheel: true,
+                pinch: true,
+                axisPressedMouseMove: true,
             },
             handleScroll: {
-                mouseWheel: true,
+                mouseWheel: false,
                 pressedMouseMove: true,
                 horzTouchDrag: true,
-                vertTouchDrag: true,
+                vertTouchDrag: false,
             },
         });
 
@@ -403,14 +420,13 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     const startIndex = Math.max(0, formattedData.length - visibleCandles);
                     const startTime = formattedData[startIndex].time;
 
-                    // 1. Set zoom level
+                    // Start a new symbol/timeframe at a useful recent range.
+                    // Do not force a later scroll position: the member can pan
+                    // and zoom freely after this initial load.
                     chartRef.current.timeScale().setVisibleRange({
                         from: startTime,
                         to: latestTime,
                     });
-
-                    // 2. Shift view to center
-                    chartRef.current.timeScale().scrollToPosition(50, false);
                 }
             } catch (error) {
                 if ((error as DOMException).name === 'AbortError' || !active) return;
@@ -535,7 +551,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 </div>
 
                 {/* Timeframe Selector */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {TIMEFRAMES.map((tf) => (
                         <button
                             key={tf.value}
@@ -548,6 +564,36 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                             {tf.label}
                         </button>
                     ))}
+                    <span className="h-5 w-px bg-white/10" aria-hidden="true" />
+                    <button
+                        type="button"
+                        onClick={() => zoomChart(0.7)}
+                        className="rounded bg-[#1a1a1a] p-1.5 text-gray-300 transition-colors hover:bg-[#222] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                        aria-label={translate(language, 'Phóng to biểu đồ', 'Zoom in chart')}
+                        title={translate(language, 'Phóng to', 'Zoom in')}
+                    >
+                        <ZoomIn className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => zoomChart(1.45)}
+                        className="rounded bg-[#1a1a1a] p-1.5 text-gray-300 transition-colors hover:bg-[#222] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                        aria-label={translate(language, 'Thu nhỏ biểu đồ', 'Zoom out chart')}
+                        title={translate(language, 'Thu nhỏ', 'Zoom out')}
+                    >
+                        <ZoomOut className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={resetChartView}
+                        className="inline-flex items-center gap-1 rounded bg-[#1a1a1a] px-2 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-[#222] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                        aria-label={translate(language, 'Khôi phục khung nhìn biểu đồ', 'Reset chart view')}
+                        title={translate(language, 'Về dữ liệu mới nhất', 'Fit latest data')}
+                    >
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Radio className="h-3 w-3 text-emerald-400" aria-hidden="true" />
+                        <span>{translate(language, 'Mới nhất', 'Latest')}</span>
+                    </button>
                 </div>
             </div>
 
