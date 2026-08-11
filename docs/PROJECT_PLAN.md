@@ -98,7 +98,8 @@ npm run build
 	- [x] Centralize post sharing behind a tested native-share/clipboard fallback, preserve cancellation as a neutral action, show actual post visibility, and prevent a comment submission race while interactions are loading. (unit tests + lint + production build passed)
   - [x] Keep notification read/read-all mutation failures separate from list-loading errors, retain the failed action for an in-place retry, and wait for a successful read before navigating from either the full notifications route or Header inbox. (lint:ci + Vitest + production build passed)
   - [x] Preserve a post-report form after a failed moderation submission and expose a dedicated localized retry action without requiring the reporter to re-enter their reason/details. (lint:ci + Vitest + production build passed)
-  - [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
+	- [x] Preserve API `request_id` values in shared error text so production failures can be reported and traced without changing each screen independently. (Vitest + production build passed)
+  - [x] Preserve failed Pre-launch create/update/delete mutations and retry the same request in place, without discarding the submitted project form or re-confirming a delete. (lint + Vitest + production build passed)
 - [x] Add pagination/infinite loading and optimistic updates with rollback.
 	- [x] Use the post-feed pagination metadata on the News dashboard: load 12 items at a time, deduplicate appended items, expose retry and stop when the API reports the last page. (targeted lint + 9 tests + production build passed)
 	- [x] Let readers choose newest-first or oldest-first order on the News dashboard; use the validated server feed-sort contract instead of an untyped Mongo-style sort string. (feed-query Vitest coverage + lint:ci + production build passed)
