@@ -575,7 +575,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 {translate(language, 'Dùng phím cộng hoặc trừ để phóng to, thu nhỏ; nhấn số 0 để về dữ liệu mới nhất.', 'Use plus or minus to zoom; press zero to return to the latest data.')}
             </span>
             {/* Header */}
-            <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+            <div className="mb-4 space-y-4">
                 <div className="min-w-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
                     <div>
                         <div className="flex items-baseline gap-3">
@@ -609,7 +609,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 </div>
 
                 {/* Timeframe Selector */}
-                <div className="flex w-fit flex-wrap items-center gap-2 xl:justify-self-end">
+                <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3 sm:justify-end">
                     {TIMEFRAMES.map((tf) => (
                         <button
                             key={tf.value}
