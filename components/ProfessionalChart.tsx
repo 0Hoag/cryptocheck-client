@@ -575,14 +575,14 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 {translate(language, 'Dùng phím cộng hoặc trừ để phóng to, thu nhỏ; nhấn số 0 để về dữ liệu mới nhất.', 'Use plus or minus to zoom; press zero to return to the latest data.')}
             </span>
             {/* Header */}
-            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+            <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                <div className="min-w-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
                     <div>
                         <div className="flex items-baseline gap-3">
-                            <span className="text-4xl font-bold text-white">
+                            <span className="inline-block min-w-[9ch] text-right text-4xl font-bold tabular-nums text-white">
                                 ${formatPrice(currentPrice)}
                             </span>
-                            <span className={`text-lg font-semibold ${isPositive ? 'text-[#26a69a]' : 'text-[#ef5350]'}`}>
+                            <span className={`inline-block min-w-[7ch] tabular-nums text-lg font-semibold ${isPositive ? 'text-[#26a69a]' : 'text-[#ef5350]'}`}>
                                 {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                             </span>
                         </div>
@@ -595,21 +595,21 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     <div className="flex flex-wrap gap-4 text-sm sm:gap-8">
                         <div className="flex flex-col">
                             <span className="text-gray-500 text-xs mb-1">{translate(language, "Đỉnh 24h", "24h high")}</span>
-                            <span className="text-gray-200 font-medium">{formatPrice(stats.high)}</span>
+                            <span className="min-w-[8ch] font-medium tabular-nums text-gray-200">{formatPrice(stats.high)}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-gray-500 text-xs mb-1">{translate(language, "Đáy 24h", "24h low")}</span>
-                            <span className="text-gray-200 font-medium">{formatPrice(stats.low)}</span>
+                            <span className="min-w-[8ch] font-medium tabular-nums text-gray-200">{formatPrice(stats.low)}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-gray-500 text-xs mb-1">{translate(language, "Khối lượng 24h", "24h volume")}</span>
-                            <span className="text-gray-200 font-medium">{formatPrice(stats.vol)}</span>
+                            <span className="min-w-[10ch] font-medium tabular-nums text-gray-200">{formatPrice(stats.vol)}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Timeframe Selector */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex w-fit flex-wrap items-center gap-2 xl:justify-self-end">
                     {TIMEFRAMES.map((tf) => (
                         <button
                             key={tf.value}
