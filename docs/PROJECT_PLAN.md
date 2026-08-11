@@ -175,6 +175,7 @@ npm run build
   - [x] Announce the full notifications-page loading state with the active language instead of presenting a spinner alone. (lint:ci + 40 Vitest tests + production build passed)
   - [x] Announce public group-directory and group-detail loading states in the active language, while hiding decorative spinner icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Announce Community feed loading and hide its decorative loading icons from assistive technology. (lint:ci + Vitest + production build passed)
+  - [x] Make the reusable loading-spinner component expose a status label and hide its decorative icon, with jsdom regression coverage for default and localized labels. (lint:ci + Vitest + production build passed)
   - [x] Give the Pre-launch watchlist form stable semantic labels (instead of placeholder-only inputs) and explicit submit behavior for keyboard and screen-reader users. (targeted lint + Vitest + production build passed)
 - [ ] Add component/integration tests for auth, scanner and community states.
   - [x] Add a jsdom component-level regression test for safe remote-image rendering, failed-image fallback and unsafe URL rejection. (lint:ci + Vitest + production build passed)
