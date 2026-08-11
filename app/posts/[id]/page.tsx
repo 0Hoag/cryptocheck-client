@@ -17,6 +17,7 @@ import rehypeSanitize from "rehype-sanitize";
 import { translate, useLanguage } from "@/context/LanguageContext";
 import { apiClient } from "@/lib/api";
 import { getAuthToken } from "@/lib/auth";
+import { shareLink } from "@/lib/share";
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
     const { language } = useLanguage();
@@ -85,17 +86,9 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
     async function sharePost() {
         const url = window.location.href;
         setShareStatus("");
-        try {
-            if (navigator.share) {
-                await navigator.share({ title: postTitle, text: postTitle, url });
-            } else {
-                await navigator.clipboard.writeText(url);
-            }
-            setShareStatus("success");
-        } catch (error) {
-            if ((error as DOMException)?.name === "AbortError") return;
-            setShareStatus("error");
-        }
+        const result = await shareLink({ title: postTitle, text: postTitle, url });
+        if (result === "shared") setShareStatus("success");
+        else if (result === "unavailable") setShareStatus("error");
     }
 
     const imageUrl = extractImageUrl(post.content);
