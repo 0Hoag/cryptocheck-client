@@ -78,6 +78,7 @@ npm run build
   - [x] Normalize the legacy empty notification response (`data: null`) before shared navigation renders it, and reject malformed notification payloads with a visible retry state rather than crashing Header on `.some()`. (Vitest + production build passed)
   - [x] Open the linked group or post directly after marking its notification read; unsupported resource types remain safely non-navigating. (production build passed)
   - [x] Add a responsive notifications page with read-all, retry and resource navigation, linked from both the desktop inbox and mobile menu. (production build passed)
+  - [x] Share notification copy and resource-link routing between Header and the full notifications page, with contract tests so the two surfaces cannot drift. (lint:ci + 40 Vitest tests + production build passed)
 - [x] Make the post-detail route community-aware, with author profile link and API reaction/comment counts. (production build passed)
 - [x] Make post-detail sharing functional with native sharing, clipboard fallback and visible completion/error feedback. (production build passed)
 - [x] Add edit/delete ownership UI for a member's own posts on the profile screen. (production build passed)
