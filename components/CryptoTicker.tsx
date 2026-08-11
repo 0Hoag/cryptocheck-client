@@ -7,7 +7,7 @@ import { useElementVisibility } from "@/lib/useElementVisibility";
 
 interface CryptoPrice {
     symbol: string;
-    price: string;
+    price: number;
     percentChange: number;
 }
 
@@ -29,6 +29,8 @@ export default function CryptoTicker() {
     const { language } = useLanguage();
     const [prices, setPrices] = useState<CryptoPrice[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
     const { ref: tickerRef, isVisible } = useElementVisibility<HTMLDivElement>();
 
     useEffect(() => {
@@ -54,7 +56,7 @@ export default function CryptoTicker() {
                     .filter((item) => trackedSymbols.includes(item.symbol))
                     .map((item) => ({
                         symbol: item.symbol.replace("USDT", ""),
-                        price: parseFloat(item.lastPrice).toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        price: parseFloat(item.lastPrice),
                         percentChange: parseFloat(item.priceChangePercent),
                     }));
 
@@ -65,10 +67,12 @@ export default function CryptoTicker() {
 
                 if (!active) return;
                 setPrices(sorted);
+                setError(false);
                 setLoading(false);
             } catch (error) {
                 if ((error as DOMException).name === "AbortError" || !active) return;
                 console.error("Failed to fetch crypto prices:", error);
+                setError(true);
                 setLoading(false);
             }
         };
@@ -95,9 +99,13 @@ export default function CryptoTicker() {
             controller?.abort();
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [language]);
+    }, [refreshKey]);
 
     if (loading) return null;
+
+    if (error && prices.length === 0) {
+        return <div className="flex items-center justify-center gap-3 border-b border-amber-500/20 bg-amber-500/5 px-4 py-2 text-xs text-amber-100" role="alert"><span>{translate(language, "Không tải được giá thị trường.", "Unable to load market prices.")}</span><button type="button" onClick={() => { setLoading(true); setError(false); setRefreshKey((key) => key + 1); }} className="font-semibold text-sky-300 hover:text-sky-100">{translate(language, "Thử lại", "Retry")}</button></div>;
+    }
 
     const marqueePrices = [...prices, ...prices];
 
@@ -114,7 +122,7 @@ export default function CryptoTicker() {
                     {marqueePrices.map((coin, index) => (
                         <div key={`orig-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
-                            <span className="text-gray-400">${coin.price}</span>
+                            <span className="text-gray-400">${coin.price.toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: coin.price < 1 ? 4 : 2 })}</span>
                             <span className={`flex items-center ${coin.percentChange >= 0 ? "text-green-500" : "text-red-500"}`}>
                                 {coin.percentChange >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                                 {Math.abs(coin.percentChange).toFixed(2)}%
@@ -127,7 +135,7 @@ export default function CryptoTicker() {
                     {marqueePrices.map((coin, index) => (
                         <div key={`copy-${coin.symbol}-${index}`} className="flex items-center gap-2 text-xs">
                             <span className="font-bold text-gray-300">{coin.symbol}</span>
-                            <span className="text-gray-400">${coin.price}</span>
+                            <span className="text-gray-400">${coin.price.toLocaleString(languageLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: coin.price < 1 ? 4 : 2 })}</span>
                             <span className={`flex items-center ${coin.percentChange >= 0 ? "text-green-500" : "text-red-500"}`}>
                                 {coin.percentChange >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                                 {Math.abs(coin.percentChange).toFixed(2)}%
