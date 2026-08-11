@@ -47,6 +47,20 @@ function optionalNumber(value: unknown): number | undefined {
   return numberValue(value);
 }
 
+function validDateString(value: unknown): string | undefined {
+  const date = stringValue(value);
+  return date && Number.isFinite(Date.parse(date)) ? date : undefined;
+}
+
+function httpsURL(value: unknown): string | undefined {
+  const url = stringValue(value);
+  try {
+    return url && new URL(url).protocol === "https:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function analysisType(value: unknown): ScanResult["analysis_type"] | undefined {
   return typeof value === "string" && analysisTypes.has(value as ScanResult["analysis_type"])
     ? value as ScanResult["analysis_type"]
@@ -90,10 +104,10 @@ export function parseScanResultResponse(payload: unknown): ScanResult {
     network, name, address, analysis_type: type, trust_score: trustScore,
     source_available: data.source_available, score_available: data.score_available,
     liquidity_usd: optionalNumber(data.liquidity_usd), volume_h24: optionalNumber(data.volume_h24), price_usd: optionalNumber(data.price_usd),
-    image_url: optionalString(data.image_url), market_provider: optionalString(data.market_provider), dex_id: optionalString(data.dex_id), pair_url: optionalString(data.pair_url),
+    image_url: optionalString(data.image_url), market_provider: optionalString(data.market_provider), dex_id: optionalString(data.dex_id), pair_url: httpsURL(data.pair_url),
     pair_created_at: optionalNumber(data.pair_created_at),
     market_confidence: confidence === "high" || confidence === "medium" || confidence === "low" ? confidence : undefined,
-    analyzed_at: optionalString(data.analyzed_at), issues: parseIssues(data.issues), safe_features: parseStringList(data.safe_features),
+    analyzed_at: validDateString(data.analyzed_at), issues: parseIssues(data.issues), safe_features: parseStringList(data.safe_features),
   };
 }
 
@@ -116,7 +130,7 @@ export function parseTokenCandidates(payload: unknown): TokenCandidate[] {
 export function parseScanHistory(payload: unknown): ScanHistoryItem[] {
   return listData(payload, "scan history").map((value) => {
     if (!isRecord(value)) throw new Error("Invalid scan history response");
-    const id = stringValue(value.id); const input = stringValue(value.input); const network = stringValue(value.network); const type = analysisType(value.analysis_type); const createdAt = stringValue(value.created_at);
+    const id = stringValue(value.id); const input = stringValue(value.input); const network = stringValue(value.network); const type = analysisType(value.analysis_type); const createdAt = validDateString(value.created_at);
     if (!id || !input || !network || !type || !createdAt) throw new Error("Invalid scan history response");
     return { id, input, network, analysis_type: type, created_at: createdAt, trust_score: optionalNumber(value.trust_score) ?? 0, score_available: value.score_available === true, engine_version: optionalString(value.engine_version) ?? "" };
   });
