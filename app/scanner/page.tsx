@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 import { isEvmAddress, isSolanaMintAddress, validateScanInput } from "@/lib/scanner-input";
 import { parseScanHistory, parseScanQuota, parseScanResultResponse, parseTokenCandidates, type ScanHistoryItem, type ScanQuota, type ScanResult, type TokenCandidate } from "@/lib/scanner-data";
+import { localizeScannerFeature, localizeScannerIssue } from "@/lib/scanner-i18n";
 import { languageLocale, translate, useLanguage, type Language } from "@/context/LanguageContext";
 import ExternalImage from "@/components/ExternalImage";
 
@@ -282,8 +283,8 @@ export default function ScannerPage() {
         </div>
         <div className="surface p-6">
           <div className="flex items-center gap-2 eyebrow"><Sparkles className="h-4 w-4 text-sky-400" /> {translate(language, "Kết quả phân tích", "Analysis results")}</div>
-          {result.issues.length > 0 ? <div className="mt-5 space-y-3">{result.issues.map((issue, index) => <div key={`${issue.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900/55 p-4"><div className="flex items-start justify-between gap-4"><div><div className="font-medium text-slate-100">{issue.name}</div><p className="mt-1 text-sm leading-6 text-slate-400">{issue.description}</p></div><span className="rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-300">-{issue.impact}</span></div></div>)}</div> : <div className="mt-5 flex gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-100"><CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />{translate(language, "Chưa phát hiện cảnh báo rủi ro từ các kiểm tra hiện có.", "No risk warning was found by the available checks.")}</div>}
-          {result.safe_features.length > 0 && <div className="mt-6 border-t border-slate-800 pt-5"><div className="eyebrow">{translate(language, "Tín hiệu tích cực", "Positive signals")}</div><div className="mt-3 flex flex-wrap gap-2">{result.safe_features.map((feature) => <span key={feature} className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">{feature}</span>)}</div></div>}
+          {result.issues.length > 0 ? <div className="mt-5 space-y-3">{result.issues.map((issue, index) => { const copy = localizeScannerIssue(issue, language); return <div key={`${issue.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900/55 p-4"><div className="flex items-start justify-between gap-4"><div><div className="font-medium text-slate-100">{copy.name}</div><p className="mt-1 text-sm leading-6 text-slate-400">{copy.description}</p></div><span className="rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-300">-{copy.impact}</span></div></div>; })}</div> : <div className="mt-5 flex gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-100"><CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />{translate(language, "Chưa phát hiện cảnh báo rủi ro từ các kiểm tra hiện có.", "No risk warning was found by the available checks.")}</div>}
+          {result.safe_features.length > 0 && <div className="mt-6 border-t border-slate-800 pt-5"><div className="eyebrow">{translate(language, "Tín hiệu tích cực", "Positive signals")}</div><div className="mt-3 flex flex-wrap gap-2">{result.safe_features.map((feature) => <span key={feature} className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">{localizeScannerFeature(feature, language)}</span>)}</div></div>}
         </div>
       </section>}
     </div>

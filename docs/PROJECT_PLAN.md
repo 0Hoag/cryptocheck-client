@@ -16,6 +16,7 @@
 - [x] Vietnamese/English switcher is restored and persisted locally.
 - [ ] Complete Vietnamese/English coverage across every shared widget, route and async/error state; verify both languages manually on the running app.
   - [x] Localize the remaining shared Header Live badge, group admin role labels and Analysis chart loading announcement so these visible/announced states no longer stay in English after switching to Vietnamese. (lint + production build passed)
+  - [x] Localize deterministic Solana mint-authority rules and positive signals returned by the API; leave unknown provider/AI copy unchanged rather than machine-translating it. (Vitest + lint + production build passed)
   - [x] Translate the news dashboard, article cards, article detail and shared market/news widgets; make relative timestamps locale-aware. (production build passed)
   - [x] Translate the account and pre-launch watchlist workflows, including forms, confirmation/error states and dates. (production build passed)
   - [x] Translate profile follow and post-management controls, including destructive confirmations and ARIA labels. (production build passed)
