@@ -834,8 +834,8 @@ export default function GroupDetailPage({
                               ? translate(language, "Chờ duyệt", "Pending")
                               : member.role === "owner"
                                 ? translate(language, "Chủ group", "Owner")
-                                : member.role === "admin"
-                                  ? "Admin"
+                              : member.role === "admin"
+                                  ? translate(language, "Quản trị viên", "Admin")
                                   : member.role === "moderator"
                                     ? translate(
                                         language,
@@ -883,7 +883,9 @@ export default function GroupDetailPage({
                               <option value="moderator">
                                 {translate(language, "Kiểm duyệt", "Moderator")}
                               </option>
-                              <option value="admin">Admin</option>
+                              <option value="admin">
+                                {translate(language, "Quản trị viên", "Admin")}
+                              </option>
                             </select>
                           )}
                         </div>

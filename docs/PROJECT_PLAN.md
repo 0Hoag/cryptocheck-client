@@ -15,6 +15,7 @@
 - [x] Replace shared Footer placeholder links with real bilingual information/legal/FAQ routes; resource links now navigate to the available Analysis route and unconfigured social channels are no longer fake clickable destinations. (targeted lint + Vitest + production build passed)
 - [x] Vietnamese/English switcher is restored and persisted locally.
 - [ ] Complete Vietnamese/English coverage across every shared widget, route and async/error state; verify both languages manually on the running app.
+  - [x] Localize the remaining shared Header Live badge, group admin role labels and Analysis chart loading announcement so these visible/announced states no longer stay in English after switching to Vietnamese. (lint + production build passed)
   - [x] Translate the news dashboard, article cards, article detail and shared market/news widgets; make relative timestamps locale-aware. (production build passed)
   - [x] Translate the account and pre-launch watchlist workflows, including forms, confirmation/error states and dates. (production build passed)
   - [x] Translate profile follow and post-management controls, including destructive confirmations and ARIA labels. (production build passed)

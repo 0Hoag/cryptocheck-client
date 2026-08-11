@@ -6,9 +6,14 @@ import CoinList from "@/components/CoinList";
 import axios from "axios";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 
+function ChartLoading() {
+    const { language } = useLanguage();
+    return <div role="status" className="h-[540px] animate-pulse rounded-2xl border border-slate-800 bg-slate-950/60"><span className="sr-only">{translate(language, "Đang tải biểu đồ thị trường", "Loading market chart")}</span></div>;
+}
+
 const ProfessionalChart = dynamic(() => import("@/components/ProfessionalChart"), {
     ssr: false,
-    loading: () => <div className="h-[540px] animate-pulse rounded-2xl border border-slate-800 bg-slate-950/60" aria-label="Loading market chart" />,
+    loading: () => <ChartLoading />,
 });
 
 type OrderBookRow = { price: string; amount: string; total: string; fill: number };
