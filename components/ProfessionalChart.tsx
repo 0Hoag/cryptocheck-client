@@ -414,7 +414,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 }
             } catch (error) {
                 if ((error as DOMException).name === 'AbortError' || !active) return;
-                console.error('Error fetching data:', error);
                 setChartLoadError(true);
             }
         };
