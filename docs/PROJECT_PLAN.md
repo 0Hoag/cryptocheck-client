@@ -180,6 +180,7 @@ npm run build
   - [x] Announce global route loading and protected-session checks as localized screen-reader status messages, rather than exposing a hard-coded or unlabeled spinner. (lint:ci + Vitest + production build passed)
   - [x] Announce route and widget loading states for News, post detail, crypto ranking and market sentiment; decorative spinner icons are hidden from assistive technology. (lint:ci + 40 Vitest tests + production build passed)
   - [x] Announce the full notifications-page loading state with the active language instead of presenting a spinner alone. (lint:ci + 40 Vitest tests + production build passed)
+  - [x] Announce Header notification-menu loading and hide decorative inbox icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Announce public group-directory and group-detail loading states in the active language, while hiding decorative spinner icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Announce Community feed loading and hide its decorative loading icons from assistive technology. (lint:ci + Vitest + production build passed)
   - [x] Make the reusable loading-spinner component expose a status label and hide its decorative icon, with jsdom regression coverage for default and localized labels. (lint:ci + Vitest + production build passed)
