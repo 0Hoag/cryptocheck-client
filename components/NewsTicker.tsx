@@ -23,9 +23,8 @@ export default function NewsTicker() {
             try {
                 const res = await getPosts({ limit: 10 });
                 if (active) setHeadlines(res.posts);
-            } catch (error) {
+            } catch {
                 if (!active) return;
-                console.error("Failed to fetch headlines:", error);
                 setHeadlinesError(true);
             }
         };

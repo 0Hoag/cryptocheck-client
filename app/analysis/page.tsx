@@ -44,8 +44,7 @@ export default function AnalysisPage() {
                 }
                 const res = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${selectedSymbol}`);
                 if (active) setCurrentPrice(parseFloat(res.data.price));
-            } catch (error) {
-                console.error("Failed to fetch price:", error);
+            } catch {
                 if (active) setOrderBookState("error");
             }
         };

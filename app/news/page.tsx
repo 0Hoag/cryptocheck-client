@@ -34,8 +34,7 @@ export default function Home() {
       });
       setPage(response.pagination?.current_page ?? nextPage);
       setHasMore(response.pagination ? response.pagination.current_page < response.pagination.total_pages : response.posts.length === pageSize);
-    } catch (requestError) {
-      console.error("Failed to fetch posts:", requestError);
+    } catch {
       setError(translate(language, "Không tải được bài viết. Vui lòng thử lại sau.", "Failed to load posts. Please try again later."));
     } finally {
       setLoading(false);

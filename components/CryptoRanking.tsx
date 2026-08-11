@@ -67,7 +67,6 @@ export default function CryptoRanking() {
                 setLoading(false);
             } catch (error) {
                 if ((error as DOMException).name === "AbortError" || !active) return;
-                console.error("Failed to fetch crypto ranking:", error);
                 setError(true);
                 setLoading(false);
             }

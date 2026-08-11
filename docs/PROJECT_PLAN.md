@@ -143,6 +143,7 @@ npm run build
 - [x] Default local development to Next webpack and keep Turbopack as an explicit opt-in command after observing excessive Turbopack memory usage on macOS. (Next CLI flag verified + production build passed)
 - [x] Add standalone Docker production configuration for the split client repository. (Next production build passed)
 - [x] Default browser API calls to same-origin `/api` and make Next's production rewrite target the Docker `backend-api` service, preventing an unset public API variable from compiling `localhost:8080` into visitor browsers. (targeted lint + Vitest + production build passed)
+  - [x] Keep recoverable API/provider failures in their visible retry states instead of emitting duplicate browser-console errors; unexpected route errors remain logged by the global error boundary. (lint:ci + 40 Vitest tests + production build + local production-browser check passed)
 	- [x] Bound routine browser API calls to 15 seconds so a stalled origin/proxy cannot leave News, Groups, Profile or Account waiting indefinitely; scanner calls explicitly retain their provider-aware 45-second timeout. (Vitest + production build passed)
 - [x] Reduce global market-ticker polling from the full Binance ticker payload every 10s to the eight displayed symbols every 60s. (production build passed)
   - [x] Keep live-ticker prices as raw numbers and format them only during render, so a VN/EN switch no longer triggers another Binance request; show a retryable visible failure if no prices can load. (lint:ci + Vitest + production build passed)

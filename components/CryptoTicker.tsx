@@ -71,7 +71,6 @@ export default function CryptoTicker() {
                 setLoading(false);
             } catch (error) {
                 if ((error as DOMException).name === "AbortError" || !active) return;
-                console.error("Failed to fetch crypto prices:", error);
                 setError(true);
                 setLoading(false);
             }

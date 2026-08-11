@@ -68,32 +68,21 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) clearAuth();
-        console.error("API Error:", error.response?.data || error.message);
         return Promise.reject(error);
     }
 );
 
 export async function getPosts(params?: PaginationParams): Promise<PostsResponse> {
-    try {
-        const response = await apiClient.get<{ data: { items: Post[]; meta: NonNullable<PostsResponse["pagination"]> } }>("/api/v1/news-feed/posts", {
-            params: buildPostFeedQuery(params),
-        });
-        // Backend returns {data: {items: [], meta: {}}}
-        return parsePostsResponse(response.data);
-    } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        throw error;
-    }
+    const response = await apiClient.get<{ data: { items: Post[]; meta: NonNullable<PostsResponse["pagination"]> } }>("/api/v1/news-feed/posts", {
+        params: buildPostFeedQuery(params),
+    });
+    // Backend returns {data: {items: [], meta: {}}}
+    return parsePostsResponse(response.data);
 }
 
 export async function getPostById(id: string): Promise<Post> {
-    try {
-        const response = await apiClient.get<{ data: Post }>(`/api/v1/news-feed/posts/${id}`);
-        return response.data.data;
-    } catch (error) {
-        console.error(`Failed to fetch post ${id}:`, error);
-        throw error;
-    }
+    const response = await apiClient.get<{ data: Post }>(`/api/v1/news-feed/posts/${id}`);
+    return response.data.data;
 }
 
 export { apiClient };

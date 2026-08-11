@@ -59,7 +59,6 @@ export default function MarketWidgets() {
                 }
             } catch (error) {
                 if ((error as DOMException).name === "AbortError" || !active) return;
-                console.error("Failed to fetch Fear & Greed Index:", error);
                 setFngError(true);
             } finally {
                 if (active) setLoadingFng(false);
