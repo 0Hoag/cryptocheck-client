@@ -102,6 +102,7 @@ npm run build
 - [x] Add reporting, moderation state and content-safe rendering. (authenticated submission, personal moderation-status history, and browser-side HTML sanitization verified by lint:ci, Vitest and production build)
   - [x] Add an authenticated post-report form to post detail, backed by the API with validation, error and success states; anonymous readers get a sign-in prompt. (production build passed)
   - [x] Add an authenticated “My reports” route backed by the API’s own-report endpoint, with localized moderation states, empty/error/retry handling and a link after successful submission. (lint:ci + Vitest + production build passed)
+  - [x] Surface “My reports” from Account, alongside profile and scanner history, so a reporter can return to moderation status without needing the post-success prompt. (lint:ci + Vitest + production build passed)
   - [x] Sanitize raw crawled/article HTML before rendering Markdown so unsafe elements and attributes are removed in the browser. (production build passed)
 
 Pass checks:
