@@ -25,8 +25,8 @@ describe("social mutation transport contracts", () => {
 
   it("uses the reaction and comment endpoints with their required post identifiers", async () => {
     const post = vi.spyOn(apiClient, "post")
-      .mockResolvedValueOnce({ data: { data: { id: "r1", post_id: "p1" } } } as never)
-      .mockResolvedValueOnce({ data: { data: { id: "c1", post_id: "p1", content: "Useful risk note" } } } as never);
+      .mockResolvedValueOnce({ data: { data: { id: "r1", post_id: "p1", author_id: "u1" } } } as never)
+      .mockResolvedValueOnce({ data: { data: { id: "c1", post_id: "p1", author_id: "u1", content: "Useful risk note" } } } as never);
 
     await expect(createReaction("p1")).resolves.toMatchObject({ id: "r1" });
     await expect(createComment("p1", "Useful risk note")).resolves.toMatchObject({ id: "c1" });

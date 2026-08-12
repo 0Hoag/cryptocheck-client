@@ -202,6 +202,7 @@ npm run build
   - [x] Validate and normalize Scanner result, candidate, history and quota payloads before rendering; malformed API data now uses the existing retry state instead of crashing a route. (Vitest + lint + production build passed)
   - [x] Validate the post-feed response contract before rendering News pagination, including legacy no-meta responses and malformed payload failures. (12 tests passed; targeted lint + production build passed)
   - [x] Reject malformed group, member and post entries at the API parsing boundary, preventing runtime crashes from partial list payloads. (Vitest + lint + production build passed)
+  - [x] Normalize Community post optional display fields and reject incomplete reaction/comment/follow items at the social API boundary, preventing partial mutation/list payloads from crashing profile or discussion UI. (targeted Vitest + lint + production build passed)
 - [x] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
   - [x] Run the Vitest suite before the production build on every pull request and push to `main`. (local 3-test suite + production build passed)
