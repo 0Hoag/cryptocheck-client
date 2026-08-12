@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowUp, ArrowDown, Activity } from "lucide-react";
 import { useLanguage, languageLocale, translate } from "@/context/LanguageContext";
 import { useElementVisibility } from "@/lib/useElementVisibility";
+import { isFiniteNumberString, toFiniteNumber } from "@/lib/market-data";
 
 interface CryptoPrice {
     symbol: string;
@@ -22,7 +23,7 @@ interface BinanceTicker24h {
 function isBinanceTicker24h(value: unknown): value is BinanceTicker24h {
     if (typeof value !== "object" || value === null) return false;
     const ticker = value as Record<string, unknown>;
-    return typeof ticker.symbol === "string" && typeof ticker.lastPrice === "string" && typeof ticker.priceChangePercent === "string";
+    return typeof ticker.symbol === "string" && isFiniteNumberString(ticker.lastPrice) && isFiniteNumberString(ticker.priceChangePercent);
 }
 
 export default function CryptoTicker() {
@@ -56,8 +57,8 @@ export default function CryptoTicker() {
                     .filter((item) => trackedSymbols.includes(item.symbol))
                     .map((item) => ({
                         symbol: item.symbol.replace("USDT", ""),
-                        price: parseFloat(item.lastPrice),
-                        percentChange: parseFloat(item.priceChangePercent),
+                        price: toFiniteNumber(item.lastPrice)!,
+                        percentChange: toFiniteNumber(item.priceChangePercent)!,
                     }));
 
                 // Sort by specified order

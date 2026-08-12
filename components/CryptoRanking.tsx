@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 import { useElementVisibility } from "@/lib/useElementVisibility";
+import { isFiniteNumberString, toFiniteNumber } from "@/lib/market-data";
 
 interface CoinData {
     rank: number;
@@ -22,7 +23,7 @@ interface BinanceTicker24h {
 function isBinanceTicker24h(value: unknown): value is BinanceTicker24h {
     if (typeof value !== "object" || value === null) return false;
     const ticker = value as Record<string, unknown>;
-    return typeof ticker.symbol === "string" && typeof ticker.lastPrice === "string" && typeof ticker.priceChangePercent === "string";
+    return typeof ticker.symbol === "string" && isFiniteNumberString(ticker.lastPrice) && isFiniteNumberString(ticker.priceChangePercent);
 }
 
 const trackedSymbols = ["BTC", "ETH", "BNB", "XRP", "SOL", "TRX", "DOGE", "ADA", "BCH", "LINK"];
@@ -56,8 +57,8 @@ export default function CryptoRanking() {
                     return {
                         rank: index + 1,
                         symbol: sym,
-                        price: ticker ? parseFloat(ticker.lastPrice) : 0,
-                        change: ticker ? parseFloat(ticker.priceChangePercent) : 0,
+                        price: ticker ? toFiniteNumber(ticker.lastPrice)! : 0,
+                        change: ticker ? toFiniteNumber(ticker.priceChangePercent)! : 0,
                     };
                 });
 

@@ -5,6 +5,7 @@ import { createChart, LineStyle, type ISeriesApi, type IChartApi, type MouseEven
 import { BarChart3, Maximize2, Minimize2, Radio, RotateCcw, SlidersHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 import { languageLocale, translate, useLanguage } from '@/context/LanguageContext';
 import { zoomLogicalRange } from '@/lib/chart-interactions';
+import { isFiniteNumberString, toFiniteNumber } from '@/lib/market-data';
 
 interface ProfessionalChartProps {
     symbol?: string;
@@ -52,11 +53,11 @@ function toChartTime(milliseconds: number): UTCTimestamp {
 function isBinanceKline(value: unknown): value is [number, string, string, string, string, string, ...unknown[]] {
     return Array.isArray(value)
         && typeof value[0] === 'number'
-        && typeof value[1] === 'string'
-        && typeof value[2] === 'string'
-        && typeof value[3] === 'string'
-        && typeof value[4] === 'string'
-        && typeof value[5] === 'string';
+        && isFiniteNumberString(value[1])
+        && isFiniteNumberString(value[2])
+        && isFiniteNumberString(value[3])
+        && isFiniteNumberString(value[4])
+        && isFiniteNumberString(value[5]);
 }
 
 function isBinanceKlineEvent(value: unknown): value is BinanceKlineEvent {
@@ -64,19 +65,19 @@ function isBinanceKlineEvent(value: unknown): value is BinanceKlineEvent {
     const kline = (value as Record<string, unknown>).k;
     if (typeof kline !== 'object' || kline === null) return false;
     const data = kline as Record<string, unknown>;
-    return typeof data.t === 'number' && typeof data.o === 'string' && typeof data.h === 'string' && typeof data.l === 'string' && typeof data.c === 'string' && typeof data.v === 'string';
+    return typeof data.t === 'number' && isFiniteNumberString(data.o) && isFiniteNumberString(data.h) && isFiniteNumberString(data.l) && isFiniteNumberString(data.c) && isFiniteNumberString(data.v);
 }
 
 function isBinanceTickerEvent(value: unknown): value is BinanceTickerEvent {
     if (typeof value !== 'object' || value === null) return false;
     const ticker = value as Record<string, unknown>;
-    return typeof ticker.h === 'string' && typeof ticker.l === 'string' && typeof ticker.v === 'string';
+    return isFiniteNumberString(ticker.h) && isFiniteNumberString(ticker.l) && isFiniteNumberString(ticker.v);
 }
 
 function isBinanceTickerStats(value: unknown): value is BinanceTickerStats {
     if (typeof value !== 'object' || value === null) return false;
     const ticker = value as Record<string, unknown>;
-    return typeof ticker.highPrice === 'string' && typeof ticker.lowPrice === 'string' && typeof ticker.volume === 'string';
+    return isFiniteNumberString(ticker.highPrice) && isFiniteNumberString(ticker.lowPrice) && isFiniteNumberString(ticker.volume);
 }
 
 export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: ProfessionalChartProps) {
@@ -363,9 +364,9 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 if (!isBinanceTickerStats(statsData)) throw new Error('Invalid Binance ticker payload');
                 if (!active) return;
                 setStats({
-                    high: parseFloat(statsData.highPrice).toFixed(2),
-                    low: parseFloat(statsData.lowPrice).toFixed(2),
-                    vol: parseFloat(statsData.volume).toFixed(2)
+                    high: toFiniteNumber(statsData.highPrice)!.toFixed(2),
+                    low: toFiniteNumber(statsData.lowPrice)!.toFixed(2),
+                    vol: toFiniteNumber(statsData.volume)!.toFixed(2)
                 });
 
                 const timeframe = TIMEFRAMES.find(tf => tf.value === interval);
@@ -380,17 +381,17 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
                 const formattedData: CandleData[] = data.map((item) => ({
                     time: toChartTime(item[0]), // Add 7 hours for UTC+7 (Vietnam)
-                    open: parseFloat(item[1]),
-                    high: parseFloat(item[2]),
-                    low: parseFloat(item[3]),
-                    close: parseFloat(item[4]),
-                    volume: parseFloat(item[5]),
+                    open: toFiniteNumber(item[1])!,
+                    high: toFiniteNumber(item[2])!,
+                    low: toFiniteNumber(item[3])!,
+                    close: toFiniteNumber(item[4])!,
+                    volume: toFiniteNumber(item[5])!,
                 }));
 
                 const volumeData = data.map((item) => ({
                     time: toChartTime(item[0]),
-                    value: parseFloat(item[5]),
-                    color: parseFloat(item[4]) >= parseFloat(item[1]) ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
+                    value: toFiniteNumber(item[5])!,
+                    color: toFiniteNumber(item[4])! >= toFiniteNumber(item[1])! ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
                 }));
 
                 if (candlestickSeriesRef.current && volumeSeriesRef.current) {
@@ -465,10 +466,10 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             if (candle && candlestickSeriesRef.current) {
                 const newCandle = {
                     time: toChartTime(candle.t),
-                    open: parseFloat(candle.o),
-                    high: parseFloat(candle.h),
-                    low: parseFloat(candle.l),
-                    close: parseFloat(candle.c),
+                    open: toFiniteNumber(candle.o)!,
+                    high: toFiniteNumber(candle.h)!,
+                    low: toFiniteNumber(candle.l)!,
+                    close: toFiniteNumber(candle.c)!,
                 };
 
                 try {
@@ -483,7 +484,7 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                 if (volumeSeriesRef.current) {
                     volumeSeriesRef.current.update({
                         time: newCandle.time,
-                        value: parseFloat(candle.v),
+                        value: toFiniteNumber(candle.v)!,
                         color: newCandle.close >= newCandle.open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
                     });
                 }
@@ -500,9 +501,9 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
             const ticker: unknown = JSON.parse(event.data);
             if (isBinanceTickerEvent(ticker)) {
                 setStats({
-                    high: parseFloat(ticker.h).toFixed(2),
-                    low: parseFloat(ticker.l).toFixed(2),
-                    vol: parseFloat(ticker.v).toFixed(2)
+                    high: toFiniteNumber(ticker.h)!.toFixed(2),
+                    low: toFiniteNumber(ticker.l)!.toFixed(2),
+                    vol: toFiniteNumber(ticker.v)!.toFixed(2)
                 });
             }
         };

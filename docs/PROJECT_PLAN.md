@@ -211,6 +211,7 @@ npm run build
   - [x] Type Binance ticker payloads in the global ticker and top-ranking widgets, and reject invalid provider payloads safely. (targeted lint + production build passed)
   - [x] Validate Binance mini-ticker websocket payloads and initialize the market coin list without synchronous effect state updates. (targeted lint + production build passed; remote-image warning remains)
   - [x] Retire the legacy CustomChart implementation after validating its provider payload boundary; Analysis now has one maintained ProfessionalChart code path. (lint + Vitest + production build passed)
+  - [x] Validate finite numeric Binance fields before prices, candles or ticker changes reach render state, preventing malformed provider payloads from displaying `NaN`. (Vitest + lint + production build passed)
   - [x] Type ProfessionalChart REST/websocket market payloads, remove unsafe chart-series casts and fix crosshair state initialization. (targeted lint + production build passed)
   - [x] Restore Community to the global lint baseline; `npm run lint` now finishes with zero warnings/errors. (global lint + Vitest + production build passed)
   - [x] Remove the unused market-widget icon import; the remaining image warnings use dynamic third-party URLs and need a safe media-proxy/allowlist decision rather than a cosmetic suppression. (targeted lint + 9 tests + production build passed)

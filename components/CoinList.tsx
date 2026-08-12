@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
 import ExternalImage from "@/components/ExternalImage";
+import { isFiniteNumberString, toFiniteNumber } from "@/lib/market-data";
 
 interface CoinListProps {
     onCoinSelect: (symbol: string, name: string) => void;
@@ -36,7 +37,7 @@ interface BinanceMiniTicker {
 function isBinanceMiniTicker(value: unknown): value is BinanceMiniTicker {
     if (typeof value !== "object" || value === null) return false;
     const ticker = value as Record<string, unknown>;
-    return typeof ticker.s === "string" && typeof ticker.c === "string" && typeof ticker.o === "string";
+    return typeof ticker.s === "string" && isFiniteNumberString(ticker.c) && isFiniteNumberString(ticker.o);
 }
 
 function createInitialCoins(coinMapping: readonly CoinDefinition[]): CoinData[] {
@@ -123,11 +124,13 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                 tickers.forEach((ticker) => {
                     const index = newCoins.findIndex(c => c.symbol === ticker.s);
                     if (index !== -1) {
+                        const close = toFiniteNumber(ticker.c)!;
+                        const open = toFiniteNumber(ticker.o)!;
                         newCoins[index] = {
                             ...newCoins[index],
-                            price: parseFloat(ticker.c).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                            change: (parseFloat(ticker.c) - parseFloat(ticker.o)).toFixed(2),
-                            changePercent: ((parseFloat(ticker.c) - parseFloat(ticker.o)) / parseFloat(ticker.o) * 100).toFixed(2),
+                            price: close.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                            change: (close - open).toFixed(2),
+                            changePercent: open === 0 ? "0.00" : ((close - open) / open * 100).toFixed(2),
                         };
                         updated = true;
                     }
