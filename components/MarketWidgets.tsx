@@ -3,13 +3,7 @@
 import { TrendingDown, Activity, Calendar, Wallet, Clock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { translate, useLanguage } from "@/context/LanguageContext";
-
-interface FNGData {
-    value: string;
-    value_classification: string;
-    timestamp: string;
-    time_until_update: string;
-}
+import { parseFearGreedResponse, type FearGreedData } from "@/lib/market-sentiment";
 
 type CalendarEvent = {
     titleVi: string;
@@ -35,7 +29,7 @@ function fearGreedLabel(value: string, language: "vi" | "en") {
 
 export default function MarketWidgets() {
     const { language } = useLanguage();
-    const [fng, setFng] = useState<FNGData | null>(null);
+    const [fng, setFng] = useState<FearGreedData | null>(null);
     const [loadingFng, setLoadingFng] = useState(true);
     const [fngError, setFngError] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
@@ -50,13 +44,9 @@ export default function MarketWidgets() {
                 const res = await fetch("https://api.alternative.me/fng/", { signal: controller.signal });
                 if (!res.ok) throw new Error(`Fear & Greed provider returned ${res.status}`);
                 const data: unknown = await res.json();
-                const payload = data as { data?: unknown };
-                if (Array.isArray(payload.data) && payload.data.length > 0 && typeof payload.data[0] === "object" && payload.data[0] !== null) {
-                    if (!active) return;
-                    setFng(payload.data[0] as FNGData);
-                } else {
-                    throw new Error("Invalid Fear & Greed provider response");
-                }
+                const nextFng = parseFearGreedResponse(data);
+                if (!active) return;
+                setFng(nextFng);
             } catch (error) {
                 if ((error as DOMException).name === "AbortError" || !active) return;
                 setFngError(true);
