@@ -14,6 +14,38 @@ export const DEFAULT_API_TIMEOUT_MS = 15_000;
 type PostFeedPayload = { data?: { items?: unknown; meta?: unknown } };
 type ListDataPayload = { data?: unknown };
 
+function normalizePost(value: unknown): Post | null {
+    if (!value || typeof value !== "object") return null;
+    const post = value as Record<string, unknown>;
+    if (typeof post.id !== "string" || !post.id || typeof post.content !== "string" || typeof post.author_id !== "string" || !post.author_id) return null;
+    const author = post.author && typeof post.author === "object" ? post.author as Record<string, unknown> : undefined;
+    return {
+        id: post.id,
+        pin: post.pin === true,
+        title: typeof post.title === "string" ? post.title : "",
+        content: post.content,
+        file_ids: Array.isArray(post.file_ids) ? post.file_ids.filter((id): id is string => typeof id === "string") : [],
+        tagged_target: Array.isArray(post.tagged_target) ? post.tagged_target.filter((target): target is string => typeof target === "string") : [],
+        permission: post.permission === "followers" || post.permission === "justme" ? post.permission : "public",
+        author_id: post.author_id,
+        source_url: typeof post.source_url === "string" ? post.source_url : "",
+        created_at: typeof post.created_at === "string" ? post.created_at : "",
+        updated_at: typeof post.updated_at === "string" ? post.updated_at : "",
+        deleted_at: typeof post.deleted_at === "string" || post.deleted_at === null ? post.deleted_at : undefined,
+        reaction_count: typeof post.reaction_count === "number" && Number.isFinite(post.reaction_count) && post.reaction_count >= 0 ? post.reaction_count : 0,
+        comment_count: typeof post.comment_count === "number" && Number.isFinite(post.comment_count) && post.comment_count >= 0 ? post.comment_count : 0,
+        author: author && typeof author.id === "string" && typeof author.username === "string"
+            ? { id: author.id, username: author.username, avatar_url: typeof author.avatar_url === "string" ? author.avatar_url : undefined }
+            : undefined,
+    };
+}
+
+export function parsePostResponse(payload: unknown, resource = "post"): Post {
+    const post = normalizePost((payload as { data?: unknown } | undefined)?.data);
+    if (!post) throw new Error(`Invalid ${resource} response`);
+    return post;
+}
+
 function isPagination(value: unknown): value is NonNullable<PostsResponse["pagination"]> {
     if (!value || typeof value !== "object") return false;
     const candidate = value as Record<string, unknown>;
@@ -24,7 +56,10 @@ export function parsePostsResponse(payload: unknown): PostsResponse {
     const response = payload as PostFeedPayload;
     if (!Array.isArray(response?.data?.items)) throw new Error("Invalid post-feed response");
     if (response.data.meta !== undefined && !isPagination(response.data.meta)) throw new Error("Invalid post-feed pagination");
-    return { posts: response.data.items as Post[], pagination: response.data.meta };
+    return { posts: response.data.items.flatMap((item) => {
+        const post = normalizePost(item);
+        return post ? [post] : [];
+    }), pagination: response.data.meta };
 }
 
 export type PostFeedQuery = { page: number; limit: number; sort: FeedSort };
@@ -81,8 +116,8 @@ export async function getPosts(params?: PaginationParams): Promise<PostsResponse
 }
 
 export async function getPostById(id: string): Promise<Post> {
-    const response = await apiClient.get<{ data: Post }>(`/api/v1/news-feed/posts/${id}`);
-    return response.data.data;
+    const response = await apiClient.get<unknown>(`/api/v1/news-feed/posts/${id}`);
+    return parsePostResponse(response.data);
 }
 
 export { apiClient };

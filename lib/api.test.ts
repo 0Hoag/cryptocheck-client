@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiClient, buildPostFeedQuery, DEFAULT_API_TIMEOUT_MS, parseListData, parsePostsResponse } from "./api";
+import { apiClient, buildPostFeedQuery, DEFAULT_API_TIMEOUT_MS, parseListData, parsePostResponse, parsePostsResponse } from "./api";
 
 const post = {
   id: "post-1", pin: false, title: "Market update", content: "Body", permission: "public",
@@ -19,8 +19,20 @@ describe("post-feed API contract", () => {
 
   it("returns posts and valid pagination metadata", () => {
     expect(parsePostsResponse({ data: { items: [post], meta: { total: 13, count: 12, per_page: 12, current_page: 1, total_pages: 2 } } })).toEqual({
-      posts: [post], pagination: { total: 13, count: 12, per_page: 12, current_page: 1, total_pages: 2 },
+      posts: [expect.objectContaining(post)], pagination: { total: 13, count: 12, per_page: 12, current_page: 1, total_pages: 2 },
     });
+  });
+
+  it("normalizes optional display fields and drops incomplete feed records", () => {
+    expect(parsePostsResponse({ data: { items: [{ id: "safe", content: "Body", author_id: "author" }, { id: "broken", title: "Missing content" }] } })).toEqual({
+      posts: [expect.objectContaining({ id: "safe", title: "", source_url: "", permission: "public", reaction_count: 0, comment_count: 0 })],
+      pagination: undefined,
+    });
+  });
+
+  it("rejects an incomplete post detail before its page renders", () => {
+    expect(parsePostResponse({ data: { id: "p1", content: "Body", author_id: "author" } })).toMatchObject({ id: "p1", permission: "public" });
+    expect(() => parsePostResponse({ data: { id: "p1", author_id: "author" } })).toThrow("Invalid post response");
   });
 
   it("allows an older response without pagination", () => {
