@@ -171,6 +171,7 @@ npm run build
 - [x] Make the interactive price chart keyboard-operable: focused chart regions now support `+`/`-` zoom and `0` reset-to-latest, with localized instructions for assistive technology. (lint + production build passed)
   - [x] Keep chart controls visually anchored while live price, percentage and timeframe metrics change, using independent grid columns and tabular number widths to prevent layout shift. (lint + production build passed)
   - [x] Place chart timeframe/zoom controls in their own toolbar row so they cannot cover the 24-hour market metrics at desktop widths. (lint + Vitest + production build passed)
+  - [x] Remove the unused legacy Recharts implementation and its transitive dependencies; retain one maintained Lightweight Charts path for Analysis. (lint + Vitest + production build passed)
 - [x] Add validated, retryable provider-error states for the persistent Fear/Greed and breaking-news widgets; abort stale sentiment requests on unmount. (targeted lint + Vitest + production build passed)
 - [x] Buffer all-market Binance WebSocket updates in the analysis coin list and commit at most one React update per second. (production build passed)
 - [ ] Responsive/mobile audit of all routes.
@@ -209,7 +210,7 @@ npm run build
   - [x] Type Analysis order-book messages and prevent stale rows from appearing while a newly selected market is loading. (targeted lint + production build passed)
   - [x] Type Binance ticker payloads in the global ticker and top-ranking widgets, and reject invalid provider payloads safely. (targeted lint + production build passed)
   - [x] Validate Binance mini-ticker websocket payloads and initialize the market coin list without synchronous effect state updates. (targeted lint + production build passed; remote-image warning remains)
-  - [x] Validate CustomChart REST/websocket candle payloads and keep the candle renderer stable outside React render. (targeted lint + production build passed)
+  - [x] Retire the legacy CustomChart implementation after validating its provider payload boundary; Analysis now has one maintained ProfessionalChart code path. (lint + Vitest + production build passed)
   - [x] Type ProfessionalChart REST/websocket market payloads, remove unsafe chart-series casts and fix crosshair state initialization. (targeted lint + production build passed)
   - [x] Restore Community to the global lint baseline; `npm run lint` now finishes with zero warnings/errors. (global lint + Vitest + production build passed)
   - [x] Remove the unused market-widget icon import; the remaining image warnings use dynamic third-party URLs and need a safe media-proxy/allowlist decision rather than a cosmetic suppression. (targeted lint + 9 tests + production build passed)

@@ -355,7 +355,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
         setChartLoadError(false);
 
         const fetchData = async () => {
-            // ... existing kline fetch logic ...
             try {
                 // Fetch 24h stats
                 const statsRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`, { signal: controller.signal });
@@ -371,31 +370,13 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
                 const timeframe = TIMEFRAMES.find(tf => tf.value === interval);
                 const limit = timeframe?.limit || 1000;
-                // const total = timeframe?.total || 1000;
-                // const batches = Math.ceil(total / limit);
-
-                // let allData: any[] = [];
-                // let endTime: number | undefined = undefined;
-
-                // Fetch multiple batches to get more historical data
-                // for (let i = 0; i < batches; i++) {
                 const url: string = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-                // ? `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}&endTime=${endTime}`
-                // : `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
                 const response: Response = await fetch(url, { signal: controller.signal });
                 if (!response.ok) throw new Error(`Binance returned ${response.status}`);
                 const payload: unknown = await response.json();
                 const data = Array.isArray(payload) ? payload.filter(isBinanceKline) : [];
                 if (!active) return;
-
-                // if (data.length === 0) break;
-
-                // allData = [...data, ...allData]; // Prepend older data
-                // endTime = data[0][0] - 1; // Set endTime for next batch
-
-                // await new Promise(resolve => setTimeout(resolve, 100)); // Rate limit delay
-                // }
 
                 const formattedData: CandleData[] = data.map((item) => ({
                     time: toChartTime(item[0]), // Add 7 hours for UTC+7 (Vietnam)
@@ -449,7 +430,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     setPriceChange(change);
                 }
 
-                // Auto-scroll logic...
                 if (chartRef.current && formattedData.length > 0) {
                     const visibleCandles = 100;
                     const latestTime = formattedData[formattedData.length - 1].time;
@@ -508,13 +488,6 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
                     });
                 }
 
-                // Note: Updating EMAs in real-time accurately requires the full history or storing the last EMA state. 
-                // For simplicity/visual smoothness, we can just let it re-fetch on interval change or implement a simplified incremental update if needed.
-                // But for now, since we have the full `formattedData` from fetch, we can't easily append without recalculating state.
-                // A full production app would manage standard indicators state more consistently. 
-                // Given the constraint, we will skip incremental EMA updates for this specific minimal scope change unless requested, 
-                // as frequent calculating on every tick might be overkill or require state refactoring.
-                // However, let's at least try to update the last point if we tracked the last EMA data.
             }
         };
 
