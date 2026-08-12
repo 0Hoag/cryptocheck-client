@@ -15,13 +15,13 @@ interface CoinData {
     symbol: string;
     name: string;
     icon: string;
-    price: string;
-    change: string;
-    changePercent: string;
+    price: string | null;
+    change: string | null;
+    changePercent: string | null;
     tvSymbol?: string;
 }
 
-interface CoinDefinition {
+export interface CoinDefinition {
     id: string;
     symbol: string;
     name: string;
@@ -40,14 +40,16 @@ function isBinanceMiniTicker(value: unknown): value is BinanceMiniTicker {
     return typeof ticker.s === "string" && isFiniteNumberString(ticker.c) && isFiniteNumberString(ticker.o);
 }
 
-function createInitialCoins(coinMapping: readonly CoinDefinition[]): CoinData[] {
+export function createInitialCoins(coinMapping: readonly CoinDefinition[]): CoinData[] {
     return coinMapping.map((coin) => ({
         id: coin.id,
         symbol: coin.symbol,
         name: coin.name,
-        price: "0.00",
-        change: "0.00",
-        changePercent: "0.00",
+        // A provider delay/outage is not a zero price. Keep the row visibly
+        // unavailable until a validated mini-ticker arrives.
+        price: null,
+        change: null,
+        changePercent: null,
         icon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png`,
         tvSymbol: coin.tvSymbol,
     }));
@@ -169,7 +171,8 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {coins.map((coin, index) => {
                     const isSelected = selectedSymbol === coin.symbol;
-                    const isPositive = parseFloat(coin.changePercent) >= 0;
+                    const hasMarketData = coin.price !== null && coin.changePercent !== null;
+                    const isPositive = hasMarketData && Number(coin.changePercent) >= 0;
                     const isGold = coin.symbol === "XAUUSD";
 
                     // Show separator after Gold (first item)
@@ -199,9 +202,9 @@ export default function CoinList({ onCoinSelect, selectedSymbol }: CoinListProps
                                         </div>
                                     </div>
                                     <div className="text-right ml-2">
-                                        <div className="text-xs font-bold text-white">${coin.price}</div>
-                                        <div className={`text-[10px] font-semibold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                                            {isPositive ? '+' : ''}{coin.changePercent}%
+                                        <div className="text-xs font-bold text-white">{coin.price === null ? translate(language, "Chưa có dữ liệu", "No data") : `$${coin.price}`}</div>
+                                        <div className={`text-[10px] font-semibold ${!hasMarketData ? 'text-gray-500' : isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                            {hasMarketData ? `${isPositive ? '+' : ''}${coin.changePercent}%` : "—"}
                                         </div>
                                     </div>
                                 </div>
