@@ -459,7 +459,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
         ws.onmessage = (event) => {
             if (document.visibilityState !== "visible") return;
-            const message: unknown = JSON.parse(event.data);
+            let message: unknown;
+            try { message = JSON.parse(event.data); } catch { return; }
             if (!isBinanceKlineEvent(message)) return;
             const candle = message.k;
 
@@ -498,7 +499,8 @@ export default function ProfessionalChart({ symbol = "BTCUSDT", coinName }: Prof
 
         tickerWs.onmessage = (event) => {
             if (document.visibilityState !== "visible") return;
-            const ticker: unknown = JSON.parse(event.data);
+            let ticker: unknown;
+            try { ticker = JSON.parse(event.data); } catch { return; }
             if (isBinanceTickerEvent(ticker)) {
                 setStats({
                     high: toFiniteNumber(ticker.h)!.toFixed(2),

@@ -214,6 +214,7 @@ npm run build
   - [x] Validate finite numeric Binance fields before prices, candles or ticker changes reach render state, preventing malformed provider payloads from displaying `NaN`. (Vitest + lint + production build passed)
   - [x] Validate Fear & Greed provider payload shape and its required 0–100 score before displaying sentiment state. (Vitest + lint + production build passed)
   - [x] Validate Binance price and order-book websocket frames before committing Analysis state; malformed depth levels are dropped instead of rendering invalid rows. (Vitest + lint + production build passed)
+  - [x] Ignore malformed JSON frames from the ProfessionalChart realtime sockets, keeping the existing chart session alive rather than surfacing provider parse errors in the browser. (lint + Vitest + production build passed)
   - [x] Type ProfessionalChart REST/websocket market payloads, remove unsafe chart-series casts and fix crosshair state initialization. (targeted lint + production build passed)
   - [x] Restore Community to the global lint baseline; `npm run lint` now finishes with zero warnings/errors. (global lint + Vitest + production build passed)
   - [x] Remove the unused market-widget icon import; the remaining image warnings use dynamic third-party URLs and need a safe media-proxy/allowlist decision rather than a cosmetic suppression. (targeted lint + 9 tests + production build passed)
