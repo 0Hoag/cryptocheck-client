@@ -14,6 +14,12 @@ describe("parseReportsResponse", () => {
     expect(parseReportsResponse({ data: null })).toEqual([]);
   });
 
+  it("drops malformed optional details before a report is rendered", () => {
+    expect(parseReportsResponse({ data: [{ ...report, details: { unexpected: true } }] })).toEqual([
+      expect.objectContaining({ id: report.id, details: undefined }),
+    ]);
+  });
+
   it("rejects malformed or unsupported report states", () => {
     expect(() => parseReportsResponse({ data: [{ ...report, status: "pending" }] })).toThrow("Invalid reports response");
   });

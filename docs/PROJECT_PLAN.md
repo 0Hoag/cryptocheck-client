@@ -205,6 +205,7 @@ npm run build
   - [x] Reject malformed group, member and post entries at the API parsing boundary, preventing runtime crashes from partial list payloads. (Vitest + lint + production build passed)
   - [x] Normalize Community post optional display fields and reject incomplete reaction/comment/follow items at the social API boundary, preventing partial mutation/list payloads from crashing profile or discussion UI. (targeted Vitest + lint + production build passed)
   - [x] Normalize optional notification route/read fields at the API boundary so malformed legacy values cannot produce broken notification links or unread state. (targeted Vitest + lint + production build passed)
+  - [x] Normalize optional report-detail fields at the API boundary so non-text payloads cannot be rendered as React children on the moderation report screen. (targeted Vitest + lint + production build passed)
 - [x] Add CI for build, lint and tests.
   - [x] Run a reproducible production build on every pull request and push to `main`. (workflow added; local production build passed)
   - [x] Run the Vitest suite before the production build on every pull request and push to `main`. (local 3-test suite + production build passed)
