@@ -8,6 +8,12 @@ describe("parseNotificationsResponse", () => {
     expect(parseNotificationsResponse({ data: [notification] })).toEqual([notification]);
   });
 
+  it("drops malformed optional transport fields instead of leaking them into notification UI", () => {
+    expect(parseNotificationsResponse({ data: [{ ...notification, resource_id: 42, read_at: { invalid: true } }] })).toEqual([
+      expect.objectContaining({ id: notification.id, resource_id: undefined, read_at: undefined }),
+    ]);
+  });
+
   it("normalizes a legacy null empty list", () => {
     expect(parseNotificationsResponse({ data: null })).toEqual([]);
   });

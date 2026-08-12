@@ -29,10 +29,22 @@ export function notificationHref(notification: AppNotification) {
 
 type NotificationPayload = { data?: unknown };
 
-function isNotification(value: unknown): value is AppNotification {
-  if (!value || typeof value !== "object") return false;
+function normalizeNotification(value: unknown): AppNotification | null {
+  if (!value || typeof value !== "object") return null;
   const notification = value as Record<string, unknown>;
-  return ["id", "type", "message", "created_at"].every((key) => typeof notification[key] === "string");
+  const id = typeof notification.id === "string" && notification.id.trim() ? notification.id : "";
+  const type = typeof notification.type === "string" && notification.type.trim() ? notification.type : "";
+  const message = typeof notification.message === "string" ? notification.message : "";
+  const createdAt = typeof notification.created_at === "string" && notification.created_at.trim() ? notification.created_at : "";
+  if (!id || !type || !createdAt) return null;
+  return {
+    id,
+    type,
+    message,
+    created_at: createdAt,
+    resource_id: typeof notification.resource_id === "string" && notification.resource_id.trim() ? notification.resource_id : undefined,
+    read_at: typeof notification.read_at === "string" && notification.read_at.trim() ? notification.read_at : undefined,
+  };
 }
 
 // Older API containers can encode an empty Mongo slice as `data: null`.
@@ -41,8 +53,12 @@ function isNotification(value: unknown): value is AppNotification {
 export function parseNotificationsResponse(payload: unknown): AppNotification[] {
   const data = (payload as NotificationPayload | undefined)?.data;
   if (data == null) return [];
-  if (!Array.isArray(data) || !data.every(isNotification)) {
+  if (!Array.isArray(data)) {
     throw new Error("Invalid notifications response");
   }
-  return data;
+  const notifications = data.map(normalizeNotification);
+  if (notifications.some((notification) => notification === null)) {
+    throw new Error("Invalid notifications response");
+  }
+  return notifications.flatMap((notification) => notification ? [notification] : []);
 }
