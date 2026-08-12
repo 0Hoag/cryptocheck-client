@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import CoinList from "@/components/CoinList";
 import axios from "axios";
 import { languageLocale, translate, useLanguage } from "@/context/LanguageContext";
+import { parseMarketDepth } from "@/lib/market-depth";
+import { toFiniteNumber } from "@/lib/market-data";
 
 function ChartLoading() {
     const { language } = useLanguage();
@@ -17,8 +19,6 @@ const ProfessionalChart = dynamic(() => import("@/components/ProfessionalChart")
 });
 
 type OrderBookRow = { price: string; amount: string; total: string; fill: number };
-type DepthMessage = { asks: [string, string][]; bids: [string, string][] };
-
 export default function AnalysisPage() {
     const { language } = useLanguage();
     const locale = languageLocale(language);
@@ -41,14 +41,15 @@ export default function AnalysisPage() {
         let active = true;
         // Initial price fetch
         const fetchPrice = async () => {
-            // ... existing axios logic if needed, but WS handles it better
             try {
                 if (selectedSymbol === "XAUUSD") {
                     setCurrentPrice(2650.00);
                     return;
                 }
-                const res = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${selectedSymbol}`);
-                if (active) setCurrentPrice(parseFloat(res.data.price));
+                const res = await axios.get<unknown>(`https://api.binance.com/api/v3/ticker/price?symbol=${selectedSymbol}`);
+                const price = toFiniteNumber((res.data as { price?: unknown } | null)?.price);
+                if (price === null) throw new Error("Invalid Binance price payload");
+                if (active) setCurrentPrice(price);
             } catch {
                 if (active) setOrderBookState("error");
             }
@@ -61,19 +62,22 @@ export default function AnalysisPage() {
 
             ws.onmessage = (event) => {
                 if (document.visibilityState !== "visible") return;
-                const data = JSON.parse(event.data) as DepthMessage;
-                const asks = data.asks.map((ask) => ({
-                    price: parseFloat(ask[0]).toFixed(2),
-                    amount: parseFloat(ask[1]).toFixed(4),
-                    total: formatTotal(parseFloat(ask[0]) * parseFloat(ask[1])),
-                    fill: Math.min(100, parseFloat(ask[1]) * 100), // Simple visual depth
-                })).reverse().slice(0, 15); // Show top 15
+                let payload: unknown;
+                try { payload = JSON.parse(event.data); } catch { return; }
+                const depth = parseMarketDepth(payload);
+                if (!depth) return;
+                const asks = depth.asks.map((ask) => ({
+                    price: ask.price.toFixed(2),
+                    amount: ask.amount.toFixed(4),
+                    total: formatTotal(ask.price * ask.amount),
+                    fill: Math.min(100, ask.amount * 100),
+                })).reverse().slice(0, 15);
 
-                const bids = data.bids.map((bid) => ({
-                    price: parseFloat(bid[0]).toFixed(2),
-                    amount: parseFloat(bid[1]).toFixed(4),
-                    total: formatTotal(parseFloat(bid[0]) * parseFloat(bid[1])),
-                    fill: Math.min(100, parseFloat(bid[1]) * 100),
+                const bids = depth.bids.map((bid) => ({
+                    price: bid.price.toFixed(2),
+                    amount: bid.amount.toFixed(4),
+                    total: formatTotal(bid.price * bid.amount),
+                    fill: Math.min(100, bid.amount * 100),
                 })).slice(0, 15);
 
                 if (active) {
