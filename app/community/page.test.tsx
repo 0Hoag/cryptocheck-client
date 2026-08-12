@@ -15,7 +15,7 @@ vi.mock("@/lib/social", async (importOriginal) => ({
   ...mocks,
 }));
 
-import { CommunityCard } from "./page";
+import { CommunityCard, timeAgo } from "./page";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -106,5 +106,12 @@ describe("CommunityCard", () => {
     await act(async () => {
       resolveReactions([]);
     });
+  });
+});
+
+describe("timeAgo", () => {
+  it("uses a localized fallback for malformed API timestamps", () => {
+    expect(timeAgo("not-a-date", "vi")).toBe("Không rõ thời điểm");
+    expect(timeAgo("not-a-date", "en")).toBe("Time unavailable");
   });
 });

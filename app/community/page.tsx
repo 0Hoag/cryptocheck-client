@@ -31,11 +31,12 @@ import { translate, useLanguage } from "@/context/LanguageContext";
 
 type CardRetry = "load" | "like" | "comment" | null;
 
-function timeAgo(value: string, language: "vi" | "en") {
-  const minutes = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(value).getTime()) / 60_000),
-  );
+export function timeAgo(value: string, language: "vi" | "en") {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) {
+    return translate(language, "Không rõ thời điểm", "Time unavailable");
+  }
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
   if (minutes < 1) return translate(language, "Vừa xong", "Just now");
   if (minutes < 60)
     return language === "vi" ? `${minutes} phút` : `${minutes}m`;
